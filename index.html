@@ -1089,6 +1089,12 @@
     const m=String(text).match(/\bTRIP\b[^\n]*?\b(\d{1,2})\.(\d{2})\b/);
     return m? {str:m[1].padStart(2,'0')+'.'+m[2], min:(+m[1])*60+(+m[2])} : null;
   }
+  // OFP taxi-out from the fuel plan line "TAXI  001000 00.30" -> H.MM (uppercase only,
+  // so it never matches "Taxiing"/"Taxilane" prose elsewhere in the package)
+  function parseTaxiOut(text){
+    const m=String(text).match(/\bTAXI\b[^\n]*?\b(\d{1,2})\.(\d{2})\b/);
+    return m? {str:m[1].padStart(2,'0')+'.'+m[2], min:(+m[1])*60+(+m[2])} : null;
+  }
   function fmtHM(min){ return Math.floor(min/60)+':'+String(min%60).padStart(2,'0'); }
   // QC: cumulative runs in order, and last waypoint cumulative == trip time
   function qualityCheck(wpts, tripMin){
@@ -1168,7 +1174,7 @@
     return {restStart:rs, restEnd:re, window:win, changeover:co, periods:periods, landMin:landMin};
   }
 
-  const API={parseNavlog,computeETA,fmtZ,totToMin,parseTripTime,qualityCheck,fmtHM,specialTimes,crewRest};
+  const API={parseNavlog,computeETA,fmtZ,totToMin,parseTripTime,parseTaxiOut,qualityCheck,fmtHM,specialTimes,crewRest};
   if(typeof module!=='undefined'&&module.exports)module.exports=API;
   root.NAVLOG=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -1248,7 +1254,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v3.3 · 2026-07-24';
+  var BUILD='v3.4 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1531,7 +1537,7 @@
   /* ---------- Flight Log / ETA running total ---------- */
   var flDep=$('#flDep'), flStatusEl=$('#flStatus'), flSpin=$('#flSpin'),
       flCards=$('#flCards'), flQC=$('#flQC'), flSum=$('#flSum'), flTable=$('#flTable');
-  var flWpts=[], flTrip=null, flTextRaw='', flEta=[], flSt=null;
+  var flWpts=[], flTrip=null, flTaxi=null, flTextRaw='', flEta=[], flSt=null;
   function flCopyText(){
     if(!flEta.length)return '';
     var dep=(flDep.value||'').replace(/\D/g,'').padStart(4,'0');
@@ -1587,7 +1593,7 @@
     b.onclick=function(){ document.querySelectorAll('[data-dcrew]').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); duCrew=+b.getAttribute('data-dcrew'); duSetLimit(); };
   });
   $('#duHost').onclick=function(){ duHostile=!duHostile; this.textContent=duHostile?'On':'Off'; this.classList.toggle('on',duHostile); if(duCrew===4) duSetLimit(); else duCompute(); };
-  $('#duFromLog').onclick=function(){ if(typeof flTrip!=='undefined' && flTrip && flTrip.str){ duFlt.value=flTrip.str.replace('.',':'); duCompute(); } else { duNote.textContent='Load a flight plan in Flight Log first to pull its trip time.'; } };
+  $('#duFromLog').onclick=function(){ if(typeof flTrip!=='undefined' && flTrip && flTrip.str){ duFlt.value=flTrip.str.replace('.',':'); if(flTaxi && flTaxi.min!=null){ duTaxiOut.value=Math.floor(flTaxi.min/60)+':'+String(flTaxi.min%60).padStart(2,'0'); } duCompute(); duNote.textContent='Pulled trip time '+flTrip.str+(flTaxi?' and OFP taxi-out '+flTaxi.str:'')+' from Flight Log.'; } else { duNote.textContent='Load a flight plan in Flight Log first to pull its trip time.'; } };
   [duReport,duLimit,duFlt,duTaxiOut,duPost,duTaxiIn].forEach(function(el){ el.addEventListener('input',duCompute); });
   function duCompute(){
     var report=duHM(duReport.value), limit=duHM(duLimit.value), flt=duHM(duFlt.value);
@@ -1760,7 +1766,7 @@
     return out;
   }
   function ingest(text){
-    flTextRaw=text; flWpts=NAVLOG.parseNavlog(text); flTrip=NAVLOG.parseTripTime(text);
+    flTextRaw=text; flWpts=NAVLOG.parseNavlog(text); flTrip=NAVLOG.parseTripTime(text); flTaxi=NAVLOG.parseTaxiOut(text);
     if(!flWpts.length){ flStatus('No waypoints found — try PDF upload, or make sure the nav-log pages are included.',false); flQC.innerHTML='';flSum.innerHTML='';flTable.innerHTML=''; return; }
     flStatus('Found '+flWpts.length+' waypoints'+(flTrip?' · trip time '+flTrip.str:'')+'.',false);
     flRender();
