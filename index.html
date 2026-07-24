@@ -82,7 +82,7 @@
   .logo{width:46px;height:46px;flex:0 0 46px;border-radius:14px;display:grid;place-items:center;
     background:linear-gradient(160deg,#2a5c9e,#12365f);border:1px solid var(--edge);
     box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12)}
-  .brandlogo{margin-left:auto;height:54px;width:auto;flex:0 0 auto;align-self:flex-start;margin-top:2px}
+  .brandlogo{margin-left:auto;height:135px;width:auto;flex:0 0 auto;align-self:center}
   header h1{margin:0;font-size:22px;letter-spacing:.4px;font-weight:800;
     background:linear-gradient(90deg,#eaf2ff,#a9c8ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   header .sub{color:var(--dim);font-size:12.5px;margin-top:1px;letter-spacing:.2px}
@@ -194,9 +194,9 @@
   .gcard.cpr .gv{color:#c9f7dd;font-size:20px}
   .gitem.na .gv{color:var(--faint);font-size:15px}
   /* tabs + flight log */
-  .tabs{display:flex;gap:8px;margin-top:14px}
-  .tab{flex:1;background:rgba(20,38,66,.6);border:1px solid var(--edge);color:var(--dim);border-radius:12px;
-    padding:12px;font-weight:700;font-size:14px;min-height:0}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .tab{flex:1 1 auto;min-width:86px;background:rgba(20,38,66,.6);border:1px solid var(--edge);color:var(--dim);border-radius:12px;
+    padding:12px 10px;font-weight:700;font-size:13.5px;min-height:0}
   .tab.on{background:linear-gradient(180deg,#2a63a8,#17406f);color:#fff;box-shadow:0 6px 18px rgba(31,116,216,.3)}
   .fl-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
   .fl-time input{width:130px;background:rgba(6,14,28,.7);color:#dbe9ff;border:1px solid var(--edge);border-radius:12px;
@@ -307,6 +307,7 @@
     <button class="tab on" data-view="decode">Decode</button>
     <button class="tab" data-view="flightlog">Flight&nbsp;Log</button>
     <button class="tab" data-view="crewrest">Crew&nbsp;Rest</button>
+    <button class="tab" data-view="duty">LABT/LATT</button>
   </div>
 
   <div id="view-decode">
@@ -395,6 +396,32 @@
       <div class="cr-row"><div class="crk">Changeover between breaks (min)</div><input id="crCo" class="crin sm" inputmode="numeric" value="5"></div>
     </div>
     <div id="crOut"></div>
+  </div>
+
+  <div id="view-duty" hidden>
+    <div class="card">
+      <label class="fld">Report time — Zulu (HHMM) · later of scheduled/actual</label>
+      <input id="duReport" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM">
+      <div class="cr-row"><div class="crk">Crew complement</div><span class="seg">
+        <button class="segbtn" data-dcrew="2">2</button>
+        <button class="segbtn" data-dcrew="3">3</button>
+        <button class="segbtn on" data-dcrew="4">4</button></span></div>
+      <div class="cr-row"><div class="crk">Hostile / ULR (4-crew → 22:00)</div><button class="segbtn" id="duHost">Off</button></div>
+      <div class="cr-grid" style="margin-top:12px">
+        <div><div class="crk">Operational limit (HH:MM)</div><input id="duLimit" class="crin" placeholder="20:00" value="20:00"></div>
+        <div><div class="crk">OFP flight time (HH:MM)</div><input id="duFlt" class="crin" placeholder="15:45"></div>
+      </div>
+      <div class="cr-grid" style="margin-top:12px">
+        <div><div class="crk">OFP taxi-out (for LABT)</div><input id="duTaxiOut" class="crin" placeholder="0:20"></div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1"><div class="crk">Post-duty (min)</div><input id="duPost" class="crin sm" style="width:100%" value="30"></div>
+          <div style="flex:1"><div class="crk">Taxi-in (min)</div><input id="duTaxiIn" class="crin sm" style="width:100%" value="10"></div>
+        </div>
+      </div>
+      <button class="minibtn" id="duFromLog" style="margin-top:10px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">↺ Flight time from Flight Log</button>
+      <div id="duNote" class="hint" style="margin-top:8px"></div>
+    </div>
+    <div id="duOut"></div>
   </div>
 
   <div class="foot">
@@ -1211,7 +1238,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v3.0 · 2026-07-24';
+  var BUILD='v3.2 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1522,9 +1549,66 @@
       var v=t.getAttribute('data-view');
       $('#view-decode').hidden=(v!=='decode'); $('#view-flightlog').hidden=(v!=='flightlog');
       $('#view-crewrest').hidden=(v!=='crewrest');
+      $('#view-duty').hidden=(v!=='duty');
       if(v==='crewrest'){ crBuild(); }
+      if(v==='duty'){ duCompute(); }
     };
   });
+
+  /* ---------- LABT / LATT (duty-limit calculator) ---------- */
+  var duReport=$('#duReport'), duLimit=$('#duLimit'), duFlt=$('#duFlt'), duTaxiOut=$('#duTaxiOut'),
+      duPost=$('#duPost'), duTaxiIn=$('#duTaxiIn'), duOut=$('#duOut'), duNote=$('#duNote');
+  var duCrew=4, duHostile=false;
+  function duHM(s){ s=(s||'').trim(); if(!s)return null;
+    if(s.indexOf(':')>-1){ var a=s.split(':'); return (parseInt(a[0],10)||0)*60+(parseInt(a[1],10)||0); }
+    var d=s.replace(/\D/g,''); if(!d)return null;
+    if(d.length<=2) return +d;                       // minutes
+    d=d.padStart(4,'0'); return (+d.slice(0,d.length-2))*60+(+d.slice(-2)); }  // HMM/HHMM
+  function duZ(m){ var d=Math.floor(m/1440), t=((m%1440)+1440)%1440;
+    return String(Math.floor(t/60)).padStart(2,'0')+String(t%60).padStart(2,'0')+'Z'+(d>0?' +'+d+'d':(d<0?' '+d+'d':'')); }
+  function duHMlabel(m){ var s=m<0?'-':''; m=Math.abs(m); return s+Math.floor(m/60)+':'+String(m%60).padStart(2,'0'); }
+  function duSetLimit(){
+    if(duCrew===4){ duLimit.value=duHostile?'22:00':'20:00'; duNote.textContent='4-crew: 20:00 std, 22:00 Hostile/ULR (CBA 12.D.1).'; }
+    else if(duCrew===3){ duLimit.value='17:00'; duNote.textContent='3-crew: 17:00 operational limit (CBA 12.D.1).'; }
+    else { duNote.textContent='2-crew limit varies 11:30–15:00 by report time (CBA 12.D.1) — enter your applicable limit.'; }
+    duCompute();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-dcrew]'),function(b){
+    b.onclick=function(){ document.querySelectorAll('[data-dcrew]').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); duCrew=+b.getAttribute('data-dcrew'); duSetLimit(); };
+  });
+  $('#duHost').onclick=function(){ duHostile=!duHostile; this.textContent=duHostile?'On':'Off'; this.classList.toggle('on',duHostile); if(duCrew===4) duSetLimit(); else duCompute(); };
+  $('#duFromLog').onclick=function(){ if(typeof flTrip!=='undefined' && flTrip && flTrip.str){ duFlt.value=flTrip.str.replace('.',':'); duCompute(); } else { duNote.textContent='Load a flight plan in Flight Log first to pull its trip time.'; } };
+  [duReport,duLimit,duFlt,duTaxiOut,duPost,duTaxiIn].forEach(function(el){ el.addEventListener('input',duCompute); });
+  function duCompute(){
+    var report=duHM(duReport.value), limit=duHM(duLimit.value), flt=duHM(duFlt.value);
+    var taxiOut=duHM(duTaxiOut.value), post=parseInt(duPost.value,10), taxiIn=parseInt(duTaxiIn.value,10);
+    if(isNaN(post))post=30; if(isNaN(taxiIn))taxiIn=10;
+    if(report==null||limit==null||flt==null){ duOut.innerHTML='<div class="hint" style="padding:0 4px">Enter report time, operational limit, and OFP flight time to compute LATT/LABT.</div>'; return; }
+    var maxOff=report+limit, maxIn=maxOff-post, maxTd=maxIn-taxiIn, latt=maxTd-flt;
+    var labt = (taxiOut!=null)? latt-taxiOut : null;
+    var h='<div class="gcard" style="margin-top:14px"><div class="glab">Worked backward from max duty-off</div>'+
+      '<ul class="lines" style="margin-top:4px">'+
+      duStep('Max duty-off',duZ(maxOff),'report '+duZ(report)+' + limit '+duHMlabel(limit))+
+      duStep('− Post-duty '+duHMlabel(post),duZ(maxIn),'max block-in')+
+      duStep('− Taxi-in '+duHMlabel(taxiIn),duZ(maxTd),'max touchdown')+
+      duStep('− OFP flight '+duHMlabel(flt),duZ(latt),'= LATT')+
+      (labt!=null? duStep('− OFP taxi-out '+duHMlabel(taxiOut),duZ(labt),'= LABT') : '')+
+      '</ul></div>';
+    h+='<div class="brk"><div class="btop"><div class="bn" style="flex:0 0 130px">LATT<br><span style="color:var(--faint);font-weight:600">wheels-up by</span></div>'+
+      '<div class="bt" style="color:var(--gold);font-size:26px">'+duZ(latt)+'</div></div></div>';
+    if(labt!=null) h+='<div class="brk"><div class="btop"><div class="bn" style="flex:0 0 130px">LABT<br><span style="color:var(--faint);font-weight:600">block-out by</span></div>'+
+      '<div class="bt" style="color:var(--gold);font-size:26px">'+duZ(labt)+'</div></div></div>';
+    else h+='<div class="hint" style="margin-top:8px">Enter OFP taxi-out to also get LABT (block-out limit).</div>';
+    h+='<button class="minibtn" id="duCopy" style="margin-top:14px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy</button>';
+    duOut.innerHTML=h;
+    $('#duCopy').onclick=function(){
+      var L=['DUTY LIMIT — LATT/LABT','Report '+duZ(report)+' + '+duHMlabel(limit)+' limit ('+duCrew+'-crew'+(duHostile?' Hostile/ULR':'')+')',
+        'Max duty-off '+duZ(maxOff)+'  block-in '+duZ(maxIn)+'  touchdown '+duZ(maxTd),
+        'LATT (wheels-up by): '+duZ(latt)]; if(labt!=null) L.push('LABT (block-out by): '+duZ(labt));
+      if(navigator.clipboard)navigator.clipboard.writeText(L.join('\n')); this.textContent='Copied ✓'; var b=this; setTimeout(function(){b.textContent='Copy';},1300);
+    };
+  }
+  function duStep(label,val,sub){ return '<li><span class="d"></span><span><b style="color:#dbe9ff">'+esc(label)+'</b> → <span style="font-family:var(--mono);color:var(--gold);font-weight:700">'+val+'</span> <span style="color:var(--faint);font-size:12px">'+esc(sub)+'</span></span></li>'; }
 
   /* ---------- Crew Rest (with adjustable per-break sliders) ---------- */
   var crDep=$('#crDep'), crLand=$('#crLand'), crStart=$('#crStart'), crEnd=$('#crEnd'), crCo=$('#crCo'), crOut=$('#crOut');
