@@ -27,6 +27,16 @@
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
     background:radial-gradient(120% 60% at 78% -8%, rgba(120,180,255,.28), transparent 60%),
                radial-gradient(90% 45% at 12% 108%, rgba(30,90,160,.35), transparent 60%);}
+  /* dark (night) theme — darker, dimmer for low-light cockpit use */
+  html[data-theme="dark"] body{background:linear-gradient(180deg,#000205 0%,#04070d 45%,#070b14 100%)}
+  html[data-theme="dark"] body::before{opacity:.22}
+  html[data-theme="dark"]{--glass:rgba(10,16,28,.72);--edge:rgba(90,120,170,.16);--dim:#8ba0bf}
+  /* settings bar */
+  .settings{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .seg{display:flex;align-items:center;gap:6px}
+  .seglab{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.4px}
+  .sbtn{min-height:0;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:700;
+    background:rgba(24,44,76,.7);border:1px solid var(--edge);color:var(--ink)}
   /* sky layer for clouds + plane */
   .sky{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
   .cloud{position:absolute;opacity:.0;animation:drift linear infinite;will-change:transform;filter:blur(.3px)}
@@ -150,18 +160,19 @@
   #cropBox .h[data-c=bl]{left:-15px;bottom:-15px} #cropBox .h[data-c=br]{right:-15px;bottom:-15px}
   .cropBar{display:flex;gap:10px;margin-top:10px}
   .cropBar button{flex:1}
-  /* ETOPS/POR/CPR time cards */
-  .tcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-  .tcard{background:linear-gradient(180deg,rgba(20,40,70,.7),rgba(12,24,44,.7));border:1px solid var(--edge);
-    border-radius:14px;padding:12px 13px}
-  .tcard.key{border-color:rgba(255,209,102,.5);background:linear-gradient(180deg,rgba(58,48,20,.55),rgba(30,26,12,.55))}
-  .tcard .lab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;font-weight:800}
-  .tcard .val{font-size:27px;font-weight:800;color:#fff;font-family:var(--mono);letter-spacing:1px;margin-top:4px}
-  .tcard.key .val{color:var(--gold)}
-  .tcard .sub{font-size:11px;color:var(--faint);margin-top:2px}
-  .tcard.na .val{color:var(--faint);font-size:17px}
-  .tcard.cpr{grid-column:1/-1;background:linear-gradient(180deg,rgba(20,50,40,.5),rgba(12,30,24,.5));border-color:rgba(78,227,154,.35)}
-  .tcard.cpr .val{font-size:19px;letter-spacing:0;color:#c9f7dd}
+  /* ETOPS/POR/CPR grouped time cards — each a full-width row */
+  .gcard{margin-top:12px;padding:12px 14px;border-radius:16px;border:1px solid var(--edge);
+    background:linear-gradient(180deg,rgba(20,40,70,.6),rgba(12,24,44,.6))}
+  .gcard.etops{border-color:rgba(255,209,102,.4)}
+  .gcard.cpr{border-color:rgba(78,227,154,.32);background:linear-gradient(180deg,rgba(20,50,40,.45),rgba(12,30,24,.45))}
+  .glab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:800;margin-bottom:9px}
+  .grow{display:flex;gap:9px;flex-wrap:wrap}
+  .gitem{flex:1 1 0;min-width:96px;background:rgba(8,16,30,.5);border:1px solid var(--edge);border-radius:11px;padding:9px 11px}
+  .gk{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+  .gv{font-size:22px;font-weight:800;font-family:var(--mono);color:#fff;letter-spacing:.5px;margin-top:3px}
+  .gv.key{color:var(--gold)}
+  .gcard.cpr .gv{color:#c9f7dd;font-size:20px}
+  .gitem.na .gv{color:var(--faint);font-size:15px}
   /* tabs + flight log */
   .tabs{display:flex;gap:8px;margin-top:14px}
   .tab{flex:1;background:rgba(20,38,66,.6);border:1px solid var(--edge);color:var(--dim);border-radius:12px;
@@ -192,22 +203,6 @@
 </style>
 </head>
 <body>
-<div class="sky" aria-hidden="true">
-  <div class="stars"></div>
-  <!-- drifting clouds injected by JS -->
-  <div class="plane">
-    <svg width="120" height="46" viewBox="0 0 120 46">
-      <g fill="#dfeaff" opacity="0.95">
-        <path d="M4 24 L78 20 C92 19 108 21 116 24 C108 27 92 29 78 28 L4 24 Z"/>
-        <path d="M40 22 L58 4 L66 4 L54 22 Z"/>
-        <path d="M40 26 L58 42 L66 42 L54 26 Z"/>
-        <path d="M96 22 L104 12 L109 12 L104 22 Z"/>
-      </g>
-      <circle cx="24" cy="24" r="2.4" fill="#7fb2ff"/>
-    </svg>
-  </div>
-</div>
-
 <div class="wrap">
   <header>
     <div class="logo">
@@ -222,6 +217,14 @@
       <div class="statusline"><span class="pulse"></span> Decoder online · works fully offline</div>
     </div>
   </header>
+
+  <div class="settings">
+    <div class="seg"><span class="seglab">Text size</span>
+      <button id="txtDn" class="sbtn" aria-label="Smaller text">A−</button>
+      <button id="txtUp" class="sbtn" aria-label="Larger text">A+</button>
+    </div>
+    <button id="themeBtn" class="sbtn">🌙 Dark</button>
+  </div>
 
   <div class="tabs">
     <button class="tab on" data-view="decode">Decode</button>
@@ -982,29 +985,25 @@
     const w=findWpt(wpts,['POR']); if(w) return {fix:w.wpt, min:w.min};
     return null;
   }
-  // key ETOPS/POR/CPR times as ready-to-display cards
+  // key times grouped: ETOPS (window/entry/exit), POR (window/point), CPR (every 4h)
   function specialTimes(wpts, text, depMin){
-    const cards=[];
     const entry=findWpt(wpts,['E.ENT','EENT','EEP']);
     let entryMin = entry? entry.min : parseEtopsEntryMin(text);
-    if(entryMin!=null){
-      cards.push({label:'ETOPS WX Window Opens', sub:'1 hr before ETOPS entry', eta:fmtZ(depMin+entryMin-60)});
-      cards.push({label:'ETOPS Entry', sub:entry?('at '+entry.wpt):'from flight plan', eta:fmtZ(depMin+entryMin), key:true});
-    } else {
-      cards.push({label:'ETOPS Entry', sub:'E.ENT not found in these pages', na:true});
-    }
     const exit=findWpt(wpts,['E.EXT','EEXT']);
-    if(exit) cards.push({label:'ETOPS Exit', sub:'at '+exit.wpt, eta:fmtZ(depMin+exit.min), key:true});
-    const por=parsePOR(text, wpts);
-    if(por){
-      cards.push({label:'POR WX Window Opens', sub:'2 hr before POR', eta:fmtZ(depMin+por.min-120)});
-      cards.push({label:'POR', sub:'at '+por.fix, eta:fmtZ(depMin+por.min), key:true});
-    } else {
-      cards.push({label:'POR', sub:'no POR found in this plan', na:true});
+    const etops=[];
+    if(entryMin!=null){
+      etops.push({k:'WX Window Opens', v:fmtZ(depMin+entryMin-60)});
+      etops.push({k:'Entry'+(entry?' · '+entry.wpt:''), v:fmtZ(depMin+entryMin), key:true});
     }
+    if(exit) etops.push({k:'Exit · '+exit.wpt, v:fmtZ(depMin+exit.min), key:true});
+    const p=parsePOR(text, wpts);
+    const por = p ? [
+      {k:'WX Window Opens', v:fmtZ(depMin+p.min-120)},
+      {k:'POR · '+p.fix, v:fmtZ(depMin+p.min), key:true}
+    ] : null;
     const arr = wpts.length? wpts[wpts.length-1].min : 0;
-    const cpr=[]; for(let t=240; t<=arr; t+=240) cpr.push(fmtZ(depMin+t));
-    return {cards, cpr};
+    const cpr=[]; for(let t=240; t<=arr; t+=240) cpr.push({k:'+'+(t/60)+'h', v:fmtZ(depMin+t)});
+    return {etops, por, cpr};
   }
 
   const API={parseNavlog,computeETA,fmtZ,totToMin,parseTripTime,qualityCheck,fmtHM,specialTimes};
@@ -1018,7 +1017,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v2.1 · 2026-07-24';
+  var BUILD='v2.2 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1056,22 +1055,25 @@
   // auto-check shortly after load (only does anything when online)
   setTimeout(function(){ checkForUpdate(false); }, 1500);
 
-  /* ---------- drifting clouds ---------- */
+  /* ---------- accessibility: text size + dark mode ---------- */
   (function(){
-    var sky=document.querySelector('.sky');
-    function cloud(scale,top,dur,delay,op){
-      var d=document.createElement('div'); d.className='cloud';
-      d.style.top=top+'%'; d.style.animationDuration=dur+'s'; d.style.animationDelay='-'+delay+'s';
-      d.style.opacity=op;
-      var w=180*scale, h=70*scale;
-      d.innerHTML='<svg width="'+w+'" height="'+h+'" viewBox="0 0 180 70">'+
-        '<g fill="rgba(226,236,255,'+ (0.10+op*0.12) +')">'+
-        '<ellipse cx="60" cy="45" rx="52" ry="22"/><ellipse cx="98" cy="38" rx="40" ry="26"/>'+
-        '<ellipse cx="128" cy="46" rx="42" ry="20"/><ellipse cx="40" cy="50" rx="30" ry="16"/></g></svg>';
-      sky.appendChild(d);
-    }
-    cloud(1.4,10,60,5,.7); cloud(1.0,26,85,30,.5); cloud(1.8,54,48,12,.85);
-    cloud(0.8,68,95,55,.4); cloud(1.2,80,70,40,.6);
+    var root=document.documentElement, wrap=document.querySelector('.wrap');
+    var SCALES=[0.9,1.0,1.1,1.25,1.4], si=1;
+    var THEMES=['','dark'], ti=0;
+    function save(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+    function load(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+    function applyScale(){ if(wrap) wrap.style.zoom=SCALES[si]; save('ad_scale',si); }
+    function applyTheme(){ if(THEMES[ti]) root.setAttribute('data-theme',THEMES[ti]); else root.removeAttribute('data-theme');
+      var tb=document.getElementById('themeBtn'); if(tb) tb.textContent=(THEMES[ti]==='dark')?'☀️ Default':'🌙 Dark';
+      var mt=document.querySelector('meta[name=theme-color]'); if(mt) mt.setAttribute('content', THEMES[ti]==='dark'?'#000205':'#0a1830');
+      save('ad_theme',ti); }
+    var s=load('ad_scale'); if(s!=null && !isNaN(+s)) si=Math.max(0,Math.min(SCALES.length-1,+s));
+    var t=load('ad_theme'); if(t!=null && !isNaN(+t)) ti=Math.max(0,Math.min(THEMES.length-1,+t));
+    var up=document.getElementById('txtUp'), dn=document.getElementById('txtDn'), tb=document.getElementById('themeBtn');
+    if(up) up.onclick=function(){ si=Math.min(SCALES.length-1,si+1); applyScale(); };
+    if(dn) dn.onclick=function(){ si=Math.max(0,si-1); applyScale(); };
+    if(tb) tb.onclick=function(){ ti=(ti+1)%THEMES.length; applyTheme(); };
+    applyScale(); applyTheme();
   })();
 
   function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
@@ -1279,8 +1281,12 @@
     L.push('FLIGHT LOG ETA   '+first.wpt+' -> '+last.wpt);
     L.push('Departure '+dep+'Z'+(flTrip?'   Trip '+flTrip.str:'')+'   Arrival '+last.wpt+' '+last.eta);
     L.push('');
-    if(flSt){ flSt.cards.forEach(function(c){ L.push(c.label+': '+(c.na?'(not found)':c.eta)); });
-      if(flSt.cpr.length) L.push('CPR every 4h: '+flSt.cpr.join('  ')); L.push(''); }
+    if(flSt){
+      (flSt.etops||[]).forEach(function(it){ L.push('ETOPS '+it.k+': '+it.v); });
+      if(flSt.por) flSt.por.forEach(function(it){ L.push('POR '+it.k+': '+it.v); });
+      if(flSt.cpr&&flSt.cpr.length) L.push('CPR every 4h: '+flSt.cpr.map(function(c){return c.v;}).join('  '));
+      L.push('');
+    }
     function col(s,n){ s=(s==null?'':''+s); return (s+'            ').slice(0,n); }
     L.push(col('#',4)+col('WPT',12)+col('NM',5)+col('LEG-T',7)+col('TOT-T',7)+'ETA');
     flEta.forEach(function(w,i){ L.push(col(i,4)+col(w.wpt,12)+col(w.nm,5)+col(w.legt,7)+col(w.tot,7)+w.eta); });
@@ -1351,13 +1357,16 @@
     // ETOPS / POR / CPR cards
     var st=NAVLOG.specialTimes(flWpts, flTextRaw, depMin);
     flEta=eta; flSt=st;
-    var ch='<div class="tcards">';
-    st.cards.forEach(function(c){ ch+='<div class="tcard'+(c.key?' key':'')+(c.na?' na':'')+'">'+
-      '<div class="lab">'+esc(c.label)+'</div><div class="val">'+(c.na?'—':c.eta)+'</div>'+
-      '<div class="sub">'+esc(c.sub||'')+'</div></div>'; });
-    if(st.cpr.length) ch+='<div class="tcard cpr"><div class="lab">CPR — Company Position Report, every 4 hr</div>'+
-      '<div class="val">'+st.cpr.join('&nbsp; · &nbsp;')+'</div><div class="sub">from departure</div></div>';
-    ch+='</div>';
+    function grp(cls,label,items){
+      var h='<div class="gcard '+cls+'"><div class="glab">'+esc(label)+'</div><div class="grow">';
+      items.forEach(function(it){ h+='<div class="gitem'+(it.na?' na':'')+'"><div class="gk">'+esc(it.k)+'</div>'+
+        '<div class="gv'+(it.key?' key':'')+'">'+esc(it.v)+'</div></div>'; });
+      return h+'</div></div>';
+    }
+    var ch='';
+    ch+=grp('etops','ETOPS', st.etops.length? st.etops : [{k:'Entry',v:'not found',na:true}]);
+    ch+=grp('por','POR', st.por? st.por : [{k:'POR',v:'not in plan',na:true}]);
+    if(st.cpr.length) ch+=grp('cpr','CPR — Company Position Report · every 4 hr', st.cpr);
     flCards.innerHTML=ch;
     var qc=NAVLOG.qualityCheck(flWpts, flTrip?flTrip.min:null);
     var h='<div class="qc '+(qc.pass?'pass':'warn')+'"><div class="big">'+(qc.pass?'✅ Quality checks passed':'⚠️ Review needed')+'</div>';
