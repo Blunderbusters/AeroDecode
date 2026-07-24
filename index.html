@@ -400,6 +400,33 @@
       return CONTRACTIONS[c]? tok.replace(c,`${c} (${CONTRACTIONS[c]})`) : tok; }).join('');
   }
 
+  /* ---- OCR robustness: fix letter/digit look-alikes ONLY in positions a
+     code group requires a digit, so a genuine letter is never altered ---- */
+  const OCR_D={O:'0',I:'1',S:'5',B:'8',Z:'2',G:'6',D:'0',Q:'0'};
+  function digify(s){ return s.replace(/[OISBZGDQ]/g,c=>OCR_D[c]); }
+  function ocrClean(tk){
+    let m;
+    // DDHHMMZ timestamp (Z frequently misread as 2, and interior O/I/S/B for digits)
+    if(/^[0-9OISBZGDQ]{6}[Z2]$/.test(tk) && /\d/.test(tk)) return digify(tk.slice(0,6))+'Z';
+    // altimeter  Q1013 / A2992
+    if(/^[QA][0-9OISBZGDQ]{4}$/.test(tk)) return tk[0]+digify(tk.slice(1));
+    // wind  dddffKT / dddffGffMPS
+    if((m=tk.match(/^(VRB|[0-9OISBZGDQ]{3})([0-9OISBZGDQ]{2,3})(G[0-9OISBZGDQ]{2,3})?(KT|MPS|KMH)$/)))
+      return (m[1]==='VRB'?'VRB':digify(m[1]))+digify(m[2])+(m[3]?'G'+digify(m[3].slice(1)):'')+m[4];
+    // temperature / dew point  28/26  or  M05/M07
+    if((m=tk.match(/^(M?)([0-9OISBZGDQ]{2})\/(M?)([0-9OISBZGDQ]{2})$/)))
+      return m[1]+digify(m[2])+'/'+m[3]+digify(m[4]);
+    // cloud height  FEW045 / BKN012CB
+    if((m=tk.match(/^(FEW|SCT|BKN|OVC|VV)([0-9OISBZGDQ]{3})(CB|TCU)?$/)))
+      return m[1]+digify(m[2])+(m[3]||'');
+    // variable wind direction  060V120
+    if((m=tk.match(/^([0-9OISBZGDQ]{3})V([0-9OISBZGDQ]{3})$/)))
+      return digify(m[1])+'V'+digify(m[2]);
+    // metric visibility  2500 / 9999  (needs ≥2 real digits so we never touch a word)
+    if(/^[0-9OISBZGDQ]{4}$/.test(tk) && (tk.match(/\d/g)||[]).length>=2) return digify(tk);
+    return tk;
+  }
+
   /* ---------------------------- weather --------------------------------- */
   function decodeWeather(tok){
     let s=tok, pre='';
@@ -566,10 +593,10 @@
     if(toks[0]==='COR'){L.push('Corrected report');toks=toks.slice(1);}
     for(let i=0;i<toks.length;i++){
       let tk=toks[i]; if(!tk)continue; let m,d;
-      // --- OCR robustness: the letter Z is very often misread as digit 2 on time groups ---
+      // --- OCR robustness: correct common letter/digit look-alikes in digit-only fields ---
       if(!rmk){
-        if(/^\d{6}2$/.test(tk)) tk=tk.slice(0,-1)+'Z';                     // DDHHMMZ issue time
-        else if(/^T[XN]M?\d{2}\/\d{4}2$/.test(tk)) tk=tk.slice(0,-1)+'Z';  // TAF TX../TN.. valid-time
+        tk=ocrClean(tk);
+        if(/^T[XN]M?\d{2}\/\d{4}2$/.test(tk)) tk=tk.slice(0,-1)+'Z';       // TAF TX../TN.. valid-time Z→2
       }
       if(tk==='RMK'){rmk=true;L.push('— Remarks —');continue;}
       if(rmk){ const r=decodeRemarkToken(tk,toks,i); if(r){L.push(r.t); i+=r.skip||0; continue;}
@@ -757,7 +784,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v1.4 · 2026-07-24';
+  var BUILD='v1.5 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- drifting clouds ---------- */
