@@ -300,7 +300,9 @@
   <div class="foot">
     <b>AeroDecode</b> · add to your home screen for one-tap offline access.<br>
     Covers WMO / ICAO / FAA international code tables. A decoding aid — always cross-check official sources.<br>
-    <span id="buildStamp" style="color:var(--faint);font-variant:tabular-nums"></span>
+    <span id="buildStamp" style="color:var(--faint);font-variant:tabular-nums"></span><br>
+    <button id="updBtn" class="minibtn" style="margin-top:8px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Check for updates</button>
+    <div id="updStatus" style="margin-top:6px;font-size:12px;min-height:16px"></div>
   </div>
 </div>
 
@@ -1007,8 +1009,43 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v1.9 · 2026-07-24';
+  var BUILD='v2.0 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
+
+  /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
+  var updStatus=document.getElementById('updStatus');
+  function setUpd(msg){ if(updStatus) updStatus.textContent=msg||''; }
+  async function getLatestBuild(){
+    try{
+      var u=location.pathname+'?ck='+Date.now();
+      var r=await fetch(u,{cache:'no-store'});
+      if(!r.ok) return null;
+      var t=await r.text();
+      var m=t.match(/var BUILD='([^']+)'/);
+      return m? m[1] : null;
+    }catch(e){ return null; }
+  }
+  async function applyUpdate(){
+    try{ if('caches' in window){ var ks=await caches.keys(); await Promise.all(ks.map(function(k){return caches.delete(k);})); } }catch(e){}
+    try{ if('serviceWorker' in navigator){ var rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function(r){return r.unregister();})); } }catch(e){}
+    location.replace(location.pathname+'?v='+Date.now());   // reload fully fresh
+  }
+  async function checkForUpdate(manual){
+    if(manual) setUpd('Checking…');
+    var latest=await getLatestBuild();
+    if(latest===null){ setUpd(manual?'Can’t check — you appear to be offline.':''); return; }
+    if(latest!==BUILD){
+      // loop guard: if we already reloaded once this load and it still differs, don't loop
+      if(!manual && /[?&]v=/.test(location.search)){ setUpd('Update available — tap “Check for updates”.'); return; }
+      setUpd('Updating to '+latest.split(' ')[0]+'…');
+      await applyUpdate();
+    } else {
+      setUpd(manual?('✓ You’re on the latest ('+BUILD.split(' ')[0]+')'):'');
+    }
+  }
+  var ub=document.getElementById('updBtn'); if(ub) ub.onclick=function(){ checkForUpdate(true); };
+  // auto-check shortly after load (only does anything when online)
+  setTimeout(function(){ checkForUpdate(false); }, 1500);
 
   /* ---------- drifting clouds ---------- */
   (function(){
@@ -1355,13 +1392,13 @@
 
   /* ---------- offline app-shell cache when hosted ---------- */
   if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
-    var sw="var V='aerodecode-v3';"+
+    var sw="var V='aerodecode-v4';"+
       "self.addEventListener('install',function(e){self.skipWaiting()});"+
       "self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return k===V?null:caches.delete(k)}))}).then(function(){return self.clients.claim()}))});"+
       "self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;var req=e.request;"+
       "var isDoc=req.mode==='navigate'||req.destination==='document';"+
       // HTML: network-first so updates arrive when online; fall back to cache when offline
-      "if(isDoc){e.respondWith(fetch(req).then(function(resp){caches.open(V).then(function(c){try{c.put(req,resp.clone())}catch(_){}}); return resp;})"+
+      "if(isDoc){e.respondWith(fetch(req,{cache:'no-store'}).then(function(resp){caches.open(V).then(function(c){try{c.put(req,resp.clone())}catch(_){}}); return resp;})"+
       ".catch(function(){return caches.match(req).then(function(r){return r||caches.match('./')})}));return;}"+
       // everything else (OCR engine, static): cache-first for speed + full offline
       "e.respondWith(caches.open(V).then(function(c){return c.match(req).then(function(r){return r||fetch(req).then(function(resp){try{c.put(req,resp.clone())}catch(_){}; return resp;}).catch(function(){return r})})}));});";
