@@ -59,6 +59,40 @@
     padding:8px;font-size:16px;font-family:var(--mono);text-align:center;margin:0 4px}
   .genout{margin-top:12px;font-family:var(--mono);color:var(--gold);font-size:24px;font-weight:800;text-align:center;letter-spacing:2px}
   .genout small{display:block;color:var(--dim);font-size:12px;font-weight:400;letter-spacing:0;margin-top:4px}
+  /* live Zulu clock */
+  .zbox{margin-top:16px;background:linear-gradient(160deg,rgba(20,44,78,.72),rgba(10,24,46,.72));
+    border:1px solid var(--edge);border-radius:16px;padding:12px 16px;display:flex;
+    align-items:center;justify-content:space-between;box-shadow:0 8px 28px rgba(2,8,20,.4)}
+  .zlab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint)}
+  .zclock{font-family:var(--mono);font-size:30px;font-weight:800;letter-spacing:2px;
+    color:#eaf2ff;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(120,180,255,.35)}
+  /* LATT/LABT countdown chips */
+  .cdgrid{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .cdrow{flex:1 1 160px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border-radius:14px;padding:12px 14px;border:1px solid;transition:background .3s,border-color .3s}
+  .cdlab{font-size:12.5px;font-weight:700;line-height:1.25}
+  .cdsub{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.4px}
+  .cdval{font-family:var(--mono);font-size:24px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .cd-green{background:rgba(26,84,54,.42);border-color:rgba(78,227,154,.45)}
+  .cd-green .cdval{color:var(--good)}
+  .cd-yellow{background:rgba(92,72,18,.42);border-color:rgba(255,194,85,.5)}
+  .cd-yellow .cdval{color:var(--warn)}
+  .cd-red{background:rgba(96,26,26,.44);border-color:rgba(255,107,107,.55)}
+  .cd-red .cdval{color:var(--bad)}
+  .cd-red{animation:cdpulse 1.4s ease-in-out infinite}
+  @keyframes cdpulse{0%,100%{box-shadow:0 0 0 rgba(255,107,107,0)}50%{box-shadow:0 0 16px rgba(255,107,107,.35)}}
+  /* LABT/LATT disclaimer + guidance */
+  .dtycard{margin-top:16px;background:rgba(60,32,12,.34);border:1px solid rgba(255,180,90,.30);
+    border-radius:16px;padding:14px 16px}
+  .dtytitle{font-weight:800;color:var(--warn);font-size:14px;letter-spacing:.3px;margin-bottom:6px}
+  .dtybody{margin:8px 0 0;color:var(--dim);font-size:14px;line-height:1.5}
+  .dtydets{margin-top:10px}
+  .dtydets>summary{cursor:pointer;color:var(--ink);font-weight:700;font-size:14px;
+    list-style:none;padding:8px 0}
+  .dtydets>summary::-webkit-details-marker{display:none}
+  .dtydets>summary::before{content:"▸ ";color:var(--warn)}
+  .dtydets[open]>summary::before{content:"▾ "}
+  .dtycard a{color:var(--gold);font-weight:700;text-decoration:none}
   /* settings bar */
   .settings{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
   .seg{display:flex;align-items:center;gap:6px}
@@ -409,6 +443,10 @@
   </div>
 
   <div id="view-duty" hidden>
+    <div class="zbox">
+      <div class="zlab">Current ZULU</div>
+      <div class="zclock" id="duNow">----:--Z</div>
+    </div>
     <div class="card">
       <label class="fld">Report time — Zulu (HHMM) · later of scheduled/actual</label>
       <input id="duReport" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM">
@@ -432,6 +470,18 @@
       <div id="duNote" class="hint" style="margin-top:8px"></div>
     </div>
     <div id="duOut"></div>
+    <div id="duCountdown"></div>
+
+    <div class="dtycard">
+      <div class="dtytitle">⚠ Reference only</div>
+      <p class="dtybody">This estimator is for reference only and should not be used as the final tool to determine legality.</p>
+      <details class="dtydets">
+        <summary>What do I do if I can't complete the flight within duty limits?</summary>
+        <p class="dtybody">Coordinate with company ground personnel to inform them that the crew has run out of duty day to complete the flight. They should begin the process of coordinating with operations in GCC. Follow up with scheduling and inform them that your duty day will exceed the operational limit given the circumstances.</p>
+        <p class="dtybody">If a crew scheduler or a duty pilot attempts to convince you otherwise, kindly inform them that your limits are set by the CBA, which you wish to exercise. Additionally, you can reach out to the union Crew Desk to connect you to a steward.</p>
+        <p class="dtybody">Union Crew Desk: <a href="tel:+17177272750">(717) 727-2750</a> · Option 2, Option 1.</p>
+      </details>
+    </div>
   </div>
 
   <div class="foot">
@@ -1254,7 +1304,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v3.4 · 2026-07-24';
+  var BUILD='v3.6 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1599,9 +1649,10 @@
     var report=duHM(duReport.value), limit=duHM(duLimit.value), flt=duHM(duFlt.value);
     var taxiOut=duHM(duTaxiOut.value), post=parseInt(duPost.value,10), taxiIn=parseInt(duTaxiIn.value,10);
     if(isNaN(post))post=30; if(isNaN(taxiIn))taxiIn=10;
-    if(report==null||limit==null||flt==null){ duOut.innerHTML='<div class="hint" style="padding:0 4px">Enter report time, operational limit, and OFP flight time to compute LATT/LABT.</div>'; return; }
+    if(report==null||limit==null||flt==null){ duOut.innerHTML='<div class="hint" style="padding:0 4px">Enter report time, operational limit, and OFP flight time to compute LATT/LABT.</div>'; duLive.valid=false; duCountdownRender(); return; }
     var maxOff=report+limit, maxIn=maxOff-post, maxTd=maxIn-taxiIn, latt=maxTd-flt;
     var labt = (taxiOut!=null)? latt-taxiOut : null;
+    duLive={valid:true, latt:latt, labt:labt, report:report};
     var h='<div class="gcard" style="margin-top:14px"><div class="glab">Worked backward from max duty-off</div>'+
       '<ul class="lines" style="margin-top:4px">'+
       duStep('Max duty-off',duZ(maxOff),'report '+duZ(report)+' + limit '+duHMlabel(limit))+
@@ -1617,6 +1668,7 @@
     else h+='<div class="hint" style="margin-top:8px">Enter OFP taxi-out to also get LABT (block-out limit).</div>';
     h+='<button class="minibtn" id="duCopy" style="margin-top:14px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy</button>';
     duOut.innerHTML=h;
+    duCountdownRender();
     $('#duCopy').onclick=function(){
       var L=['DUTY LIMIT — LATT/LABT','Report '+duZ(report)+' + '+duHMlabel(limit)+' limit ('+duCrew+'-crew'+(duHostile?' Hostile/ULR':'')+')',
         'Max duty-off '+duZ(maxOff)+'  block-in '+duZ(maxIn)+'  touchdown '+duZ(maxTd),
@@ -1625,6 +1677,42 @@
     };
   }
   function duStep(label,val,sub){ return '<li><span class="d"></span><span><b style="color:#dbe9ff">'+esc(label)+'</b> → <span style="font-family:var(--mono);color:var(--gold);font-weight:700">'+val+'</span> <span style="color:var(--faint);font-size:12px">'+esc(sub)+'</span></span></li>'; }
+
+  /* ---- live Zulu clock + LATT/LABT countdown ---- */
+  var duLive={valid:false};
+  function zNow(){ var d=new Date();
+    return {sec:d.getUTCHours()*3600+d.getUTCMinutes()*60+d.getUTCSeconds(),
+            hh:String(d.getUTCHours()).padStart(2,'0'),
+            mm:String(d.getUTCMinutes()).padStart(2,'0'),
+            ss:String(d.getUTCSeconds()).padStart(2,'0')}; }
+  // seconds until an absolute target (minutes from report-day midnight), anchored to now>=report
+  function duRemSec(targetMin,reportMin){
+    var now=zNow().sec, tgt=targetMin*60, r=reportMin*60;
+    while(now<r) now+=86400;                       // in-duty: now is at/after report time
+    return tgt-now;
+  }
+  function duFmtHMS(sec){ var neg=sec<0; sec=Math.abs(sec);
+    var h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
+    return (neg?'−':'')+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+  function duCol(sec){ if(sec<0) return 'red'; var m=sec/60; return m>60?'green':(m>15?'yellow':'red'); }
+  function duTickClock(){ var n=zNow(); var el=$('#duNow'); if(el) el.textContent=n.hh+':'+n.mm+':'+n.ss+'Z'; }
+  function duCountdownRender(){
+    var box=$('#duCountdown'); if(!box) return;
+    if(!duLive.valid){ box.innerHTML=''; return; }
+    var rows='';
+    function row(label,tgt){
+      if(tgt==null) return '';
+      var s=duRemSec(tgt,duLive.report), col=duCol(s);
+      var word=s<0?'EXCEEDED':'remaining';
+      return '<div class="cdrow cd-'+col+'"><div class="cdlab">'+label+'<br><span class="cdsub">'+word+'</span></div>'+
+             '<div class="cdval">'+duFmtHMS(s)+'</div></div>';
+    }
+    rows+=row('LATT · wheels-up', duLive.latt);
+    rows+=row('LABT · block-out', duLive.labt);
+    box.innerHTML='<div class="cdgrid">'+rows+'</div>';
+  }
+  setInterval(function(){ duTickClock(); if(duLive.valid) duCountdownRender(); },1000);
+  duTickClock();
 
   /* ---------- Crew Rest (with adjustable per-break sliders) ---------- */
   var crDep=$('#crDep'), crLand=$('#crLand'), crStart=$('#crStart'), crEnd=$('#crEnd'), crCo=$('#crCo'), crOut=$('#crOut');
