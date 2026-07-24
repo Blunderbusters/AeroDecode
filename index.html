@@ -180,12 +180,12 @@
   .fl-summary{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:14px;
     background:linear-gradient(180deg,rgba(42,99,168,.4),rgba(23,64,111,.4));border:1px solid var(--edge)}
   .fl-summary b{color:#fff;font-size:16px}
-  table.fl{width:100%;border-collapse:collapse;margin-top:12px;font-size:15px}
-  table.fl th{text-align:left;color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-    padding:8px 6px;border-bottom:1px solid var(--edge)}
-  table.fl td{padding:9px 6px;border-bottom:1px solid rgba(120,160,220,.12);font-family:var(--mono)}
-  table.fl td.wpt{color:#dbe9ff;font-weight:600} table.fl td.eta{color:var(--gold);font-weight:700;font-size:16px}
-  table.fl td.n{color:var(--faint);width:34px} table.fl tr:last-child td{border-bottom:0}
+  table.fl{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  table.fl th{text-align:left;color:var(--faint);font-size:10px;text-transform:uppercase;letter-spacing:.3px;
+    padding:7px 3px;border-bottom:1px solid var(--edge)}
+  table.fl td{padding:7px 3px;border-bottom:1px solid rgba(120,160,220,.12);font-family:var(--mono);white-space:nowrap}
+  table.fl td.wpt{color:#dbe9ff;font-weight:600} table.fl td.eta{color:var(--gold);font-weight:700;font-size:14.5px}
+  table.fl td.n{color:var(--faint);width:26px} table.fl tr:last-child td{border-bottom:0}
   table.fl tr.dest td{background:rgba(78,163,255,.1)}
   .foot{color:var(--faint);font-size:12px;text-align:center;margin-top:26px;line-height:1.7}
   .foot b{color:var(--dim)}
@@ -922,7 +922,16 @@
         for(let k=i-1;k>=Math.max(0,i-4);k--){ const n=nameFromLine(lines[k]); if(n && !LAT.test(lines[k]) && !LON.test(lines[k])){ name=n; break; } }
       }
       if(!name) name='(fix)';
-      wpts.push({wpt:name,tot,min});
+      // pull NM (leg distance) + LEG-T (leg time) from the latitude line just above
+      let nm=null, legt=null, latLine=null;
+      for(let k=i-1;k>=Math.max(0,i-3);k--){ if(LAT.test(lines[k])){ latLine=lines[k]; break; } }
+      if(latLine){
+        const lm=latLine.match(/[NS]\d{2}\s+\d{1,3}\.\d\s+(\d{2,3})\s+(\d{2,3})/);
+        if(lm) nm=lm[2];
+        const lt=latLine.match(TIME);
+        if(lt) legt=lt[1].padStart(2,'0')+'.'+lt[2];
+      }
+      wpts.push({wpt:name,tot,min,nm,legt});
       lastTot=min; started=true;
     }
     return wpts;
@@ -1009,7 +1018,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v2.0 · 2026-07-24';
+  var BUILD='v2.1 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1272,8 +1281,9 @@
     L.push('');
     if(flSt){ flSt.cards.forEach(function(c){ L.push(c.label+': '+(c.na?'(not found)':c.eta)); });
       if(flSt.cpr.length) L.push('CPR every 4h: '+flSt.cpr.join('  ')); L.push(''); }
-    L.push('#   WPT          CUME    ETA');
-    flEta.forEach(function(w,i){ L.push((''+i).padStart(2,' ')+'  '+(w.wpt+'           ').slice(0,12)+' '+w.tot+'   '+w.eta); });
+    function col(s,n){ s=(s==null?'':''+s); return (s+'            ').slice(0,n); }
+    L.push(col('#',4)+col('WPT',12)+col('NM',5)+col('LEG-T',7)+col('TOT-T',7)+'ETA');
+    flEta.forEach(function(w,i){ L.push(col(i,4)+col(w.wpt,12)+col(w.nm,5)+col(w.legt,7)+col(w.tot,7)+w.eta); });
     return L.join('\n');
   }
   function flStatus(m,busy){ flStatusEl.textContent=m; flStatusEl.className='pill'+(busy?' busy':''); flSpin.style.display=busy?'inline-block':'none'; }
@@ -1357,8 +1367,8 @@
     flQC.innerHTML=h;
     flSum.innerHTML='<div class="fl-summary">Departure <b>'+dep+'Z</b> · '+eta.length+' waypoints · Arrival <b>'+esc(last.wpt)+' '+last.eta+'</b>'+(flTrip?' · trip '+flTrip.str:'')+' <button class="minibtn" id="flCopyBtn" style="margin-left:8px">Copy for kneeboard</button></div>';
     var cb=$('#flCopyBtn'); if(cb) cb.onclick=function(){ var t=flCopyText(); if(navigator.clipboard)navigator.clipboard.writeText(t); cb.textContent='Copied ✓'; setTimeout(function(){cb.textContent='Copy for kneeboard';},1300); };
-    var t='<table class="fl"><thead><tr><th class="n">#</th><th>Waypoint</th><th>Cume</th><th>ETA&nbsp;(Z)</th></tr></thead><tbody>';
-    eta.forEach(function(w,i){ t+='<tr class="'+(i===eta.length-1?'dest':'')+'"><td class="n">'+i+'</td><td class="wpt">'+esc(w.wpt)+'</td><td>'+w.tot+'</td><td class="eta">'+w.eta+'</td></tr>'; });
+    var t='<table class="fl"><thead><tr><th class="n">#</th><th>Waypoint</th><th>NM</th><th>Leg-T</th><th>Tot-T</th><th>ETA</th></tr></thead><tbody>';
+    eta.forEach(function(w,i){ t+='<tr class="'+(i===eta.length-1?'dest':'')+'"><td class="n">'+i+'</td><td class="wpt">'+esc(w.wpt)+'</td><td>'+(w.nm||'')+'</td><td>'+(w.legt||'')+'</td><td>'+w.tot+'</td><td class="eta">'+w.eta+'</td></tr>'; });
     flTable.innerHTML=t+'</tbody></table>';
   }
   flDep.addEventListener('input',flRender);
