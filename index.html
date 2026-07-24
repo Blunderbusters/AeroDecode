@@ -133,6 +133,23 @@
   .ref td{padding:6px 8px;border-bottom:1px solid rgba(120,160,220,.12);vertical-align:top}
   .ref td:first-child{color:#bcd6ff;font-family:var(--mono);white-space:nowrap;width:36%}
 
+  /* crop overlay */
+  .cropModal{position:fixed;inset:0;z-index:50;background:rgba(4,10,22,.95);backdrop-filter:blur(6px);
+    display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px)}
+  .cropModal.on{display:flex}
+  .cropHead{color:var(--ink);font-weight:700;text-align:center;font-size:15px}
+  .cropHint{color:var(--dim);font-size:12.5px;text-align:center;margin:3px 0 8px}
+  .cropStage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .cropWrap{position:relative;display:inline-block;max-width:100%;max-height:100%;line-height:0}
+  .cropWrap img{display:block;max-width:100%;max-height:72vh;touch-action:none;-webkit-user-drag:none;user-select:none}
+  #cropBox{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(4,10,22,.6);
+    touch-action:none;cursor:move}
+  #cropBox .h{position:absolute;width:30px;height:30px;background:rgba(78,163,255,.3);border:2px solid #cfe4ff;
+    border-radius:50%;touch-action:none}
+  #cropBox .h[data-c=tl]{left:-15px;top:-15px} #cropBox .h[data-c=tr]{right:-15px;top:-15px}
+  #cropBox .h[data-c=bl]{left:-15px;bottom:-15px} #cropBox .h[data-c=br]{right:-15px;bottom:-15px}
+  .cropBar{display:flex;gap:10px;margin-top:10px}
+  .cropBar button{flex:1}
   .foot{color:var(--faint);font-size:12px;text-align:center;margin-top:26px;line-height:1.7}
   .foot b{color:var(--dim)}
 </style>
@@ -210,6 +227,25 @@
     <b>AeroDecode</b> · add to your home screen for one-tap offline access.<br>
     Covers WMO / ICAO / FAA international code tables. A decoding aid — always cross-check official sources.<br>
     <span id="buildStamp" style="color:var(--faint);font-variant:tabular-nums"></span>
+  </div>
+</div>
+
+<div class="cropModal" id="cropModal">
+  <div class="cropHead">Select the text to read</div>
+  <div class="cropHint">Drag the box, or its corners, around just the report(s) you want.</div>
+  <div class="cropStage">
+    <div class="cropWrap" id="cropWrap">
+      <img id="cropImg" alt="">
+      <div id="cropBox">
+        <span class="h" data-c="tl"></span><span class="h" data-c="tr"></span>
+        <span class="h" data-c="bl"></span><span class="h" data-c="br"></span>
+      </div>
+    </div>
+  </div>
+  <div class="cropBar">
+    <button class="ghost" id="cropCancel">Cancel</button>
+    <button class="ghost" id="cropAll">Whole image</button>
+    <button class="primary" id="cropGo">Read selection</button>
   </div>
 </div>
 
@@ -551,7 +587,15 @@
       if((d=decodeWind(tk))){L.push(d);continue;}
       if((m=tk.match(/^(\d{3})V(\d{3})$/))){L.push(`wind direction variable ${+m[1]}°–${+m[2]}°`);continue;}
       if((m=tk.match(/^WS(\d{3})\/(\d{3})(\d{2,3})(KT|MPS)$/))){L.push(`wind shear at ${+m[1]*100} ft: ${+m[2]}° at ${+m[3]} ${m[4]==='KT'?'kt':'m/s'}`);continue;}
-      if(/^WS(\s|$)/.test(tk)||tk==='WS'){L.push('wind shear reported (see following)');continue;}
+      if(tk==='WS'){
+        let j=i+1, rwys=[];
+        if(toks[j]==='ALL'&&toks[j+1]==='RWY'){L.push('wind shear on all runways');i=j+1;continue;}
+        if((toks[j]==='LDG'||toks[j]==='TKOF')&&/^(RWY)?\d{2}[LRC]?$/.test(toks[j+1]||'')){
+          L.push('wind shear on '+(toks[j]==='LDG'?'landing':'take-off')+' runway '+toks[j+1].replace('RWY',''));i=j+1;continue;}
+        while(toks[j]&&/^R\d{2}[LRC]?$/.test(toks[j])){rwys.push(toks[j].slice(1));j++;}
+        if(rwys.length){L.push('wind shear on runway'+(rwys.length>1?'s':'')+' '+rwys.join(', '));i=j-1;continue;}
+        L.push('wind shear reported');continue;
+      }
       if((d=decodeRunwayState(tk))){L.push(d);continue;}
       if((d=decodeRVR(tk))){L.push(d);continue;}
       d=decodeVis(tk,toks[i+1]); if(d){ if(typeof d==='object'){L.push(d.text); if(d.consumedNext)i++;} else L.push(d); continue; }
@@ -664,8 +708,11 @@
   /* -------- split a mixed briefing into individual reports -------------- */
   function splitReports(text){
     const lines=String(text).replace(/\r/g,'').split('\n');
-    // section headers / obvious non-report labels to drop
-    const NOISE=/^(DESTINATION|DEPARTURE|EN\s?ROUTE|ENROUTE|ALTERNATE|ALTN|ORIGIN|DEST|TAKEOFF ALTERNATE|NOTAMS?|WEATHER|BRIEFING|FORECAST|WINDS ?ALOFT|SIGWX|PROG)\s*:?\s*$/i;
+    // section headers / obvious non-report labels to drop (single OR multi-word, e.g. "DESTINATION ALTERNATE")
+    const HDR=new Set(['DESTINATION','ALTERNATE','DEPARTURE','EN','ROUTE','ENROUTE','ORIGIN','TAKEOFF',
+      'DEST','ALTN','WEATHER','NOTAM','NOTAMS','BRIEFING','FORECAST','SIGWX','PROG','WINDS','ALOFT','ARRIVAL']);
+    function isNoise(s){ s=s.trim().toUpperCase().replace(/:$/,''); if(!s)return true;
+      const w=s.split(/\s+/); return w.every(function(x){return HDR.has(x);}); }
     function isStart(raw){
       let t=raw.trim().replace(/^[-*•>»]\s*/,'').toUpperCase();
       if(/^(METAR|SPECI|TAF|SIGMET|AIRMET)\b/.test(t))return true;      // keyword reports
@@ -678,7 +725,7 @@
     const segs=[]; let cur=null;
     for(const raw of lines){
       if(!raw.trim())continue;
-      if(NOISE.test(raw.trim()))continue;
+      if(isNoise(raw))continue;
       const line=raw.trim().replace(/^[-*•>»]\s*/,'');
       if(isStart(raw)){ if(cur)segs.push(cur.join(' ')); cur=[line]; }
       else if(cur){ cur.push(line); }        // continuation / wrapped line
@@ -705,7 +752,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v1.2 · 2026-07-24';
+  var BUILD='v1.3 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- drifting clouds ---------- */
@@ -840,17 +887,84 @@
   }
   $('#prepBtn').onclick=function(){ensureTess()};
   $('#camBtn').onclick=function(){$('#cam').click()};
-  $('#cam').onchange=async function(e){
-    var f=e.target.files&&e.target.files[0]; if(!f)return;
+
+  /* ----- crop overlay ----- */
+  var cropModal=$('#cropModal'), cropImg=$('#cropImg'), cropBox=$('#cropBox');
+  var pendingFile=null, pendingURL=null, box={x:0,y:0,w:0,h:0}, drag=null;
+
+  function setBox(x,y,w,h){
+    var iw=cropImg.clientWidth, ih=cropImg.clientHeight;
+    w=Math.max(36,Math.min(w,iw)); h=Math.max(36,Math.min(h,ih));
+    x=Math.max(0,Math.min(x,iw-w)); y=Math.max(0,Math.min(y,ih-h));
+    box={x:x,y:y,w:w,h:h};
+    cropBox.style.left=x+'px';cropBox.style.top=y+'px';cropBox.style.width=w+'px';cropBox.style.height=h+'px';
+  }
+  function openCrop(file){
+    pendingFile=file;
+    if(pendingURL)URL.revokeObjectURL(pendingURL);
+    pendingURL=URL.createObjectURL(file);
+    cropImg.onload=function(){
+      cropModal.classList.add('on');
+      var w=cropImg.clientWidth, h=cropImg.clientHeight;
+      setBox(w*0.08, h*0.10, w*0.84, h*0.6);
+    };
+    cropImg.src=pendingURL;
+  }
+  function closeCrop(){ cropModal.classList.remove('on'); }
+
+  cropBox.addEventListener('pointerdown',function(e){
+    if(e.target.getAttribute('data-c'))return;
+    e.preventDefault();
+    drag={mode:'move',sx:e.clientX,sy:e.clientY,bx:box.x,by:box.y};
+    try{cropBox.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  Array.prototype.forEach.call(cropBox.querySelectorAll('.h'),function(hd){
+    hd.addEventListener('pointerdown',function(e){
+      e.preventDefault();e.stopPropagation();
+      drag={mode:'resize',corner:hd.getAttribute('data-c'),sx:e.clientX,sy:e.clientY,bx:box.x,by:box.y,bw:box.w,bh:box.h};
+      try{hd.setPointerCapture(e.pointerId);}catch(_){}
+    });
+  });
+  document.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    var dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+    if(drag.mode==='move'){ setBox(drag.bx+dx,drag.by+dy,box.w,box.h); return; }
+    var x=drag.bx,y=drag.by,w=drag.bw,h=drag.bh,c=drag.corner;
+    if(c.indexOf('l')>-1){x=drag.bx+dx;w=drag.bw-dx;}
+    if(c.indexOf('r')>-1){w=drag.bw+dx;}
+    if(c.indexOf('t')>-1){y=drag.by+dy;h=drag.bh-dy;}
+    if(c.indexOf('b')>-1){h=drag.bh+dy;}
+    setBox(x,y,w,h);
+  });
+  document.addEventListener('pointerup',function(){drag=null;});
+
+  async function runOCR(src){
     if(!await ensureTess())return;
-    setPill('Camera OCR: reading image…','busy',true);
+    setPill('Camera OCR: reading…','busy',true);
     try{
-      var url=URL.createObjectURL(f);
-      var res=await worker.recognize(url); URL.revokeObjectURL(url);
+      var url=(src instanceof Blob)?URL.createObjectURL(src):src;
+      var res=await worker.recognize(url);
+      if(src instanceof Blob)URL.revokeObjectURL(url);
       input.value=(res.data.text||'').replace(/[ \t]+/g,' ').replace(/\n{2,}/g,'\n').trim();
       setPill('Camera OCR: done — review & Decode','ready',false); render();
-    }catch(err){ setPill('Camera OCR: failed, try a clearer photo','',false); }
-    e.target.value='';
+    }catch(e){ setPill('Camera OCR: failed — try a clearer or tighter crop','',false); }
+  }
+  function readSelection(){
+    closeCrop();
+    var scale=cropImg.naturalWidth/cropImg.clientWidth;
+    var nx=box.x*scale, ny=box.y*scale, nw=box.w*scale, nh=box.h*scale;
+    var f=Math.min(3,Math.max(1,1600/nw));
+    var cv=document.createElement('canvas'); cv.width=Math.round(nw*f); cv.height=Math.round(nh*f);
+    cv.getContext('2d').drawImage(cropImg,nx,ny,nw,nh,0,0,cv.width,cv.height);
+    cv.toBlob(function(b){ runOCR(b||pendingFile); },'image/png');
+  }
+  $('#cropGo').onclick=readSelection;
+  $('#cropAll').onclick=function(){ closeCrop(); runOCR(pendingFile); };
+  $('#cropCancel').onclick=function(){ closeCrop(); setPill('Camera OCR: ready','ready',false); };
+
+  $('#cam').onchange=function(e){
+    var f=e.target.files&&e.target.files[0]; e.target.value='';
+    if(f) openCrop(f);
   };
 
   /* ---------- cheat sheet ---------- */
