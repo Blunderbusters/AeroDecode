@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1830">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>AeroDecode — Offline Aviation Weather Decoder</title>
+<style>
+  :root{
+    --ink:#eaf2ff; --dim:#9fb3d1; --faint:#6c81a6;
+    --glass:rgba(15,28,52,.62); --glass2:rgba(12,22,42,.72); --edge:rgba(120,160,220,.22);
+    --accent:#4ea3ff; --accent2:#1f74d8; --gold:#ffd166; --good:#4ee39a; --warn:#ffc255; --bad:#ff6b6b;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:17px;line-height:1.5;min-height:100%;position:relative;overflow-x:hidden;
+    background:linear-gradient(180deg,#050c1c 0%,#0a1830 22%,#123056 55%,#1b4a7e 82%,#2c6aa6 100%);
+    background-attachment:fixed;
+  }
+  /* atmospheric glow */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(120% 60% at 78% -8%, rgba(120,180,255,.28), transparent 60%),
+               radial-gradient(90% 45% at 12% 108%, rgba(30,90,160,.35), transparent 60%);}
+  /* sky layer for clouds + plane */
+  .sky{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .cloud{position:absolute;opacity:.0;animation:drift linear infinite;will-change:transform;filter:blur(.3px)}
+  .cloud svg{display:block}
+  @keyframes drift{
+    0%{transform:translateX(-30vw)}
+    100%{transform:translateX(130vw)}
+  }
+  .plane{position:absolute;top:14%;left:-15%;animation:fly 26s linear infinite;opacity:.9;will-change:transform}
+  @keyframes fly{
+    0%{transform:translate(-15vw,6vh) rotate(-4deg)}
+    50%{transform:translate(55vw,-2vh) rotate(-7deg)}
+    100%{transform:translate(130vw,4vh) rotate(-4deg)}
+  }
+  .stars{position:absolute;inset:0;background-image:
+    radial-gradient(1px 1px at 20% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 66% 8%, #cfe0ff, transparent),
+    radial-gradient(1px 1px at 82% 26%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 30%, #bcd, transparent);
+    opacity:.5}
+
+  .wrap{position:relative;z-index:2;max-width:860px;margin:0 auto;padding:0 16px 48px}
+  header{padding:calc(env(safe-area-inset-top) + 20px) 4px 10px;display:flex;align-items:center;gap:14px}
+  .logo{width:46px;height:46px;flex:0 0 46px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(160deg,#2a5c9e,#12365f);border:1px solid var(--edge);
+    box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12)}
+  header h1{margin:0;font-size:22px;letter-spacing:.4px;font-weight:800;
+    background:linear-gradient(90deg,#eaf2ff,#a9c8ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  header .sub{color:var(--dim);font-size:12.5px;margin-top:1px;letter-spacing:.2px}
+  .statusline{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--good);margin-top:3px}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good);animation:pl 2.2s ease-in-out infinite}
+  @keyframes pl{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .card{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--edge);border-radius:20px;box-shadow:0 12px 40px rgba(2,8,20,.45);
+    padding:16px;margin-top:16px}
+  label.fld{display:block;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin:0 2px 8px}
+  textarea{width:100%;min-height:118px;background:rgba(6,14,28,.7);color:#dbe9ff;border:1px solid var(--edge);
+    border-radius:14px;padding:14px;font-size:16px;font-family:var(--mono);resize:vertical;letter-spacing:.3px}
+  textarea::placeholder{color:#5c73a0}
+  textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(78,163,255,.18)}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;-webkit-overflow-scrolling:touch}
+  .chip{flex:0 0 auto;background:rgba(20,38,66,.7);border:1px solid var(--edge);color:var(--dim);
+    padding:7px 12px;border-radius:999px;font-size:12px;font-family:var(--mono);white-space:nowrap;cursor:pointer}
+  .chip:active{transform:scale(.97)}
+
+  .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  button{appearance:none;border:0;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:700;color:#fff;
+    background:rgba(24,44,76,.8);border:1px solid var(--edge);min-height:54px;cursor:pointer;transition:transform .05s}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.5}
+  button.primary{flex:1;background:linear-gradient(180deg,#59abff,#1f74d8);border-color:transparent;
+    box-shadow:0 8px 22px rgba(31,116,216,.4)}
+  button.icon{flex:0 0 auto;display:flex;align-items:center;gap:7px}
+  .hint{color:var(--faint);font-size:12.5px;margin-top:10px;line-height:1.55}
+
+  #cam{display:none}
+  .ocr{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .ocr .pill{font-size:11.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--edge);color:var(--dim);background:rgba(10,20,38,.6)}
+  .ocr .pill.ready{color:var(--good);border-color:rgba(78,227,154,.4)}
+  .ocr .pill.busy{color:var(--warn)}
+  .spin{width:15px;height:15px;border:2px solid rgba(120,150,200,.3);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;display:none}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .minibtn{font-size:12.5px;min-height:0;padding:7px 12px;border-radius:10px;font-weight:600}
+
+  /* result */
+  .res .head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .badge{font-size:12px;font-weight:800;letter-spacing:.8px;padding:6px 12px;border-radius:999px;
+    background:linear-gradient(180deg,#2a63a8,#17406f);border:1px solid var(--edge);color:#cfe4ff}
+  .raw{font-family:var(--mono);font-size:13px;color:var(--dim);background:rgba(6,14,28,.6);border:1px solid var(--edge);
+    border-radius:12px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
+  ul.lines{list-style:none;margin:0;padding:0}
+  ul.lines li{display:flex;gap:11px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid rgba(120,160,220,.12);font-size:16px}
+  ul.lines li:last-child{border-bottom:0}
+  ul.lines li .d{width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:8px;flex:0 0 7px;box-shadow:0 0 8px rgba(78,163,255,.6)}
+  ul.lines li.section{color:var(--gold);font-weight:800;font-size:13px;letter-spacing:.6px;text-transform:uppercase;border-bottom:0;padding-bottom:2px}
+  ul.lines li.section .d{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+  ul.lines li.unk{color:var(--warn)} ul.lines li.unk .d{background:var(--warn);box-shadow:none}
+  ul.lines li.blank{padding:2px}
+
+  /* windsock widget */
+  .sock{display:flex;gap:16px;align-items:center;margin-top:2px}
+  .sock .gauge{position:relative;width:118px;height:118px;flex:0 0 118px}
+  .sock .read{font-size:15px}
+  .sock .read b{font-size:26px;font-weight:800;color:#fff;display:block;line-height:1.1}
+  .sock .read span{color:var(--dim);font-size:13px}
+  .compass{position:absolute;inset:0}
+  .rose text{fill:var(--faint);font-size:11px;font-weight:700;font-family:var(--mono)}
+  .sockGroup{transition:transform .8s cubic-bezier(.2,.8,.2,1);transform-origin:60px 60px}
+  .sockBody path{transition:opacity .6s}
+  .countbar{display:flex;align-items:center;gap:9px;margin-top:16px;padding:11px 15px;border-radius:14px;
+    background:linear-gradient(180deg,rgba(42,99,168,.5),rgba(23,64,111,.5));border:1px solid var(--edge);
+    color:#dce9ff;font-weight:700;font-size:14px;letter-spacing:.3px}
+
+  details.ref{margin-top:16px}
+  details.ref summary{cursor:pointer;list-style:none;font-weight:700;padding:4px 2px;display:flex;align-items:center;gap:8px}
+  details.ref summary::-webkit-details-marker{display:none}
+  details.ref summary .tw{color:var(--accent);transition:transform .2s}
+  details.ref[open] summary .tw{transform:rotate(90deg)}
+  .ref h4{margin:16px 0 6px;color:var(--accent);font-size:13.5px;letter-spacing:.3px}
+  .ref h4 small{color:var(--faint);font-weight:500;letter-spacing:0}
+  .ref table{width:100%;border-collapse:collapse;font-size:14px}
+  .ref td{padding:6px 8px;border-bottom:1px solid rgba(120,160,220,.12);vertical-align:top}
+  .ref td:first-child{color:#bcd6ff;font-family:var(--mono);white-space:nowrap;width:36%}
+
+  .foot{color:var(--faint);font-size:12px;text-align:center;margin-top:26px;line-height:1.7}
+  .foot b{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true">
+  <div class="stars"></div>
+  <!-- drifting clouds injected by JS -->
+  <div class="plane">
+    <svg width="120" height="46" viewBox="0 0 120 46">
+      <g fill="#dfeaff" opacity="0.95">
+        <path d="M4 24 L78 20 C92 19 108 21 116 24 C108 27 92 29 78 28 L4 24 Z"/>
+        <path d="M40 22 L58 4 L66 4 L54 22 Z"/>
+        <path d="M40 26 L58 42 L66 42 L54 26 Z"/>
+        <path d="M96 22 L104 12 L109 12 L104 22 Z"/>
+      </g>
+      <circle cx="24" cy="24" r="2.4" fill="#7fb2ff"/>
+    </svg>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path d="M2 13.5 L21 11 M21 11 L21 11 M2 13.5 L21 16 M9 11.6 L15 3 M9 15.4 L15 21 M18 11.9 L21.5 7 M18 15.1 L21.5 17.5"
+          stroke="#dfeaff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1>AeroDecode</h1>
+      <div class="sub">METAR · TAF · SIGMET · AIRMET · PIREP · NOTAM — worldwide</div>
+      <div class="statusline"><span class="pulse"></span> Decoder online · works fully offline</div>
+    </div>
+  </header>
+
+  <div class="card">
+    <label class="fld" for="input">Coded report</label>
+    <textarea id="input" spellcheck="false" autocapitalize="characters" autocomplete="off"
+      placeholder="Paste, type, or photograph a coded report…&#10;&#10;e.g.  ZBAA 241600Z 09004MPS 9000 NSC 26/14 Q1008 NOSIG"></textarea>
+
+    <div class="chips" id="examples"></div>
+
+    <div class="row">
+      <button class="primary" id="decodeBtn">Decode</button>
+      <button class="icon" id="camBtn" title="Photograph a report">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 8h3l1.5-2h7L18 8h2a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2v-8a2 2 0 012-2z" stroke="#dfeaff" stroke-width="1.6"/><circle cx="12" cy="13" r="3.4" stroke="#dfeaff" stroke-width="1.6"/></svg>
+        Photo
+      </button>
+      <button class="icon" id="clearBtn">Clear</button>
+    </div>
+    <input type="file" id="cam" accept="image/*" capture="environment">
+
+    <div class="ocr">
+      <span class="spin" id="spin"></span>
+      <span class="pill" id="ocrPill">Camera OCR: not prepared</span>
+      <button class="minibtn" id="prepBtn">Prepare for offline</button>
+    </div>
+    <div class="hint">
+      <b style="color:var(--dim)">Decoding is 100% offline</b> — no signal ever needed.
+      Camera reading (OCR) is a large engine that must download <b style="color:var(--dim)">once while online</b>:
+      connect to wifi, tap <b style="color:var(--dim)">Prepare for offline</b>, and after that the camera works with no internet.
+      <br><br>Paste or photograph a <b style="color:var(--dim)">whole briefing package</b> — the app splits it into separate reports and ignores unrelated text.
+    </div>
+  </div>
+
+  <div id="output"></div>
+
+  <details class="ref card">
+    <summary><span class="tw">▶</span> Quick reference — code cheat sheet</summary>
+    <div id="refBody"></div>
+  </details>
+
+  <div class="foot">
+    <b>AeroDecode</b> · add to your home screen for one-tap offline access.<br>
+    Covers WMO / ICAO / FAA international code tables. A decoding aid — always cross-check official sources.<br>
+    <span id="buildStamp" style="color:var(--faint);font-variant:tabular-nums"></span>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   AVWX-OFFLINE  —  Aviation weather / NOTAM plain-language decoder  (v2)
+   Pure, dependency-free. Runs in browser and Node (for testing).
+   Built on WMO 4678 / ICAO Annex 3 / FAA 7340 code tables so it decodes
+   reports from anywhere in the world (US, Europe, China, Russia, Gulf, etc.).
+   ========================================================================== */
+(function (root) {
+  'use strict';
+
+  /* ----------------------------- tables --------------------------------- */
+  const WX_DESCRIPTOR = {
+    MI:'shallow', PR:'partial', BC:'patches of', DR:'low drifting',
+    BL:'blowing', SH:'showers of', TS:'thunderstorm', FZ:'freezing'
+  };
+  const WX_PHENOMENA = {
+    DZ:'drizzle', RA:'rain', SN:'snow', SG:'snow grains', IC:'ice crystals',
+    PL:'ice pellets', GR:'hail', GS:'small hail / snow pellets', UP:'unknown precipitation',
+    BR:'mist', FG:'fog', FU:'smoke', VA:'volcanic ash', DU:'widespread dust',
+    SA:'sand', HZ:'haze', PY:'spray',
+    PO:'dust/sand whirls', SQ:'squalls', FC:'funnel cloud / tornado',
+    SS:'sandstorm', DS:'duststorm'
+  };
+  const PHEN_KEYS = Object.keys(WX_PHENOMENA);
+  const CLOUD_AMOUNT = {
+    SKC:'sky clear', CLR:'clear below 12,000 ft (automated)', NSC:'no significant cloud',
+    NCD:'no cloud detected (automated)', FEW:'few (1–2 eighths)', SCT:'scattered (3–4 eighths)',
+    BKN:'broken (5–7 eighths)', OVC:'overcast (8 eighths)'
+  };
+  const CLOUD_TYPE = { CB:'cumulonimbus (thunderstorm cloud)', TCU:'towering cumulus' };
+  const COMPASS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  function degToCompass(d){ if(d==null||d==='VRB')return null; const n=+d; if(isNaN(n))return null;
+    return COMPASS[Math.round((n%360)/22.5)%16]; }
+
+  const COLOR_STATE = {
+    BLU:'BLUE — vis ≥8 km, cloud base ≥2500 ft', WHT:'WHITE — vis ≥5 km, base ≥1500 ft',
+    GRN:'GREEN — vis ≥3.7 km, base ≥700 ft', YLO:'YELLOW — vis ≥1.6 km, base ≥300 ft',
+    YLO1:'YELLOW 1 — vis ≥2.5 km, base ≥500 ft', YLO2:'YELLOW 2 — vis ≥1.6 km, base ≥300 ft',
+    AMB:'AMBER — vis ≥0.8 km, base ≥200 ft', RED:'RED — vis <0.8 km or base <200 ft (below limits)'
+  };
+
+  /* runway-state (SNOWTAM / METAR group Rrr/ErCrDrDrBrBr) */
+  const RWY_DEPOSIT = {
+    '0':'clear and dry','1':'damp','2':'wet or water patches','3':'rime/frost',
+    '4':'dry snow','5':'wet snow','6':'slush','7':'ice','8':'compacted snow',
+    '9':'frozen ruts/ridges','/':'type not reported'
+  };
+  const RWY_EXTENT = {'1':'≤10% covered','2':'11–25% covered','5':'26–50% covered','9':'51–100% covered','/':'extent not reported'};
+
+  /* PIREP intensity words */
+  const TURB_IC = {
+    NEG:'none', 'NEG-LGT':'none to light', LGT:'light', 'LGT-MOD':'light to moderate',
+    MOD:'moderate', 'MOD-SEV':'moderate to severe', SEV:'severe', EXTRM:'extreme',
+    CHOP:'choppy', CAT:'clear-air turbulence', RIME:'rime', CLR:'clear', MX:'mixed', TRACE:'trace'
+  };
+
+  /* ICAO/FAA contractions used across NOTAM/SIGMET/PIREP free text */
+  const CONTRACTIONS = {
+    ABV:'above', ACFT:'aircraft', ACT:'active', AD:'aerodrome', ADJ:'adjacent', ADZ:'advise',
+    AFT:'after', AGL:'above ground level', ALS:'approach light system', ALT:'altitude',
+    ALTN:'alternate', AMDT:'amendment', AP:'airport', APCH:'approach', APN:'apron',
+    APP:'approach control', ARFF:'aircraft rescue & firefighting', ARR:'arrival', ASPH:'asphalt',
+    ATC:'air traffic control', ATIS:'automatic terminal information service', AUTH:'authorized',
+    AVBL:'available', AWOS:'automated weather observing system', AWY:'airway', AZM:'azimuth',
+    BA:'braking action', BCN:'beacon', BFR:'before', BLDG:'building', BLW:'below', BND:'boundary',
+    BTN:'between', CD:'candela', CHG:'change', CIRC:'circling', CL:'centerline', CLBR:'calibration',
+    CLSD:'closed', CMB:'climb', CMSND:'commissioned', CNL:'cancel', COM:'communications',
+    CONC:'concrete', COND:'condition', CONS:'continuous', CTC:'contact', CTL:'control',
+    CTN:'caution', DA:'decision altitude', DCMSND:'decommissioned', DCT:'direct', DEG:'degrees',
+    DEP:'departure', DEST:'destination', DH:'decision height', DIST:'distance', DLA:'delay',
+    DLY:'daily', DME:'distance measuring equipment', DP:'dew point', DPLR:'doppler',
+    DSPLCD:'displaced', DSTN:'destination', DTG:'date-time group', EFF:'effective', ELEV:'elevation',
+    ENG:'engine', ENR:'en route', EQPT:'equipment', EST:'estimated', EXC:'except', EXP:'expect',
+    FAC:'facility', FAF:'final approach fix', FI:'flight inspection', FIR:'flight information region',
+    FLW:'follow', FLT:'flight', FM:'from', FREQ:'frequency', FRNG:'firing', FST:'first', FT:'feet',
+    GA:'general aviation', GLD:'glider', GND:'ground', GP:'glide path', GPS:'GPS',
+    GRVL:'gravel', HDG:'heading', HEL:'helicopter', HELI:'heliport', HGT:'height', HLDG:'holding',
+    HOL:'holiday', HR:'hours', IAP:'instrument approach procedure', IBN:'identification beacon',
+    ID:'identification', IDENT:'identification', ILS:'instrument landing system',
+    IMC:'instrument meteorological conditions', INBD:'inbound', INFO:'information', INOP:'inoperative',
+    INSTR:'instrument', INT:'intersection', INTL:'international', INTST:'intensity',
+    LDG:'landing', LGT:'light', LGTD:'lighted', LOC:'localizer', LTD:'limited', LTG:'lightning',
+    MAG:'magnetic', MAINT:'maintenance', MALS:'medium-intensity approach light system',
+    MAPT:'missed approach point', MIL:'military', MIN:'minutes', MNM:'minimum', MNT:'monitor',
+    MOC:'minimum obstacle clearance', MOV:'moving', MSA:'minimum safe altitude', MSG:'message',
+    MSL:'mean sea level', MTW:'mountain wave', NA:'not authorized', NAV:'navigation',
+    NDB:'non-directional beacon', NM:'nautical miles', NR:'number', NW:'northwest',
+    OBSC:'obscured', OBST:'obstacle', OCA:'oceanic control area', OPR:'operate', OPS:'operations',
+    OTS:'out of service', OVR:'over', PAPI:'precision approach path indicator', PAX:'passengers',
+    PCL:'pilot-controlled lighting', PERM:'permanent', PJE:'parachute jumping exercise',
+    PLA:'practice low approach', PN:'prior notice', PPR:'prior permission required',
+    PROC:'procedure', PSN:'position', PWR:'power', RCH:'reach', RCL:'runway centerline',
+    REP:'report', RMK:'remark', RNAV:'area navigation', RTE:'route', RVR:'runway visual range',
+    RWY:'runway', SA:'sand', SFC:'surface', SKED:'scheduled', SN:'snow', SR:'sunrise', SS:'sunset',
+    STD:'standard', SVC:'service', TAR:'terminal area surveillance radar', TDZ:'touchdown zone',
+    TFC:'traffic', TFR:'temporary flight restriction', TGL:'touch-and-go landing', THR:'threshold',
+    THRU:'through', TIL:'until', TKOF:'takeoff', TWR:'tower', TWY:'taxiway', UAS:'unmanned aircraft',
+    UAV:'unmanned aerial vehicle', UFN:'until further notice', UNL:'unlimited', UNREL:'unreliable',
+    UNUSBL:'unusable', VDP:'visual descent point', VIA:'by way of', VIS:'visibility',
+    VMC:'visual meteorological conditions', VOR:'VOR', WDI:'wind direction indicator',
+    WEF:'with effect from', WI:'within', WIP:'work in progress', WKDAYS:'weekdays', WX:'weather'
+  };
+
+  const NOTAM_Q_SUBJECT = {
+    FA:'aerodrome', FF:'firefighting/rescue', FM:'met service', FU:'fuel',
+    LA:'approach lighting', LB:'aerodrome beacon', LC:'runway centerline lights', LD:'landing direction',
+    LE:'runway edge lights', LF:'sequenced flashing lights', LG:'pilot-controlled lighting',
+    LH:'high-intensity runway lights', LI:'runway end ident lights', LL:'low-intensity runway lights',
+    LP:'PAPI', LR:'all landing lights', LT:'threshold lights', LX:'taxiway centerline lights',
+    LZ:'runway touchdown-zone lights', MA:'movement area', MB:'braking action', MR:'runway',
+    MS:'stopway', MT:'threshold', MU:'runway turning bay', MW:'strip/shoulder', MX:'taxiway',
+    NA:'GNSS/GPS', NB:'NDB (nondirectional beacon)', ND:'DME', NM:'microwave landing system',
+    NN:'NDB', NV:'VOR', IC:'ILS', ID:'ILS DME', IG:'glide path', II:'ILS inner marker',
+    IL:'localizer', IM:'ILS middle marker', IO:'ILS outer marker', IS:'ILS category',
+    OB:'obstacle', OL:'obstacle lights', RA:'restricted area (airspace)', RD:'danger area',
+    RM:'military ops area', RO:'overflying restriction', RP:'prohibited area', RR:'reserved area',
+    RT:'temporary restricted area', SA:'automatic terminal info (ATIS)', SB:'ATIS', SC:'area control',
+    SE:'volmet', SF:'approach control', SO:'automatic terminal info', SP:'PAR', SS:'flight service',
+    ST:'aerodrome control tower', SV:'volmet', WA:'air display', WB:'aerobatics', WC:'captive balloon',
+    WD:'demolition of explosives', WE:'exercises', WF:'air refueling', WG:'glider flying',
+    WH:'blasting', WJ:'banner/target towing', WL:'ascent of free balloon', WM:'missile/gun/rocket firing',
+    WP:'parachute jumping', WR:'radioactive/toxic hazard', WS:'burning/blowing', WT:'mass movement of aircraft',
+    WU:'unmanned aircraft', WV:'formation flight', WW:'volcanic activity', WZ:'model flying'
+  };
+  const NOTAM_Q_STATUS = {
+    AC:'withdrawn for maintenance', AD:'available for daylight operation', AF:'flight-checked & found reliable',
+    AG:'operating but ground-checked only', AH:'hours of service changed', AK:'resumed normal operations',
+    AL:'operative subject to conditions', AM:'military operations only', AN:'available for night operation',
+    AO:'operational', AP:'prior permission required', AR:'available on request', AS:'unserviceable',
+    AU:'not available', AW:'completely withdrawn', AX:'previously promulgated shutdown resumed',
+    CA:'activated', CC:'completed', CD:'deactivated', CE:'erected', CF:'operating frequency changed',
+    CG:'downgraded', CH:'changed', CI:'identification/radio call-sign changed', CL:'realigned',
+    CM:'displaced', CN:'cancelled', CO:'operating', CP:'operating on reduced power', CR:'temporarily replaced',
+    CS:'installed', CT:'on test, do not use', HA:'braking action', HB:'friction coefficient',
+    HV:'work completed', HW:'work in progress', HX:'concentration of birds', LA:'operating on auxiliary power',
+    LB:'reserved for aircraft based therein', LC:'closed', LD:'unsafe', LE:'operating without auxiliary power',
+    LF:'interference from', LG:'operating without identification', LH:'unserviceable for aircraft heavier than',
+    LI:'closed to IFR operations', LK:'operating as a fixed light', LL:'usable for length & width',
+    LN:'closed to all night operations', LP:'prohibited to', LR:'aircraft restricted to runways/taxiways',
+    LS:'subject to interference', LT:'limited to', LV:'serviceable', LW:'will take place', LX:'operating but caution advised',
+    TT:'temporary', XX:'plain language (see text)'
+  };
+
+  /* -------------------------- small helpers ----------------------------- */
+  function zuluDayTime(s){ const m=s.match(/^(\d{2})(\d{2})(\d{2})?Z?$/); if(!m)return null;
+    return `day ${m[1]} at ${m[2]}:${m[3]||'00'} UTC`; }
+  function expandContractions(text){
+    return text.split(/(\s+)/).map(tok=>{ const c=tok.replace(/[.,;:()/\\-]/g,'');
+      return CONTRACTIONS[c]? tok.replace(c,`${c} (${CONTRACTIONS[c]})`) : tok; }).join('');
+  }
+
+  /* ---------------------------- weather --------------------------------- */
+  function decodeWeather(tok){
+    let s=tok, pre='';
+    if(tok==='NSW') return 'no significant weather';
+    if(s[0]==='+'){pre='heavy ';s=s.slice(1);} else if(s[0]==='-'){pre='light ';s=s.slice(1);}
+    if(s.startsWith('VC')){pre+='in the vicinity ';s=s.slice(2);}
+    let desc=''; for(const d in WX_DESCRIPTOR){ if(s.startsWith(d)){desc=WX_DESCRIPTOR[d]+' ';s=s.slice(2);break;} }
+    const phen=[]; while(s.length>=2){ const p=s.slice(0,2); if(WX_PHENOMENA[p]){phen.push(WX_PHENOMENA[p]);s=s.slice(2);} else break; }
+    if(s.length) return null; // leftover -> not a clean weather token
+    const body=(desc+phen.join(' and ')).trim();
+    return body? (pre+body).trim() : (pre.trim()||null);
+  }
+  function isWeatherToken(t){
+    if(t==='NSW')return true;
+    let s=t; if('+-'.includes(s[0]))s=s.slice(1); if(s.startsWith('VC'))s=s.slice(2);
+    for(const d in WX_DESCRIPTOR){ if(s.startsWith(d)){s=s.slice(2);break;} }
+    if(!s.length && /(SH|TS|FZ|BL|DR|MI|BC|PR)/.test(t)) return true;
+    let any=false; while(s.length>=2){ const p=s.slice(0,2); if(WX_PHENOMENA[p]){s=s.slice(2);any=true;} else return false; }
+    return any;
+  }
+
+  function decodeCloud(tok){
+    let m=tok.match(/^(VV)(\d{3}|\/{3})$/);
+    if(m) return m[2]==='///' ? 'sky obscured, vertical visibility not measured'
+      : `sky obscured, vertical visibility ${+m[2]*100} ft`;
+    m=tok.match(/^(FEW|SCT|BKN|OVC|SKC|CLR|NSC|NCD)(\d{3}|\/{3})?(CB|TCU|\/{3})?$/);
+    if(!m)return null;
+    let out=CLOUD_AMOUNT[m[1]]||m[1];
+    if(m[2]&&m[2]!=='///') out+=` at ${+m[2]*100} ft`;
+    else if(m[2]==='///') out+=' at unknown height';
+    if(m[3]==='CB'||m[3]==='TCU') out+=`, ${CLOUD_TYPE[m[3]]}`;
+    return out;
+  }
+
+  function decodeVis(tok, next){
+    if(tok==='CAVOK') return 'CAVOK — ceiling & visibility OK (vis ≥10 km, no cloud below 5,000 ft/MSA, no significant weather)';
+    let m=tok.match(/^(\d{4})(N|NE|E|SE|S|SW|W|NW|NDV)?$/);
+    if(m){ const v=+m[1]; let s = v>=9999?'visibility 10 km or more' : v>=1000?`visibility ${v/1000} km`:`visibility ${v} m`;
+      if(m[2]&&m[2]!=='NDV')s+=` toward ${m[2]}`; if(m[2]==='NDV')s+=' (no directional variation)'; return s; }
+    // statute miles, possibly "1 1/2SM"
+    if(/^\d$/.test(tok)&&next&&/^\d\/\dSM$/.test(next)) tok=tok+' '+next;
+    m=tok.match(/^(M|P)?(\d{1,3})?\s?(\d\/\d{1,2})?SM$/);
+    if(m&&(m[2]||m[3])){ let s='visibility '; if(m[1]==='M')s+='less than '; if(m[1]==='P')s+='more than ';
+      s+=(m[2]&&m[3]?`${m[2]} ${m[3]}`:(m[3]||m[2]))+' statute miles'; return {text:s, consumedNext:/\s/.test(tok)}; }
+    return null;
+  }
+
+  function decodeWind(tok){
+    let m=tok.match(/^(\d{3}|VRB)P?(\d{2,3})(GP?(\d{2,3}))?(KT|MPS|KMH)$/);
+    if(!m)return null;
+    const unit=m[5]==='KT'?'knots':m[5]==='MPS'?'m/s':'km/h';
+    if(+m[2]===0 && !m[4]) return 'wind calm';
+    let dir=m[1]==='VRB'?'variable in direction':`from ${+m[1]}°`;
+    const c=degToCompass(m[1]==='VRB'?null:m[1]); if(c)dir+=` (${c})`;
+    let s=`wind ${dir} at ${+m[2]} ${unit}`; if(m[4])s+=`, gusting ${+m[4]} ${unit}`;
+    return s;
+  }
+
+  function decodeTempDew(tok){
+    const m=tok.match(/^(M?\d{2}|\/{2})\/(M?\d{2}|\/{2})$/); if(!m)return null;
+    const f=x=> x==='//'?'not available':((x[0]==='M'?'-':'')+ +x.replace('M','') +'°C');
+    return `temperature ${f(m[1])}, dew point ${f(m[2])}`;
+  }
+  function decodePressure(tok){
+    let m=tok.match(/^Q(\d{3,4}|\/{3,4})$/); if(m)return m[1].includes('/')?'altimeter (QNH) not available':`altimeter (QNH) ${+m[1]} hPa`;
+    m=tok.match(/^A(\d{4}|\/{4})$/); if(m)return m[1].includes('/')?'altimeter not available':`altimeter ${(+m[1]/100).toFixed(2)} inHg`;
+    return null;
+  }
+  function decodeRVR(tok){
+    const m=tok.match(/^R(\d{2}[LRC]?|\d{2})\/([MP])?(\d{3,4})(V([MP])?(\d{3,4}))?(FT)?\/?([UDN])?$/);
+    if(!m)return null;
+    const unit=m[7]?'ft':'m'; const pf=p=>p==='M'?'less than ':p==='P'?'more than ':'';
+    let s=`runway ${m[1]} visual range ${pf(m[2])}${+m[3]} ${unit}`;
+    if(m[6])s+=` varying to ${pf(m[5])}${+m[6]} ${unit}`;
+    if(m[8]==='U')s+=', increasing'; if(m[8]==='D')s+=', decreasing'; if(m[8]==='N')s+=', no change';
+    return s;
+  }
+  function decodeRunwayState(tok){
+    // R + rwy(2, or 88 all / 99 repeat) + '/' + deposit,extent,depth(2),friction(2)  e.g. R24/451293, R88/CLRD//
+    let m=tok.match(/^R(\d{2}[LRC]?|88|99)\/(CLRD|\d|\/)(\d|\/)(\d{2}|\/{2})(\d{2}|\/{2})$/);
+    if(!m){ m=tok.match(/^R(\d{2}[LRC]?|88|99)\/(CLRD)(\/{2}|\d{2})$/); if(m){
+      const r=m[1]==='88'?'all runways':m[1]==='99'?'(repeat of last)':`runway ${m[1]}`;
+      return `${r}: contamination cleared; ${m[3]==='//'?'braking not reported':'friction coefficient 0.'+m[3]}`; } return null; }
+    const rwy=m[1]==='88'?'all runways':m[1]==='99'?'(repeat of last report)':`runway ${m[1]}`;
+    const dep=RWY_DEPOSIT[m[2]]||'deposit '+m[2];
+    const ext=RWY_EXTENT[m[3]]||'extent '+m[3];
+    let depth; const dd=m[4];
+    if(dd==='//')depth='depth not reported'; else{ const n=+dd;
+      depth = n===0?'less than 1 mm':n<=90?`${n} mm deep`:n===92?'10 cm':n===93?'15 cm':n===94?'20 cm':n===95?'25 cm':n===96?'30 cm':n===97?'35 cm':n===98?'≥40 cm':'depth n/a'; }
+    let fr; const ff=m[5];
+    if(ff==='//')fr='braking action not reported'; else{ const n=+ff;
+      fr = n<=90?`friction coefficient 0.${ff}`: n===91?'braking: poor':n===92?'braking: medium/poor':n===93?'braking: medium':n===94?'braking: medium/good':n===95?'braking: good':n===99?'braking unreliable':'braking n/a'; }
+    return `${rwy}: ${dep}, ${ext}, ${depth}, ${fr}`;
+  }
+
+  /* ------------------------- US remark groups --------------------------- */
+  function decodeRemarkToken(tk, toks, i){
+    let m;
+    if(tk==='AO1')return {t:'automated station, no precipitation sensor'};
+    if(tk==='AO2')return {t:'automated station, with precipitation sensor'};
+    if(tk==='PK'&&toks[i+1]==='WND'&&toks[i+2]){ const w=toks[i+2].match(/^(\d{3})(\d{2,3})\/(\d{2})(\d{2})?$/);
+      if(w)return {t:`peak wind ${+w[1]}° at ${+w[2]} kt at ${w[3]}:${w[4]||'00'}`,skip:2}; }
+    if(tk==='WSHFT'&&toks[i+1]){ const w=toks[i+1].match(/^(\d{2})?(\d{2})$/);
+      const fropa=toks[i+2]==='FROPA'; if(w)return {t:`wind shift at ${w[1]||''}${w[2]}${fropa?' (frontal passage)':''}`,skip:fropa?2:1}; }
+    if(tk==='TWR'&&toks[i+1]==='VIS'){ return {t:`tower visibility ${toks[i+2]||''} SM`,skip:2}; }
+    if(tk==='SFC'&&toks[i+1]==='VIS'){ return {t:`surface visibility ${toks[i+2]||''} SM`,skip:2}; }
+    if((m=tk.match(/^SLP(\d{3}|NO)$/))){ if(m[1]==='NO')return {t:'sea-level pressure not available'};
+      const v=+m[1]; return {t:`sea-level pressure ${(v>=500?900+v/10:1000+v/10).toFixed(1)} hPa`}; }
+    if((m=tk.match(/^T([01])(\d{3})([01])(\d{3})$/))){ const t=(m[1]==='1'?-1:1)*+m[2]/10, d=(m[3]==='1'?-1:1)*+m[4]/10;
+      return {t:`precise temperature ${t.toFixed(1)}°C, dew point ${d.toFixed(1)}°C`}; }
+    if((m=tk.match(/^1([01])(\d{3})$/))){ return {t:`6-hr maximum temperature ${(m[1]==='1'?-1:1)*+m[2]/10}°C`}; }
+    if((m=tk.match(/^2([01])(\d{3})$/))){ return {t:`6-hr minimum temperature ${(m[1]==='1'?-1:1)*+m[2]/10}°C`}; }
+    if((m=tk.match(/^4([01])(\d{3})([01])(\d{3})$/))){ return {t:`24-hr max ${(m[1]==='1'?-1:1)*+m[2]/10}°C, min ${(m[3]==='1'?-1:1)*+m[4]/10}°C`}; }
+    if((m=tk.match(/^5([0-8])(\d{3})$/))){ const dir=+m[1]; const val=(+m[2]/10).toFixed(1);
+      const desc=dir<=3?'increasing':dir===4?'steady':'decreasing'; return {t:`3-hr pressure tendency ${val} hPa (${desc})`}; }
+    if((m=tk.match(/^P(\d{4})$/)))return {t:`precipitation ${(+m[1]/100).toFixed(2)} in in past hour`};
+    if((m=tk.match(/^6(\d{4})$/)))return {t:`precipitation ${(+m[1]/100).toFixed(2)} in in past 3–6 hr`};
+    if((m=tk.match(/^7(\d{4})$/)))return {t:`precipitation ${(+m[1]/100).toFixed(2)} in in past 24 hr`};
+    if((m=tk.match(/^4\/(\d{3})$/)))return {t:`snow depth ${+m[1]} in on ground`};
+    if((m=tk.match(/^933(\d{3})$/)))return {t:`water equivalent of snow ${(+m[1]/10).toFixed(1)} in`};
+    if((m=tk.match(/^([A-Z]{2})B(\d{2,4})E(\d{2,4})$/))&&isWeatherToken(m[1])){
+      return {t:`${WX_PHENOMENA[m[1]]||m[1]} began :${m[2]}, ended :${m[3]}`}; }
+    if(tk==='PRESRR')return {t:'pressure rising rapidly'};
+    if(tk==='PRESFR')return {t:'pressure falling rapidly'};
+    if(tk==='FROPA')return {t:'frontal passage'};
+    if(tk==='SNINCR')return {t:'snow increasing rapidly (see following)'};
+    if(tk==='VIRGA')return {t:'virga (precipitation not reaching ground)'};
+    if(tk==='PNO')return {t:'precipitation sensor not operating'};
+    if(tk==='FZRANO')return {t:'freezing-rain sensor not operating'};
+    if(tk==='TSNO')return {t:'thunderstorm sensor not operating'};
+    if(tk==='PWINO')return {t:'present-weather sensor not operating'};
+    if(tk==='RVRNO')return {t:'RVR not available'};
+    if(tk==='$')return {t:'station needs maintenance'};
+    if(tk==='LTG'||tk==='LTGIC'||tk==='LTGCG'||tk==='LTGCC'||tk==='LTGCA')return {t:'lightning observed'};
+    if(tk==='OHD')return {t:'overhead'};
+    if(tk==='DSNT')return {t:'distant'};
+    if(tk==='CB'&&toks[i+1])return {t:'cumulonimbus reported'};
+    if((m=tk.match(/^CIG(\d{3})V(\d{3})$/)))return {t:`ceiling variable ${+m[1]*100}–${+m[2]*100} ft`};
+    return null;
+  }
+
+  /* --------------------------- type detection --------------------------- */
+  function detectType(raw){
+    const t=raw.trim().toUpperCase();
+    if(/\bSIGMET\b/.test(t))return 'SIGMET';
+    if(/\bAIRMET\b/.test(t)||/\b(SIERRA|TANGO|ZULU)\b/.test(t)&&/\bAIRMET\b/i.test(t))return 'AIRMET';
+    if(/^(METAR|SPECI)\b/.test(t))return 'METAR';
+    if(/^TAF\b/.test(t))return 'TAF';
+    if(/^(UA|UUA)\b/.test(t)||/\/OV\s/.test(t))return 'PIREP';
+    if(/\bNOTAM[NRC]?\b/.test(t)||/^\![A-Z]/.test(t)||/^[A-Z]\d{4}\/\d{2}\b/.test(t))return 'NOTAM';
+    if(/\bSNOWTAM\b/.test(t))return 'NOTAM';
+    if(/^[A-Z]{4}\s+[A-Z]?\d{3,4}\/\d{2}\b/.test(t))return 'NOTAM';   // series NOTAM: ICAO + id/year (e.g. ZHEC G2891/26)
+    if(/^[A-Z]{4}\s+\d{6}Z\s+\d{4}\/\d{4}/.test(t))return 'TAF';
+    if(/^[A-Z]{4}\s+\d{6}Z/.test(t))return 'METAR';
+    return 'UNKNOWN';
+  }
+
+  /* --------------------------- METAR / TAF ------------------------------ */
+  function decodeMetarTaf(raw, type){
+    let toks=raw.trim().toUpperCase().replace(/=$/,'').split(/\s+/);
+    const L=[]; let rmk=false;
+    if(['METAR','SPECI','TAF'].includes(toks[0])){ if(toks[0]==='SPECI')L.push('SPECI — special off-schedule observation'); if(toks[0]==='TAF')type='TAF'; toks=toks.slice(1); }
+    if(toks[0]==='AMD'){L.push('Amended forecast');toks=toks.slice(1);}
+    if(toks[0]==='COR'){L.push('Corrected report');toks=toks.slice(1);}
+    for(let i=0;i<toks.length;i++){
+      const tk=toks[i]; if(!tk)continue; let m,d;
+      if(tk==='RMK'){rmk=true;L.push('— Remarks —');continue;}
+      if(rmk){ const r=decodeRemarkToken(tk,toks,i); if(r){L.push(r.t); i+=r.skip||0; continue;}
+        if(CONTRACTIONS[tk]){L.push(`${tk}: ${CONTRACTIONS[tk]}`);continue;} L.push(`(rmk) ${tk}`); continue; }
+      if(i===0&&/^[A-Z]{4}$/.test(tk)){L.push(`Station: ${tk}`);continue;}
+      if(tk==='AUTO'){L.push('Fully automated observation');continue;}
+      if(tk==='NIL'){L.push('NIL — no report available');continue;}
+      if(tk==='CNL'){L.push('Forecast cancelled');continue;}
+      if(/^\d{6}Z$/.test(tk)){L.push(`Issued: ${zuluDayTime(tk)}`);continue;}
+      if((m=tk.match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/))){L.push(`Valid: day ${m[1]} ${m[2]}:00Z → day ${m[3]} ${m[4]}:00Z`);continue;}
+      if(tk==='BECMG'){L.push('BECMG — gradually becoming:');continue;}
+      if(tk==='TEMPO'){L.push('TEMPO — temporarily:');continue;}
+      if(tk==='NOSIG'){L.push('NOSIG — no significant change next 2 hr');continue;}
+      if((m=tk.match(/^FM(\d{2})(\d{2})(\d{2})$/))){L.push(`FM — from day ${m[1]} ${m[2]}:${m[3]}Z:`);continue;}
+      if((m=tk.match(/^PROB(\d{2})$/))){L.push(`PROB${m[1]} — ${m[1]}% probability of:`);continue;}
+      if((m=tk.match(/^(TL|AT)(\d{2})(\d{2})$/))){L.push(`${m[1]==='TL'?'until':'at'} ${m[2]}:${m[3]}Z`);continue;}
+      if((m=tk.match(/^TX(M?\d{2})\/(\d{2})(\d{2})Z$/))){L.push(`max temp ${(m[1][0]==='M'?'-':'')+ +m[1].replace('M','')}°C at day ${m[2]} ${m[3]}Z`);continue;}
+      if((m=tk.match(/^TN(M?\d{2})\/(\d{2})(\d{2})Z$/))){L.push(`min temp ${(m[1][0]==='M'?'-':'')+ +m[1].replace('M','')}°C at day ${m[2]} ${m[3]}Z`);continue;}
+      if(tk==='CAVOK'){L.push(decodeVis(tk));continue;}
+      if((d=decodeWind(tk))){L.push(d);continue;}
+      if((m=tk.match(/^(\d{3})V(\d{3})$/))){L.push(`wind direction variable ${+m[1]}°–${+m[2]}°`);continue;}
+      if((m=tk.match(/^WS(\d{3})\/(\d{3})(\d{2,3})(KT|MPS)$/))){L.push(`wind shear at ${+m[1]*100} ft: ${+m[2]}° at ${+m[3]} ${m[4]==='KT'?'kt':'m/s'}`);continue;}
+      if(/^WS(\s|$)/.test(tk)||tk==='WS'){L.push('wind shear reported (see following)');continue;}
+      if((d=decodeRunwayState(tk))){L.push(d);continue;}
+      if((d=decodeRVR(tk))){L.push(d);continue;}
+      d=decodeVis(tk,toks[i+1]); if(d){ if(typeof d==='object'){L.push(d.text); if(d.consumedNext)i++;} else L.push(d); continue; }
+      if((m=tk.match(/^RE(.+)$/))&&isWeatherToken(m[1])){L.push('recent weather: '+decodeWeather(m[1]));continue;}
+      if(isWeatherToken(tk)){const w=decodeWeather(tk); if(w){L.push('weather: '+w);continue;}}
+      if((d=decodeCloud(tk))){L.push('cloud: '+d);continue;}
+      if((d=decodeTempDew(tk))){L.push(d);continue;}
+      if((d=decodePressure(tk))){L.push(d);continue;}
+      if(COLOR_STATE[tk]){L.push('color state '+COLOR_STATE[tk]);continue;}
+      if(tk==='SNOCLO'||tk==='R/SNOCLO'){L.push('aerodrome closed due to snow');continue;}
+      if(tk==='QFE'||/^QFE\d+$/.test(tk)){L.push('QFE (pressure at field elevation) '+tk.replace('QFE',''));continue;}
+      if(tk==='RMK')continue;
+      if(CONTRACTIONS[tk]){L.push(`${tk}: ${CONTRACTIONS[tk]}`);continue;}
+      L.push(`(?) ${tk} — not recognized`);
+    }
+    return L;
+  }
+
+  /* --------------------------- SIGMET / AIRMET -------------------------- */
+  const SIGMET_PHENOM = [
+    ['OBSC TS GR','obscured thunderstorms with hail'],['EMBD TS GR','embedded thunderstorms with hail'],
+    ['FRQ TS GR','frequent thunderstorms with hail'],['SQL TS GR','squall-line thunderstorms with hail'],
+    ['OBSC TS','obscured thunderstorms'],['EMBD TS','embedded thunderstorms'],
+    ['FRQ TS','frequent thunderstorms'],['SQL TS','squall-line thunderstorms'],['TSGR','thunderstorms with hail'],
+    ['TS','thunderstorms'],['SEV TURB','severe turbulence'],['SEV ICE (FZRA)','severe icing (freezing rain)'],
+    ['SEV ICE','severe icing'],['MOD TURB','moderate turbulence'],['MOD ICE','moderate icing'],
+    ['SEV MTW','severe mountain wave'],['HVY DS','heavy duststorm'],['HVY SS','heavy sandstorm'],
+    ['VA CLD','volcanic ash cloud'],['VA','volcanic ash'],['TC','tropical cyclone'],
+    ['RDOACT CLD','radioactive cloud'],['TURB','turbulence'],['ICE','icing'],['MTW','mountain wave']
+  ];
+  const AIRMET_US={ SIERRA:'SIERRA — IFR conditions and/or mountain obscuration',
+    TANGO:'TANGO — turbulence, strong surface winds, low-level wind shear',
+    ZULU:'ZULU — icing and freezing levels' };
+  function decodeSigmet(raw){
+    const t=raw.trim().toUpperCase().replace(/=$/,''); const O=[]; let m;
+    const isA=/AIRMET/.test(t);
+    O.push('This is a '+(isA?'AIRMET (weather hazardous mainly to lighter aircraft)':'SIGMET (significant weather hazardous to all aircraft)')+'.');
+    if((m=t.match(/^([A-Z]{4})\s/)))O.push('Issuing office/FIR id: '+m[1]);
+    if((m=t.match(/\b([A-Z]{4})\s+(SIGMET|AIRMET)\s+([A-Z0-9]+)\b/)))O.push(`FIR ${m[1]}, ${m[2]} sequence ${m[3]}`);
+    if((m=t.match(/\bVALID\s+(\d{6})\/(\d{6})\b/)))O.push(`Valid ${zuluDayTime(m[1])} → ${zuluDayTime(m[2])}`);
+    for(const k of Object.keys(AIRMET_US)) if(new RegExp('\\b'+k+'\\b').test(t)){O.push('Hazard type: '+AIRMET_US[k]);break;}
+    for(const [k,v] of SIGMET_PHENOM){ if(new RegExp('\\b'+k.replace(/[()]/g,'\\$&').replace(/ /g,'\\s+')+'\\b').test(t)){O.push('Hazard: '+v);break;} }
+    if((m=t.match(/\bFL(\d{3})\/(\d{3})\b/)))O.push(`Between FL${m[1]} and FL${m[2]} (${+m[1]*100}–${+m[2]*100} ft)`);
+    else if((m=t.match(/\bTOP\s+(?:ABV\s+)?FL(\d{3})\b/)))O.push(`Tops to FL${m[1]} (${+m[1]*100} ft)`);
+    else if((m=t.match(/\bSFC\/FL(\d{3})\b/)))O.push(`From surface to FL${m[1]} (${+m[1]*100} ft)`);
+    if((m=t.match(/\bMOV\s+([NSEW]{1,3})\s+(\d{1,3})\s?(KT|KMH)\b/)))O.push(`Moving ${m[1]} at ${+m[2]} ${m[3]==='KT'?'kt':'km/h'}`);
+    if(/\bSTNR\b/.test(t))O.push('Stationary');
+    if(/\bINTSF\b/.test(t))O.push('Intensifying');
+    if(/\bWKN\b/.test(t))O.push('Weakening');
+    if(/\bNC\b/.test(t))O.push('No change in intensity');
+    O.push(''); O.push('Full text, abbreviations expanded:'); O.push(expandContractions(t));
+    return O;
+  }
+
+  /* ------------------------------- PIREP -------------------------------- */
+  const PIREP_FIELDS={OV:'Location',TM:'Time (UTC)',FL:'Altitude / flight level',TP:'Aircraft type',
+    SK:'Sky / cloud',WX:'Weather & flight visibility',TA:'Temperature (°C)',WV:'Wind',
+    TB:'Turbulence',IC:'Icing',RM:'Remarks'};
+  function decodePirep(raw){
+    const t=raw.trim().toUpperCase().replace(/=$/,''); const O=[];
+    O.push(/^UUA/.test(t)?'URGENT pilot report (PIREP / UUA).':'Routine pilot report (PIREP / UA).');
+    const parts=t.split(/\s*\/(?=(?:OV|TM|FL|TP|SK|WX|TA|WV|TB|IC|RM))/);
+    for(let p of parts){ p=p.trim(); if(!p||/^(UA|UUA)$/.test(p))continue;
+      const k=p.slice(0,2), v=p.slice(2).trim();
+      if(PIREP_FIELDS[k]){ let vv=v;
+        if(k==='FL'){ if(/^\d{3}$/.test(v))vv=`${+v*100} ft (FL${v})`; else if(v==='UNKN')vv='unknown'; else if(v==='DURGC')vv='during climb'; else if(v==='DURGD')vv='during descent'; }
+        if(k==='TA'&&/^M?\d+$/.test(v))vv=(v[0]==='M'?'-':'')+ +v.replace('M','')+'°C';
+        if(k==='TB'||k==='IC'){ const key=v.split(/\s+/)[0]; if(TURB_IC[key])vv=TURB_IC[key]+(v.slice(key.length)?' '+expandContractions(v.slice(key.length).trim()):''); else vv=expandContractions(v); }
+        O.push(`${PIREP_FIELDS[k]}: ${k==='TB'||k==='IC'?vv:expandContractions(vv)}`);
+      } else O.push(expandContractions(p));
+    }
+    return O;
+  }
+
+  /* ------------------------------- NOTAM -------------------------------- */
+  function decodeNotam(raw){
+    const t=raw.trim().toUpperCase(); const O=[]; O.push('NOTAM (Notice to Air Missions).');
+    let m=t.match(/Q\)\s*([A-Z]{4})\/Q([A-Z]{4})\//);
+    if(m){ O.push(`Affected FIR: ${m[1]}`); const q=m[2];
+      const sj=NOTAM_Q_SUBJECT[q.slice(0,2)], st=NOTAM_Q_STATUS[q.slice(2,4)];
+      O.push(`Q-code Q${q}: ${sj||'subject '+q.slice(0,2)} — ${st||'status '+q.slice(2,4)}`); }
+    const fn={A:'Location (aerodrome)',B:'Effective from',C:'Effective until',D:'Active schedule',E:'Text',F:'Lower limit',G:'Upper limit'};
+    const cleanT=t.replace(/\)\s*$/,''); const re=/\b([A-G])\)\s*([^]*?)(?=\s+[A-G]\)|$)/g; let fm,found=false;
+    while((fm=re.exec(cleanT))){ found=true; let v=fm[2].trim();
+      if((fm[1]==='B'||fm[1]==='C')&&/^\d{10}$/.test(v))v=`20${v.slice(0,2)}-${v.slice(2,4)}-${v.slice(4,6)} ${v.slice(6,8)}:${v.slice(8,10)} UTC`;
+      if(fm[1]==='C'&&v==='PERM')v='permanent';
+      if(fm[1]==='E')v=expandContractions(v);
+      O.push(`${fn[fm[1]]}: ${v}`); }
+    if(!found){ O.push(''); O.push('Expanded text:'); O.push(expandContractions(t)); }
+    return O;
+  }
+
+  /* ------------------------------- public ------------------------------- */
+  function decode(raw){
+    if(!raw||!raw.trim())return {type:'UNKNOWN',lines:['(no input)'],raw:''};
+    const type=detectType(raw); let lines;
+    switch(type){
+      case 'METAR': lines=decodeMetarTaf(raw,'METAR');break;
+      case 'TAF':   lines=decodeMetarTaf(raw,'TAF');break;
+      case 'SIGMET':
+      case 'AIRMET':lines=decodeSigmet(raw);break;
+      case 'PIREP': lines=decodePirep(raw);break;
+      case 'NOTAM': lines=decodeNotam(raw);break;
+      default: lines=decodeMetarTaf(raw,'METAR');
+        lines.unshift('(type uncertain — decoded as METAR-style; may be partial)');
+    }
+    return {type,lines,raw:raw.trim()};
+  }
+
+  /* -------- split a mixed briefing into individual reports -------------- */
+  function splitReports(text){
+    const lines=String(text).replace(/\r/g,'').split('\n');
+    // section headers / obvious non-report labels to drop
+    const NOISE=/^(DESTINATION|DEPARTURE|EN\s?ROUTE|ENROUTE|ALTERNATE|ALTN|ORIGIN|DEST|TAKEOFF ALTERNATE|NOTAMS?|WEATHER|BRIEFING|FORECAST|WINDS ?ALOFT|SIGWX|PROG)\s*:?\s*$/i;
+    function isStart(raw){
+      let t=raw.trim().replace(/^[-*•>»]\s*/,'').toUpperCase();
+      if(/^(METAR|SPECI|TAF|SIGMET|AIRMET)\b/.test(t))return true;      // keyword reports
+      if(/^\(?[A-Z]\d{3,4}\/\d{2}\b/.test(t))return true;               // (A1234/26  or  A1234/26
+      if(/^[A-Z]{4}\s+[A-Z]?\d{3,4}\/\d{2}\b/.test(t))return true;      // ZHEC G2891/26  /  PANC A3696/25
+      if(/^\![A-Z]{2,4}\b/.test(t))return true;                        // FAA !LAX
+      if(/^[A-Z]{4}\s+\d{6}Z\b/.test(t))return true;                   // bare METAR/TAF
+      return false;
+    }
+    const segs=[]; let cur=null;
+    for(const raw of lines){
+      if(!raw.trim())continue;
+      if(NOISE.test(raw.trim()))continue;
+      const line=raw.trim().replace(/^[-*•>»]\s*/,'');
+      if(isStart(raw)){ if(cur)segs.push(cur.join(' ')); cur=[line]; }
+      else if(cur){ cur.push(line); }        // continuation / wrapped line
+      // else: preamble before the first recognized report -> ignored
+    }
+    if(cur)segs.push(cur.join(' '));
+    return segs.map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean);
+  }
+  function decodeAll(text){
+    const parts=splitReports(text);
+    if(!parts.length) return [decode(text)];   // nothing split out -> decode whole thing
+    return parts.map(decode);
+  }
+
+  const API={decode,decodeAll,splitReports,detectType,decodeWeather,decodeWind,decodeCloud,decodeVis,
+             decodePressure,decodeRunwayState,expandContractions,CONTRACTIONS};
+  if(typeof module!=='undefined'&&module.exports)module.exports=API;
+  root.AVWX=API;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
+  var BUILD='v1.2 · 2026-07-24';
+  var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
+
+  /* ---------- drifting clouds ---------- */
+  (function(){
+    var sky=document.querySelector('.sky');
+    function cloud(scale,top,dur,delay,op){
+      var d=document.createElement('div'); d.className='cloud';
+      d.style.top=top+'%'; d.style.animationDuration=dur+'s'; d.style.animationDelay='-'+delay+'s';
+      d.style.opacity=op;
+      var w=180*scale, h=70*scale;
+      d.innerHTML='<svg width="'+w+'" height="'+h+'" viewBox="0 0 180 70">'+
+        '<g fill="rgba(226,236,255,'+ (0.10+op*0.12) +')">'+
+        '<ellipse cx="60" cy="45" rx="52" ry="22"/><ellipse cx="98" cy="38" rx="40" ry="26"/>'+
+        '<ellipse cx="128" cy="46" rx="42" ry="20"/><ellipse cx="40" cy="50" rx="30" ry="16"/></g></svg>';
+      sky.appendChild(d);
+    }
+    cloud(1.4,10,60,5,.7); cloud(1.0,26,85,30,.5); cloud(1.8,54,48,12,.85);
+    cloud(0.8,68,95,55,.4); cloud(1.2,80,70,40,.6);
+  })();
+
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+
+  /* ---------- windsock ---------- */
+  function windsockSVG(idx){
+    return '<div class="sock"><div class="gauge">'+
+      '<svg class="compass" viewBox="0 0 120 120">'+
+      '<circle cx="60" cy="60" r="56" fill="rgba(6,14,28,.55)" stroke="rgba(120,160,220,.3)"/>'+
+      '<g class="rose">'+
+        '<text x="60" y="16" text-anchor="middle">N</text>'+
+        '<text x="108" y="64" text-anchor="middle">E</text>'+
+        '<text x="60" y="112" text-anchor="middle">S</text>'+
+        '<text x="12" y="64" text-anchor="middle">W</text>'+
+      '</g>'+
+      '<g class="sockGroup" id="sockGroup'+idx+'">'+
+        '<circle cx="60" cy="60" r="4" fill="#9fb3d1"/>'+
+        '<g class="sockBody">'+
+          '<path d="M60 60 L60 22 L74 26 L60 30 Z" fill="#ff7b5e"/>'+
+          '<path d="M60 30 L74 26 L86 30 L60 34 Z" fill="#ffd166"/>'+
+          '<path d="M60 34 L86 30 L96 34 L60 38 Z" fill="#ff7b5e"/>'+
+          '<path d="M60 38 L96 34 L104 38 L60 40 Z" fill="#ffd166"/>'+
+        '</g>'+
+      '</g></svg></div>'+
+      '<div class="read" id="sockRead'+idx+'"></div></div>';
+  }
+  function updateWindsock(idx,dirDeg,spd,unit){
+    var g=document.getElementById('sockGroup'+idx), read=document.getElementById('sockRead'+idx); if(!g)return;
+    var rot=(dirDeg==null)?0:(dirDeg+180)%360;
+    g.style.transform='rotate('+rot+'deg)';
+    var segs=g.querySelector('.sockBody').children;
+    var lift=spd>=15?4:spd>=10?3:spd>=5?2:spd>0?1:0;
+    for(var i=0;i<segs.length;i++)segs[i].style.opacity=(i<lift?1:0.18);
+    if(dirDeg==null&&spd===0)read.innerHTML='<b>CALM</b><span>no wind</span>';
+    else if(dirDeg==null)read.innerHTML='<b>'+spd+'</b><span>'+unit+' · variable dir</span>';
+    else read.innerHTML='<b>'+spd+'</b><span>'+unit+' from '+dirDeg+'°</span>';
+  }
+  function extractWind(lines){
+    for(var i=0;i<lines.length;i++){
+      var l=lines[i];
+      if(/wind calm/.test(l)) return {dir:null,spd:0,unit:''};
+      var m=l.match(/wind (?:from (\d+)°|variable in direction).* at (\d+) (knots|m\/s|km\/h)/);
+      if(m) return {dir:m[1]?+m[1]:null, spd:+m[2], unit:m[3]==='knots'?'kt':m[3]};
+    }
+    return null;
+  }
+
+  /* ---------- render (handles one OR many reports) ---------- */
+  function cardHTML(r,idx){
+    var wind=extractWind(r.lines);
+    var h='<div class="card res"><div class="head"><span class="badge">'+esc(r.type)+'</span>'+
+      '<button class="minibtn" data-copy="'+idx+'">Copy</button></div>';
+    if(wind) h+=windsockSVG(idx);
+    h+='<div class="raw">'+esc(r.raw)+'</div><ul class="lines">';
+    r.lines.forEach(function(l){
+      if(l===''){h+='<li class="blank"></li>';return;}
+      if(/^—.*—$/.test(l)){h+='<li class="section"><span class="d"></span>'+esc(l.replace(/—/g,'').trim())+'</li>';return;}
+      var cls=/^\(\?\)/.test(l)||/^\(type/.test(l)?'unk':'';
+      h+='<li class="'+cls+'"><span class="d"></span><span>'+esc(l)+'</span></li>';
+    });
+    h+='</ul></div>';
+    return h;
+  }
+  function render(){
+    var raw=input.value.trim(); if(!raw){out.innerHTML='';return;}
+    var reports=AVWX.decodeAll(raw);
+    var html='';
+    if(reports.length>1) html+='<div class="countbar"><span class="pulse"></span> Found '+reports.length+' reports — decoded separately below</div>';
+    reports.forEach(function(r,idx){html+=cardHTML(r,idx);});
+    out.innerHTML=html;
+    reports.forEach(function(r,idx){var w=extractWind(r.lines); if(w)updateWindsock(idx,w.dir,w.spd,w.unit);});
+    Array.prototype.forEach.call(out.querySelectorAll('[data-copy]'),function(btn){
+      btn.onclick=function(){var r=reports[+btn.getAttribute('data-copy')];
+        var text=r.type+'\n'+r.raw+'\n\n'+r.lines.join('\n');
+        if(navigator.clipboard)navigator.clipboard.writeText(text);
+        btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy'},1200);};
+    });
+  }
+  $('#decodeBtn').onclick=render;
+  $('#clearBtn').onclick=function(){input.value='';out.innerHTML='';input.focus()};
+  input.addEventListener('input',function(){if(input.value.trim().length>3)render()});
+
+  /* ---------- examples ---------- */
+  var EX=[
+    'KJFK 241651Z 18012G22KT 10SM FEW045 SCT250 28/17 A3001 RMK AO2 SLP160',
+    'ZBAA 241600Z 09004MPS 060V120 9000 NSC 26/14 Q1008 NOSIG',
+    'TAF EDDF 241100Z 2412/2518 26010KT 9999 SCT035 TEMPO 2416/2420 4000 SHRA BKN012CB',
+    'EDDM 241620Z 36008KT 0500 FZFG OVC002 M03/M04 Q1015 R26L/451293',
+    'LTAA SIGMET 2 VALID 241700/242100 SEV TURB FL250/390 MOV NE 20KT INTSF',
+    'UA /OV APE/FL085/TP BE20/TB MOD/IC LGT RIME'
+  ];
+  var ec=$('#examples');
+  EX.forEach(function(x){var c=document.createElement('div');c.className='chip';
+    c.textContent=x.length>30?x.slice(0,28)+'…':x;c.title=x;
+    c.onclick=function(){input.value=x;render();window.scrollTo({top:0,behavior:'smooth'})};ec.appendChild(c);});
+
+  /* ---------- OCR (Tesseract, lazy) ---------- */
+  var tessReady=false, worker=null;
+  function setPill(txt,cls,busy){ocrPill.textContent=txt;ocrPill.className='pill'+(cls?' '+cls:'');spin.style.display=busy?'inline-block':'none';}
+  function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=res;s.onerror=function(){rej(new Error('load'))};document.head.appendChild(s)})}
+  async function ensureTess(){
+    if(tessReady)return true;
+    setPill('Camera OCR: downloading engine…','busy',true);
+    try{
+      if(typeof Tesseract==='undefined'){
+        try{await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');}
+        catch(e){await loadScript('https://unpkg.com/tesseract.js@5/dist/tesseract.min.js');}
+      }
+      setPill('Camera OCR: preparing recognizer…','busy',true);
+      worker=await Tesseract.createWorker('eng');
+      await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /-+().:'});
+      tessReady=true; setPill('Camera OCR: ready · cached offline','ready',false); return true;
+    }catch(e){ setPill('Camera OCR: needs internet once','',false); return false; }
+  }
+  $('#prepBtn').onclick=function(){ensureTess()};
+  $('#camBtn').onclick=function(){$('#cam').click()};
+  $('#cam').onchange=async function(e){
+    var f=e.target.files&&e.target.files[0]; if(!f)return;
+    if(!await ensureTess())return;
+    setPill('Camera OCR: reading image…','busy',true);
+    try{
+      var url=URL.createObjectURL(f);
+      var res=await worker.recognize(url); URL.revokeObjectURL(url);
+      input.value=(res.data.text||'').replace(/[ \t]+/g,' ').replace(/\n{2,}/g,'\n').trim();
+      setPill('Camera OCR: done — review & Decode','ready',false); render();
+    }catch(err){ setPill('Camera OCR: failed, try a clearer photo','',false); }
+    e.target.value='';
+  };
+
+  /* ---------- cheat sheet ---------- */
+  var REF=[
+    ['Wind','direction / speed',[['18012G22KT','from 180° at 12 kt, gusts 22'],['09004MPS','from 090° at 4 m/s'],['VRB03KT','variable at 3 kt'],['280V350','dir varying 280°–350°']]],
+    ['Visibility','',[['9999 / CAVOK','10 km+ / ceiling & vis OK'],['4000','4000 m'],['1 1/2SM','1.5 statute miles'],['M1/4SM · P6SM','less than ¼ · more than 6 SM'],['R06L/1800','RVR runway 06L 1800 m']]],
+    ['Weather','+heavy · −light · VC vicinity',[['TS SH FZ BL','thunderstorm / showers / freezing / blowing'],['RA SN DZ GR','rain snow drizzle hail'],['BR FG HZ FU','mist fog haze smoke'],['DU SA VA · DS SS','dust sand ash · dust-/sand-storm']]],
+    ['Cloud','height ×100 ft',[['FEW SCT BKN OVC','few / scattered / broken / overcast'],['BKN012CB','broken 1200 ft, cumulonimbus'],['VV003','sky obscured, vert vis 300 ft'],['NSC NCD SKC','none significant / detected / clear']]],
+    ['Pressure & Temp','',[['Q1013','QNH 1013 hPa'],['A2992','29.92 inHg'],['M05/M07','temp −5°C, dew −7°C']]],
+    ['Runway state','SNOWTAM 8-figure',[['R26L/451293','rwy 26L: dry snow, 26-50%, 12mm, braking medium'],['CLRD//','contamination cleared'],['SNOCLO','aerodrome closed for snow']]],
+    ['Change / forecast','',[['BECMG','gradually becoming'],['TEMPO','temporary fluctuation'],['FM241800','from 24th 1800Z'],['PROB30','30% probability'],['TX30/2421Z','max temp 30° at 21Z'],['NOSIG','no significant change']]],
+    ['Colour states','military',[['BLU WHT GRN','decreasing minima →'],['YLO AMB RED','… down to below-limits (RED)']]],
+    ['SIGMET / AIRMET','',[['EMBD / FRQ TS','embedded / frequent storms'],['SEV TURB / ICE','severe turbulence / icing'],['MOV NE 20KT','moving NE at 20 kt'],['INTSF WKN NC','intensifying / weakening / no change'],['SIERRA TANGO ZULU','US AIRMET: IFR / turb / icing']]],
+    ['PIREP fields','/xx',[['/OV /TM /FL','location / time / altitude'],['/TP /SK /WX','type / sky / weather'],['/TA /WV','temp / wind'],['/TB /IC','turbulence / icing']]],
+    ['NOTAM','',[['A) B) C)','location / from / until'],['E)','plain text (decoded)'],['Q) ....','coded subject + status'],['CLSD WIP UFN','closed / work-in-progress / until further notice']]]
+  ];
+  var rb=$('#refBody'),H='';
+  REF.forEach(function(g){H+='<h4>'+esc(g[0])+(g[1]?' <small>'+esc(g[1])+'</small>':'')+'</h4><table>';
+    g[2].forEach(function(r){H+='<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>'});H+='</table>'});
+  rb.innerHTML=H;
+
+  /* ---------- offline app-shell cache when hosted ---------- */
+  if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+    var sw="var V='aerodecode-v3';"+
+      "self.addEventListener('install',function(e){self.skipWaiting()});"+
+      "self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return k===V?null:caches.delete(k)}))}).then(function(){return self.clients.claim()}))});"+
+      "self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;var req=e.request;"+
+      "var isDoc=req.mode==='navigate'||req.destination==='document';"+
+      // HTML: network-first so updates arrive when online; fall back to cache when offline
+      "if(isDoc){e.respondWith(fetch(req).then(function(resp){caches.open(V).then(function(c){try{c.put(req,resp.clone())}catch(_){}}); return resp;})"+
+      ".catch(function(){return caches.match(req).then(function(r){return r||caches.match('./')})}));return;}"+
+      // everything else (OCR engine, static): cache-first for speed + full offline
+      "e.respondWith(caches.open(V).then(function(c){return c.match(req).then(function(r){return r||fetch(req).then(function(resp){try{c.put(req,resp.clone())}catch(_){}; return resp;}).catch(function(){return r})})}));});";
+    try{navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'}))).catch(function(){});}catch(_){}
+  }
+})();
+</script>
+</body>
+</html>
