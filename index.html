@@ -354,6 +354,11 @@
     <button class="tab" data-view="duty">LABT/LATT</button>
   </div>
 
+  <div class="zbox">
+    <div class="zlab">Current ZULU</div>
+    <div class="zclock" id="duNow">--:--:--Z</div>
+  </div>
+
   <div id="view-decode">
   <div class="card">
     <label class="fld" for="input">Coded report</label>
@@ -443,10 +448,6 @@
   </div>
 
   <div id="view-duty" hidden>
-    <div class="zbox">
-      <div class="zlab">Current ZULU</div>
-      <div class="zclock" id="duNow">----:--Z</div>
-    </div>
     <div class="card">
       <label class="fld">Report time — Zulu (HHMM) · later of scheduled/actual</label>
       <input id="duReport" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM">
@@ -1304,7 +1305,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v3.6 · 2026-07-24';
+  var BUILD='v3.7 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1707,8 +1708,8 @@
       return '<div class="cdrow cd-'+col+'"><div class="cdlab">'+label+'<br><span class="cdsub">'+word+'</span></div>'+
              '<div class="cdval">'+duFmtHMS(s)+'</div></div>';
     }
-    rows+=row('LATT · wheels-up', duLive.latt);
     rows+=row('LABT · block-out', duLive.labt);
+    rows+=row('LATT · wheels-up', duLive.latt);
     box.innerHTML='<div class="cdgrid">'+rows+'</div>';
   }
   setInterval(function(){ duTickClock(); if(duLive.valid) duCountdownRender(); },1000);
