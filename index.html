@@ -565,7 +565,12 @@
     if(toks[0]==='AMD'){L.push('Amended forecast');toks=toks.slice(1);}
     if(toks[0]==='COR'){L.push('Corrected report');toks=toks.slice(1);}
     for(let i=0;i<toks.length;i++){
-      const tk=toks[i]; if(!tk)continue; let m,d;
+      let tk=toks[i]; if(!tk)continue; let m,d;
+      // --- OCR robustness: the letter Z is very often misread as digit 2 on time groups ---
+      if(!rmk){
+        if(/^\d{6}2$/.test(tk)) tk=tk.slice(0,-1)+'Z';                     // DDHHMMZ issue time
+        else if(/^T[XN]M?\d{2}\/\d{4}2$/.test(tk)) tk=tk.slice(0,-1)+'Z';  // TAF TX../TN.. valid-time
+      }
       if(tk==='RMK'){rmk=true;L.push('— Remarks —');continue;}
       if(rmk){ const r=decodeRemarkToken(tk,toks,i); if(r){L.push(r.t); i+=r.skip||0; continue;}
         if(CONTRACTIONS[tk]){L.push(`${tk}: ${CONTRACTIONS[tk]}`);continue;} L.push(`(rmk) ${tk}`); continue; }
@@ -752,7 +757,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v1.3 · 2026-07-24';
+  var BUILD='v1.4 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- drifting clouds ---------- */
