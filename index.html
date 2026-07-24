@@ -227,6 +227,25 @@
   table.fl tr.mark.por td{color:#8fc4ff}
   table.fl tr.mark.cpr td{color:#c9f7dd}
   table.fl tr.dest td{background:rgba(78,163,255,.1)}
+  /* crew rest */
+  .cr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .crk{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+  .crin{width:100%;background:rgba(6,14,28,.7);color:#dbe9ff;border:1px solid var(--edge);border-radius:12px;
+    padding:12px;font-size:20px;font-family:var(--mono);text-align:center;letter-spacing:2px}
+  .crin.sm{width:90px;letter-spacing:1px;font-size:18px}
+  .crin:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(78,163,255,.18)}
+  .cr-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .cr-row .crk{margin-bottom:0}
+  .seg{display:inline-flex;gap:6px}
+  .segbtn{min-height:0;padding:9px 14px;border-radius:10px;font-size:14px;font-weight:700;
+    background:rgba(20,38,66,.7);border:1px solid var(--edge);color:var(--dim)}
+  .segbtn.on{background:linear-gradient(180deg,#2a63a8,#17406f);color:#fff}
+  .brk{display:flex;align-items:center;gap:14px;margin-top:10px;padding:13px 15px;border-radius:14px;
+    background:linear-gradient(180deg,rgba(20,40,70,.6),rgba(12,24,44,.6));border:1px solid var(--edge)}
+  .brk .bn{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;font-weight:800;flex:0 0 74px}
+  .brk .bt{font-family:var(--mono);font-size:21px;font-weight:800;color:#fff;flex:1}
+  .brk .bd{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--gold)}
+  .brkco{text-align:center;color:var(--faint);font-size:12px;margin:8px 0;letter-spacing:.3px}
   .foot{color:var(--faint);font-size:12px;text-align:center;margin-top:26px;line-height:1.7}
   .foot b{color:var(--dim)}
 </style>
@@ -277,6 +296,7 @@
   <div class="tabs">
     <button class="tab on" data-view="decode">Decode</button>
     <button class="tab" data-view="flightlog">Flight&nbsp;Log</button>
+    <button class="tab" data-view="crewrest">Crew&nbsp;Rest</button>
   </div>
 
   <div id="view-decode">
@@ -346,6 +366,25 @@
     <div id="flQC"></div>
     <div id="flSum"></div>
     <div id="flTable"></div>
+  </div>
+
+  <div id="view-crewrest" hidden>
+    <div class="card">
+      <label class="fld">Times — Zulu (HHMM)</label>
+      <div class="cr-grid">
+        <div><div class="crk">Departure</div><input id="crDep" class="crin" inputmode="numeric" maxlength="4" placeholder="0001"></div>
+        <div><div class="crk">Landing</div><input id="crLand" class="crin" inputmode="numeric" maxlength="4" placeholder="1601"></div>
+      </div>
+      <button class="minibtn" id="crFromLog" style="margin-top:8px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">↺ Use Flight Log times</button>
+      <div class="cr-grid" style="margin-top:14px">
+        <div><div class="crk">Rest starts — min after departure</div><input id="crStart" class="crin" inputmode="numeric" value="30"></div>
+        <div><div class="crk">Rest ends — min before landing</div><input id="crEnd" class="crin" inputmode="numeric" value="60"></div>
+      </div>
+      <div class="cr-row"><div class="crk">Crew</div><span class="seg"><button class="segbtn" data-crew="3">3-man</button><button class="segbtn on" data-crew="4">4-man</button></span></div>
+      <div class="cr-row"><div class="crk">Breaks</div><span class="seg"><button class="segbtn" data-breaks="2">2</button><button class="segbtn" data-breaks="3">3</button><button class="segbtn" data-breaks="4">4</button></span></div>
+      <div class="cr-row"><div class="crk">Changeover between breaks (min)</div><input id="crCo" class="crin sm" inputmode="numeric" value="5"></div>
+    </div>
+    <div id="crOut"></div>
   </div>
 
   <div class="foot">
@@ -1063,7 +1102,26 @@
       porFix: p? p.fix : null};
   }
 
-  const API={parseNavlog,computeETA,fmtZ,totToMin,parseTripTime,qualityCheck,fmtHM,specialTimes};
+  /* ---- crew rest planner ---- */
+  function crewRest(o){
+    var depMin=o.depMin, landMin=o.landMin;
+    if(landMin<=depMin) landMin+=1440;                 // landing next day
+    var rs=depMin+(o.startOffset||0), re=landMin-(o.endOffset||0);
+    var win=re-rs;
+    if(win<=0) return {error:'Rest window is empty — check the times/offsets.'};
+    var N=Math.max(1,o.breaks||2), co=Math.max(0,o.changeover||0);
+    var totalBreak=win-(N-1)*co;
+    if(totalBreak<=0) return {error:'Changeover time exceeds the rest window.'};
+    var base=Math.floor(totalBreak/N), rem=totalBreak-base*N, periods=[], t=rs;
+    for(var i=0;i<N;i++){
+      var dur=base+(i<rem?1:0);
+      periods.push({start:t,end:t+dur,dur:dur});
+      t+=dur; if(i<N-1) t+=co;
+    }
+    return {restStart:rs, restEnd:re, window:win, changeover:co, periods:periods, landMin:landMin};
+  }
+
+  const API={parseNavlog,computeETA,fmtZ,totToMin,parseTripTime,qualityCheck,fmtHM,specialTimes,crewRest};
   if(typeof module!=='undefined'&&module.exports)module.exports=API;
   root.NAVLOG=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -1143,7 +1201,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v2.6 · 2026-07-24';
+  var BUILD='v2.7 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1453,8 +1511,61 @@
       t.classList.add('on');
       var v=t.getAttribute('data-view');
       $('#view-decode').hidden=(v!=='decode'); $('#view-flightlog').hidden=(v!=='flightlog');
+      $('#view-crewrest').hidden=(v!=='crewrest');
+      if(v==='crewrest'){ crPrefill(); crCompute(); }
     };
   });
+
+  /* ---------- Crew Rest ---------- */
+  var crDep=$('#crDep'), crLand=$('#crLand'), crStart=$('#crStart'), crEnd=$('#crEnd'), crCo=$('#crCo'), crOut=$('#crOut');
+  var crCrew=4, crBreaks=2, crBreaksSet=false;
+  function crParse(el){ var d=(el.value||'').replace(/\D/g,''); if(d.length<3)return null; d=d.padStart(4,'0'); return (+d.slice(0,2))*60+(+d.slice(2)); }
+  function crHM(m){ return Math.floor(m/60)+':'+String(m%60).padStart(2,'0'); }
+  function crPrefill(){
+    if(!crDep.value && typeof flDep!=='undefined' && flDep.value) crDep.value=flDep.value.replace(/\D/g,'').slice(0,4);
+    if(!crLand.value && flEta && flEta.length){ var z=(flEta[flEta.length-1].eta||'').match(/(\d{4})Z/); if(z) crLand.value=z[1]; }
+  }
+  $('#crFromLog').onclick=function(){
+    if(typeof flDep!=='undefined' && flDep.value) crDep.value=flDep.value.replace(/\D/g,'').slice(0,4);
+    if(flEta && flEta.length){ var z=(flEta[flEta.length-1].eta||'').match(/(\d{4})Z/); if(z) crLand.value=z[1]; }
+    crCompute();
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-crew]'),function(b){
+    b.onclick=function(){ document.querySelectorAll('[data-crew]').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
+      crCrew=+b.getAttribute('data-crew'); if(!crBreaksSet){ crBreaks=(crCrew===3?3:2); syncBreakBtns(); } crCompute(); };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-breaks]'),function(b){
+    b.onclick=function(){ crBreaks=+b.getAttribute('data-breaks'); crBreaksSet=true; syncBreakBtns(); crCompute(); };
+  });
+  function syncBreakBtns(){ document.querySelectorAll('[data-breaks]').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-breaks')===crBreaks); }); }
+  [crDep,crLand,crStart,crEnd,crCo].forEach(function(el){ el.addEventListener('input',crCompute); });
+  syncBreakBtns();
+  function crCompute(){
+    var dep=crParse(crDep), land=crParse(crLand);
+    if(dep==null||land==null){ crOut.innerHTML='<div class="hint" style="padding:0 4px">Enter departure and landing Zulu times to plan crew rest.</div>'; return; }
+    var r=NAVLOG.crewRest({depMin:dep, landMin:land, startOffset:parseInt(crStart.value,10)||0, endOffset:parseInt(crEnd.value,10)||0, breaks:crBreaks, changeover:parseInt(crCo.value,10)||0});
+    if(r.error){ crOut.innerHTML='<div class="qc warn" style="margin-top:14px"><div class="big">⚠️ '+esc(r.error)+'</div></div>'; return; }
+    var Z=NAVLOG.fmtZ;
+    var h='<div class="gcard" style="margin-top:14px"><div class="glab">Rest window · '+crCrew+'-man crew · '+r.periods.length+' break'+(r.periods.length>1?'s':'')+'</div>'+
+      '<div class="grow"><div class="gitem"><div class="gk">Rest begins</div><div class="gv key">'+Z(r.restStart)+'</div></div>'+
+      '<div class="gitem"><div class="gk">Rest ends</div><div class="gv key">'+Z(r.restEnd)+'</div></div>'+
+      '<div class="gitem"><div class="gk">Total window</div><div class="gv">'+crHM(r.window)+'</div></div></div></div>';
+    r.periods.forEach(function(p,i){
+      var crew=String.fromCharCode(65+(i%(crCrew===3?3:2)));
+      h+='<div class="brk"><div class="bn">Break '+(i+1)+'<br><span style="color:var(--faint);font-weight:600">Crew '+crew+'</span></div>'+
+        '<div class="bt">'+Z(p.start)+' – '+Z(p.end)+'</div><div class="bd">'+crHM(p.dur)+'</div></div>';
+      if(i<r.periods.length-1) h+='<div class="brkco">↕ changeover '+r.changeover+' min</div>';
+    });
+    h+='<button class="minibtn" id="crCopy" style="margin-top:14px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy rest plan</button>';
+    crOut.innerHTML=h;
+    var cb=$('#crCopy'); if(cb) cb.onclick=function(){
+      var L=['CREW REST PLAN','Departure '+String(Math.floor(dep/60)).padStart(2,"0")+String(dep%60).padStart(2,"0")+'Z · Landing '+crLand.value.replace(/\D/g,"").padStart(4,"0")+'Z',
+        'Rest '+Z(r.restStart)+' - '+Z(r.restEnd)+' ('+crHM(r.window)+') · '+crCrew+'-man · '+r.periods.length+' breaks',''];
+      r.periods.forEach(function(p,i){ L.push('Break '+(i+1)+' (Crew '+String.fromCharCode(65+(i%(crCrew===3?3:2)))+'): '+Z(p.start)+' - '+Z(p.end)+'  ['+crHM(p.dur)+']');
+        if(i<r.periods.length-1) L.push('   changeover '+r.changeover+' min'); });
+      if(navigator.clipboard)navigator.clipboard.writeText(L.join('\n')); cb.textContent='Copied ✓'; setTimeout(function(){cb.textContent='Copy rest plan';},1300);
+    };
+  }
 
   var pdfReady=false;
   async function ensurePdf(){
