@@ -404,24 +404,35 @@
      code group requires a digit, so a genuine letter is never altered ---- */
   const OCR_D={O:'0',I:'1',S:'5',B:'8',Z:'2',G:'6',D:'0',Q:'0'};
   function digify(s){ return s.replace(/[OISBZGDQ]/g,c=>OCR_D[c]); }
+  const CLOUD_CODES=['FEW','SCT','BKN','OVC','SKC','NSC','NCD','CLR','VV'];
+  function cloudAmt(p){ p=p.toUpperCase(); if(CLOUD_CODES.indexOf(p)>-1)return p;
+    const s=p.split('').sort().join('');   // anagram match repairs transpositions (BNK→BKN)
+    for(let i=0;i<CLOUD_CODES.length;i++){ if(CLOUD_CODES[i].split('').sort().join('')===s)return CLOUD_CODES[i]; }
+    return null; }
+  function windUnit(u){ if(/M/.test(u)&&/P/.test(u))return 'MPS';
+    if(/K/.test(u)&&/H/.test(u))return 'KMH'; if(/K/.test(u)&&/T/.test(u))return 'KT'; return null; }
   function ocrClean(tk){
     let m;
-    // DDHHMMZ timestamp (Z frequently misread as 2, and interior O/I/S/B for digits)
-    if(/^[0-9OISBZGDQ]{6}[Z2]$/.test(tk) && /\d/.test(tk)) return digify(tk.slice(0,6))+'Z';
+    // DDHHMMZ timestamp — Z often misread as a digit; tolerate 1–2 trailing junk chars
+    if(/^[0-9OISBZGDQ]{6}(Z|[0-9OISBZGDQ]{1,2})$/.test(tk) && /\d/.test(tk)) return digify(tk.slice(0,6))+'Z';
     // altimeter  Q1013 / A2992
     if(/^[QA][0-9OISBZGDQ]{4}$/.test(tk)) return tk[0]+digify(tk.slice(1));
-    // wind  dddffKT / dddffGffMPS
-    if((m=tk.match(/^(VRB|[0-9OISBZGDQ]{3})([0-9OISBZGDQ]{2,3})(G[0-9OISBZGDQ]{2,3})?(KT|MPS|KMH)$/)))
-      return (m[1]==='VRB'?'VRB':digify(m[1]))+digify(m[2])+(m[3]?'G'+digify(m[3].slice(1)):'')+m[4];
+    // wind  dddffKT / VRBffMPS  — fuzzy unit (e.g. MBPS→MPS)
+    if((m=tk.match(/^(VRB|[0-9OISBZGDQ]{3})([0-9OISBZGDQ]{2,3})(G[0-9OISBZGDQ]{2,3})?([A-Z]{2,4})$/))){
+      const u=windUnit(m[4]); if(u) return (m[1]==='VRB'?'VRB':digify(m[1]))+digify(m[2])+(m[3]?'G'+digify(m[3].slice(1)):'')+u;
+    }
+    // TAF max/min temp time  TX30/2207Z — trailing Z often misread
+    if((m=tk.match(/^(T[XN])(M?)([0-9OISBZGDQ]{2})\/([0-9OISBZGDQ]{4})[0-9OISBZGDQ]?$/)))
+      return m[1]+m[2]+digify(m[3])+'/'+digify(m[4])+'Z';
     // temperature / dew point  28/26  or  M05/M07
     if((m=tk.match(/^(M?)([0-9OISBZGDQ]{2})\/(M?)([0-9OISBZGDQ]{2})$/)))
       return m[1]+digify(m[2])+'/'+m[3]+digify(m[4]);
-    // cloud height  FEW045 / BKN012CB
-    if((m=tk.match(/^(FEW|SCT|BKN|OVC|VV)([0-9OISBZGDQ]{3})(CB|TCU)?$/)))
-      return m[1]+digify(m[2])+(m[3]||'');
+    // cloud  FEW045 / BKN012CB — repairs transposed prefix + an extra height digit
+    if((m=tk.match(/^([A-Z]{2,3})([0-9OISBZGDQ]{3,4})(CB|TCU)?$/))){
+      const a=cloudAmt(m[1]); if(a){ let h=digify(m[2]); if(h.length===4)h=h.slice(-3); return a+h+(m[3]||''); }
+    }
     // variable wind direction  060V120
-    if((m=tk.match(/^([0-9OISBZGDQ]{3})V([0-9OISBZGDQ]{3})$/)))
-      return digify(m[1])+'V'+digify(m[2]);
+    if((m=tk.match(/^([0-9OISBZGDQ]{3})V([0-9OISBZGDQ]{3})$/))) return digify(m[1])+'V'+digify(m[2]);
     // metric visibility  2500 / 9999  (needs ≥2 real digits so we never touch a word)
     if(/^[0-9OISBZGDQ]{4}$/.test(tk) && (tk.match(/\d/g)||[]).length>=2) return digify(tk);
     return tk;
@@ -593,11 +604,10 @@
     if(toks[0]==='COR'){L.push('Corrected report');toks=toks.slice(1);}
     for(let i=0;i<toks.length;i++){
       let tk=toks[i]; if(!tk)continue; let m,d;
-      // --- OCR robustness: correct common letter/digit look-alikes in digit-only fields ---
-      if(!rmk){
-        tk=ocrClean(tk);
-        if(/^T[XN]M?\d{2}\/\d{4}2$/.test(tk)) tk=tk.slice(0,-1)+'Z';       // TAF TX../TN.. valid-time Z→2
-      }
+      if(!/[A-Z0-9]/.test(tk))continue;   // drop pure OCR noise like "?" or stray symbols
+      // --- OCR robustness: correct common letter/digit look-alikes in digit-only fields
+      //     (skip the station id at i===0 so a 4-letter ICAO code is never touched) ---
+      if(!rmk && i>0) tk=ocrClean(tk);
       if(tk==='RMK'){rmk=true;L.push('— Remarks —');continue;}
       if(rmk){ const r=decodeRemarkToken(tk,toks,i); if(r){L.push(r.t); i+=r.skip||0; continue;}
         if(CONTRACTIONS[tk]){L.push(`${tk}: ${CONTRACTIONS[tk]}`);continue;} L.push(`(rmk) ${tk}`); continue; }
@@ -624,7 +634,7 @@
         if(toks[j]==='ALL'&&toks[j+1]==='RWY'){L.push('wind shear on all runways');i=j+1;continue;}
         if((toks[j]==='LDG'||toks[j]==='TKOF')&&/^(RWY)?\d{2}[LRC]?$/.test(toks[j+1]||'')){
           L.push('wind shear on '+(toks[j]==='LDG'?'landing':'take-off')+' runway '+toks[j+1].replace('RWY',''));i=j+1;continue;}
-        while(toks[j]&&/^R\d{2}[LRC]?$/.test(toks[j])){rwys.push(toks[j].slice(1));j++;}
+        while(toks[j]&&/^R[0-9OISBZGDQ]{2}[LRC]?$/.test(toks[j])){rwys.push(digify(toks[j].slice(1)));j++;}
         if(rwys.length){L.push('wind shear on runway'+(rwys.length>1?'s':'')+' '+rwys.join(', '));i=j-1;continue;}
         L.push('wind shear reported');continue;
       }
@@ -784,7 +794,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v1.5 · 2026-07-24';
+  var BUILD='v1.6 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- drifting clouds ---------- */
