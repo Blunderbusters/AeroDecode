@@ -240,11 +240,17 @@
   .segbtn{min-height:0;padding:9px 14px;border-radius:10px;font-size:14px;font-weight:700;
     background:rgba(20,38,66,.7);border:1px solid var(--edge);color:var(--dim)}
   .segbtn.on{background:linear-gradient(180deg,#2a63a8,#17406f);color:#fff}
-  .brk{display:flex;align-items:center;gap:14px;margin-top:10px;padding:13px 15px;border-radius:14px;
+  .brk{display:flex;flex-direction:column;gap:10px;margin-top:10px;padding:13px 15px;border-radius:14px;
     background:linear-gradient(180deg,rgba(20,40,70,.6),rgba(12,24,44,.6));border:1px solid var(--edge)}
+  .brk .btop{display:flex;align-items:center;gap:14px}
   .brk .bn{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;font-weight:800;flex:0 0 74px}
   .brk .bt{font-family:var(--mono);font-size:21px;font-weight:800;color:#fff;flex:1}
   .brk .bd{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--gold)}
+  .brange{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:5px;outline:none;
+    background:rgba(120,160,220,.28);accent-color:var(--accent)}
+  .brange::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;
+    background:var(--accent);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);cursor:pointer}
+  .brange::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--accent);border:3px solid #fff;cursor:pointer}
   .brkco{text-align:center;color:var(--faint);font-size:12px;margin:8px 0;letter-spacing:.3px}
   .foot{color:var(--faint);font-size:12px;text-align:center;margin-top:26px;line-height:1.7}
   .foot b{color:var(--dim)}
@@ -372,8 +378,8 @@
     <div class="card">
       <label class="fld">Times — Zulu (HHMM)</label>
       <div class="cr-grid">
-        <div><div class="crk">Departure</div><input id="crDep" class="crin" inputmode="numeric" maxlength="4" placeholder="0001"></div>
-        <div><div class="crk">Landing</div><input id="crLand" class="crin" inputmode="numeric" maxlength="4" placeholder="1601"></div>
+        <div><div class="crk">Departure</div><input id="crDep" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div><div class="crk">Landing</div><input id="crLand" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
       </div>
       <button class="minibtn" id="crFromLog" style="margin-top:8px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">↺ Use Flight Log times</button>
       <div class="cr-grid" style="margin-top:14px">
@@ -1201,7 +1207,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v2.7 · 2026-07-24';
+  var BUILD='v2.8 · 2026-07-24';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
@@ -1512,59 +1518,92 @@
       var v=t.getAttribute('data-view');
       $('#view-decode').hidden=(v!=='decode'); $('#view-flightlog').hidden=(v!=='flightlog');
       $('#view-crewrest').hidden=(v!=='crewrest');
-      if(v==='crewrest'){ crPrefill(); crCompute(); }
+      if(v==='crewrest'){ crBuild(); }
     };
   });
 
-  /* ---------- Crew Rest ---------- */
+  /* ---------- Crew Rest (with adjustable per-break sliders) ---------- */
   var crDep=$('#crDep'), crLand=$('#crLand'), crStart=$('#crStart'), crEnd=$('#crEnd'), crCo=$('#crCo'), crOut=$('#crOut');
-  var crCrew=4, crBreaks=2, crBreaksSet=false;
+  var crCrew=4, crBreaks=2, crBreaksSet=false, crMIN=5;
+  var crState=null;   // {rs, total, co, durs:[]}
   function crParse(el){ var d=(el.value||'').replace(/\D/g,''); if(d.length<3)return null; d=d.padStart(4,'0'); return (+d.slice(0,2))*60+(+d.slice(2)); }
   function crHM(m){ return Math.floor(m/60)+':'+String(m%60).padStart(2,'0'); }
-  function crPrefill(){
-    if(!crDep.value && typeof flDep!=='undefined' && flDep.value) crDep.value=flDep.value.replace(/\D/g,'').slice(0,4);
-    if(!crLand.value && flEta && flEta.length){ var z=(flEta[flEta.length-1].eta||'').match(/(\d{4})Z/); if(z) crLand.value=z[1]; }
+  function crCrewLetter(i){ return String.fromCharCode(65+(i%(crCrew===3?3:2))); }
+  function equalSplit(total,N){ var base=Math.floor(total/N),rem=total-base*N,a=[]; for(var i=0;i<N;i++)a.push(base+(i<rem?1:0)); return a; }
+  function crRedist(durs,i,want,total,minE){
+    var n=durs.length; want=Math.max(minE,Math.min(want,total-(n-1)*minE));
+    var res=durs.slice(); res[i]=want;
+    var others=[]; for(var j=0;j<n;j++) if(j!==i) others.push(j);
+    if(!others.length) return res;
+    var target=total-want,pool=0; others.forEach(function(j){pool+=durs[j];});
+    var used=0,tmp={};
+    others.forEach(function(j){ var v=pool>0? durs[j]*target/pool : target/others.length; v=Math.max(minE,Math.round(v)); tmp[j]=v; used+=v; });
+    var resid=target-used, order=others.slice().sort(function(a,b){return tmp[b]-tmp[a];}), gi=0, guard=0;
+    while(resid!==0 && guard++<100000){ var j=order[gi%order.length]; gi++;
+      if(resid>0){tmp[j]++;resid--;} else if(tmp[j]>minE){tmp[j]--;resid++;} }
+    others.forEach(function(j){res[j]=tmp[j];});
+    return res;
   }
   $('#crFromLog').onclick=function(){
     if(typeof flDep!=='undefined' && flDep.value) crDep.value=flDep.value.replace(/\D/g,'').slice(0,4);
-    if(flEta && flEta.length){ var z=(flEta[flEta.length-1].eta||'').match(/(\d{4})Z/); if(z) crLand.value=z[1]; }
-    crCompute();
+    if(typeof flEta!=='undefined' && flEta && flEta.length){ var z=(flEta[flEta.length-1].eta||'').match(/(\d{4})Z/); if(z) crLand.value=z[1]; }
+    crBuild();
   };
   Array.prototype.forEach.call(document.querySelectorAll('[data-crew]'),function(b){
     b.onclick=function(){ document.querySelectorAll('[data-crew]').forEach(function(x){x.classList.remove('on');}); b.classList.add('on');
-      crCrew=+b.getAttribute('data-crew'); if(!crBreaksSet){ crBreaks=(crCrew===3?3:2); syncBreakBtns(); } crCompute(); };
+      crCrew=+b.getAttribute('data-crew'); if(!crBreaksSet){ crBreaks=(crCrew===3?3:2); syncBreakBtns(); } crBuild(); };
   });
   Array.prototype.forEach.call(document.querySelectorAll('[data-breaks]'),function(b){
-    b.onclick=function(){ crBreaks=+b.getAttribute('data-breaks'); crBreaksSet=true; syncBreakBtns(); crCompute(); };
+    b.onclick=function(){ crBreaks=+b.getAttribute('data-breaks'); crBreaksSet=true; syncBreakBtns(); crBuild(); };
   });
   function syncBreakBtns(){ document.querySelectorAll('[data-breaks]').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-breaks')===crBreaks); }); }
-  [crDep,crLand,crStart,crEnd,crCo].forEach(function(el){ el.addEventListener('input',crCompute); });
+  [crDep,crLand,crStart,crEnd,crCo].forEach(function(el){ el.addEventListener('input',crBuild); });
   syncBreakBtns();
-  function crCompute(){
+
+  function crBuild(){
     var dep=crParse(crDep), land=crParse(crLand);
-    if(dep==null||land==null){ crOut.innerHTML='<div class="hint" style="padding:0 4px">Enter departure and landing Zulu times to plan crew rest.</div>'; return; }
+    if(dep==null||land==null){ crState=null; crOut.innerHTML='<div class="hint" style="padding:0 4px">Enter departure and landing Zulu times to plan crew rest.</div>'; return; }
     var r=NAVLOG.crewRest({depMin:dep, landMin:land, startOffset:parseInt(crStart.value,10)||0, endOffset:parseInt(crEnd.value,10)||0, breaks:crBreaks, changeover:parseInt(crCo.value,10)||0});
-    if(r.error){ crOut.innerHTML='<div class="qc warn" style="margin-top:14px"><div class="big">⚠️ '+esc(r.error)+'</div></div>'; return; }
-    var Z=NAVLOG.fmtZ;
-    var h='<div class="gcard" style="margin-top:14px"><div class="glab">Rest window · '+crCrew+'-man crew · '+r.periods.length+' break'+(r.periods.length>1?'s':'')+'</div>'+
-      '<div class="grow"><div class="gitem"><div class="gk">Rest begins</div><div class="gv key">'+Z(r.restStart)+'</div></div>'+
-      '<div class="gitem"><div class="gk">Rest ends</div><div class="gv key">'+Z(r.restEnd)+'</div></div>'+
-      '<div class="gitem"><div class="gk">Total window</div><div class="gv">'+crHM(r.window)+'</div></div></div></div>';
-    r.periods.forEach(function(p,i){
-      var crew=String.fromCharCode(65+(i%(crCrew===3?3:2)));
-      h+='<div class="brk"><div class="bn">Break '+(i+1)+'<br><span style="color:var(--faint);font-weight:600">Crew '+crew+'</span></div>'+
-        '<div class="bt">'+Z(p.start)+' – '+Z(p.end)+'</div><div class="bd">'+crHM(p.dur)+'</div></div>';
-      if(i<r.periods.length-1) h+='<div class="brkco">↕ changeover '+r.changeover+' min</div>';
-    });
-    h+='<button class="minibtn" id="crCopy" style="margin-top:14px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy rest plan</button>';
+    if(r.error){ crState=null; crOut.innerHTML='<div class="qc warn" style="margin-top:14px"><div class="big">⚠️ '+esc(r.error)+'</div></div>'; return; }
+    var total=0; r.periods.forEach(function(p){total+=p.dur;});
+    crState={rs:r.restStart, re:r.restEnd, window:r.window, total:total, co:r.changeover, durs:equalSplit(total,r.periods.length)};
+    crRenderCards();
+  }
+  function crStarts(){ var s=[],t=crState.rs; for(var i=0;i<crState.durs.length;i++){ s.push(t); t+=crState.durs[i]+ (i<crState.durs.length-1?crState.co:0); } return s; }
+  function crRenderCards(){
+    var Z=NAVLOG.fmtZ, N=crState.durs.length, maxEach=crState.total-(N-1)*crMIN;
+    var h='<div class="gcard" style="margin-top:14px"><div class="glab">Rest window · '+crCrew+'-man crew · '+N+' break'+(N>1?'s':'')+'</div>'+
+      '<div class="grow"><div class="gitem"><div class="gk">Rest begins</div><div class="gv key">'+Z(crState.rs)+'</div></div>'+
+      '<div class="gitem"><div class="gk">Rest ends</div><div class="gv key">'+Z(crState.re)+'</div></div>'+
+      '<div class="gitem"><div class="gk">Total window</div><div class="gv">'+crHM(crState.window)+'</div></div></div></div>';
+    var st=crStarts();
+    for(var i=0;i<N;i++){
+      h+='<div class="brk"><div class="btop"><div class="bn">Break '+(i+1)+'<br><span style="color:var(--faint);font-weight:600">Crew '+crCrewLetter(i)+'</span></div>'+
+        '<div class="bt" id="crT'+i+'">'+Z(st[i])+' – '+Z(st[i]+crState.durs[i])+'</div><div class="bd" id="crD'+i+'">'+crHM(crState.durs[i])+'</div></div>'+
+        '<input type="range" class="brange" id="crR'+i+'" min="'+crMIN+'" max="'+maxEach+'" step="5" value="'+crState.durs[i]+'"></div>';
+      if(i<N-1) h+='<div class="brkco">↕ changeover '+crState.co+' min</div>';
+    }
+    h+='<button class="minibtn" id="crCopy" style="margin-top:14px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy rest plan</button>'+
+       '<button class="minibtn" id="crReset" style="margin-top:14px;margin-left:6px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Even split</button>';
     crOut.innerHTML=h;
-    var cb=$('#crCopy'); if(cb) cb.onclick=function(){
-      var L=['CREW REST PLAN','Departure '+String(Math.floor(dep/60)).padStart(2,"0")+String(dep%60).padStart(2,"0")+'Z · Landing '+crLand.value.replace(/\D/g,"").padStart(4,"0")+'Z',
-        'Rest '+Z(r.restStart)+' - '+Z(r.restEnd)+' ('+crHM(r.window)+') · '+crCrew+'-man · '+r.periods.length+' breaks',''];
-      r.periods.forEach(function(p,i){ L.push('Break '+(i+1)+' (Crew '+String.fromCharCode(65+(i%(crCrew===3?3:2)))+'): '+Z(p.start)+' - '+Z(p.end)+'  ['+crHM(p.dur)+']');
-        if(i<r.periods.length-1) L.push('   changeover '+r.changeover+' min'); });
-      if(navigator.clipboard)navigator.clipboard.writeText(L.join('\n')); cb.textContent='Copied ✓'; setTimeout(function(){cb.textContent='Copy rest plan';},1300);
+    for(var k=0;k<N;k++)(function(idx){ var el=document.getElementById('crR'+idx);
+      el.addEventListener('input',function(){ crState.durs=crRedist(crState.durs,idx,parseInt(el.value,10)||crMIN,crState.total,crMIN); crRefresh(idx); }); })(k);
+    $('#crReset').onclick=function(){ crState.durs=equalSplit(crState.total,N); crRenderCards(); };
+    $('#crCopy').onclick=function(){
+      var s=crStarts(), L=['CREW REST PLAN','Departure '+crDep.value.replace(/\D/g,'').padStart(4,'0')+'Z · Landing '+crLand.value.replace(/\D/g,'').padStart(4,'0')+'Z',
+        'Rest '+Z(crState.rs)+' - '+Z(crState.re)+' ('+crHM(crState.window)+') · '+crCrew+'-man · '+N+' breaks',''];
+      for(var i=0;i<N;i++){ L.push('Break '+(i+1)+' (Crew '+crCrewLetter(i)+'): '+Z(s[i])+' - '+Z(s[i]+crState.durs[i])+'  ['+crHM(crState.durs[i])+']');
+        if(i<N-1) L.push('   changeover '+crState.co+' min'); }
+      if(navigator.clipboard)navigator.clipboard.writeText(L.join('\n')); this.textContent='Copied ✓'; var b=this; setTimeout(function(){b.textContent='Copy rest plan';},1300);
     };
+  }
+  function crRefresh(dragIdx){
+    var Z=NAVLOG.fmtZ, st=crStarts();
+    for(var i=0;i<crState.durs.length;i++){
+      document.getElementById('crT'+i).textContent=Z(st[i])+' – '+Z(st[i]+crState.durs[i]);
+      document.getElementById('crD'+i).textContent=crHM(crState.durs[i]);
+      if(i!==dragIdx){ var r=document.getElementById('crR'+i); if(r) r.value=crState.durs[i]; }
+    }
   }
 
   var pdfReady=false;
