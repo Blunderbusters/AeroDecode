@@ -1448,7 +1448,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v5.2 · 2026-07-24';
+  var BUILD='v5.3 · 2026-07-24';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2194,7 +2194,10 @@
     var dt=$('#flDemoText'); if(dt) dt.textContent=DEMO_OFP;
     var dv=$('#flDemoView'); if(dv) dv.hidden=false;
     ingest(DEMO_OFP);
-    $('#flDemoNote').innerHTML='Loaded demo ORD→ZHEC — 83 waypoints, 14:32 trip, POR SABTU. Tap <b style="color:var(--dim)">View the demo OFP text</b> to read it, or change the departure time above.';
+    // apply the demo across every tab so the user doesn't have to load it again elsewhere
+    try{ var d=$('#duFromLog'); if(d&&d.onclick) d.onclick(); }catch(e){}
+    try{ var c=$('#crFromLog'); if(c&&c.onclick) c.onclick(); }catch(e){}
+    $('#flDemoNote').innerHTML='Loaded demo ORD→ZHEC across all tabs — 83 waypoints, 14:32 trip, POR SABTU, and the LABT/LATT and Crew Rest tabs are filled in too. Tap <b style="color:var(--dim)">View the demo OFP text</b> to read it, or change any value.';
     if(dv){ dv.scrollIntoView({block:'nearest'}); }
   };
 
