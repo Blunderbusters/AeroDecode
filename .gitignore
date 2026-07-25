@@ -1,0 +1,8 @@
+# Source assets — the app is fully self-contained in index.html.
+# These are large originals that should NOT be published to the public repo.
+Background App.png
+*.png
+*.jpg
+*.jpeg
+*.b64
+*.pdf
