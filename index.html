@@ -106,15 +106,15 @@
   .t2row{display:flex;gap:5px;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
   .t2{flex-shrink:0;min-width:50px;display:flex;flex-direction:column;text-align:center;
     --c:#9fb3d1}
-  .t2.buf{--c:#8ba7d4} .t2.taxi{--c:#5aa0ff} .t2.flt{--c:#f0b83f} .t2.tin{--c:#4ed3a0} .t2.post{--c:#b58cff}
+  .t2.buf{--c:#8ba7d4} .t2.taxi{--c:#5aa0ff} .t2.flt{--c:#f0b83f} .t2.tin{--c:#29c3e0} .t2.post{--c:#b58cff}
   /* vertical boundary bars (REPORT / LABT / LATT) that mark points in time */
   .t2.t2v{flex:0 0 auto;min-width:44px}
-  .t2v.rep{--c:#cfe0ff} .t2v.key{--c:var(--gold)}
+  .t2v.rep{--c:#cfe0ff} .t2v.key{--c:#ff6b6b}
   .t2v .t2repbar{width:5px;height:40px;margin:0 auto;border-radius:3px}
   .t2v.rep .t2repbar{background:linear-gradient(180deg,#ffffff,#9fc0ff);box-shadow:0 0 10px rgba(180,210,255,.6)}
-  .t2v.key .t2repbar{background:linear-gradient(180deg,#ffe08a,#e5a11f);box-shadow:0 0 10px rgba(255,209,102,.6)}
+  .t2v.key .t2repbar{background:linear-gradient(180deg,#ff9a9a,#e03e3e);box-shadow:0 0 10px rgba(255,107,107,.6)}
   .t2v .t2top{color:var(--c)}
-  .t2v.key .t2z{color:var(--gold)}
+  .t2v.key .t2z{color:#ff6b6b}
   .t2v .t2sub{color:var(--c)}
   .t2top{font-family:var(--mono);font-size:12.5px;font-weight:800;color:var(--c);margin-bottom:4px}
   .t2bar{height:40px;display:flex;align-items:center;justify-content:center;border-radius:9px;
@@ -1452,7 +1452,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v5.5 · 2026-07-26';
+  var BUILD='v5.7 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
