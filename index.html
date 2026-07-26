@@ -351,6 +351,18 @@
   .rptCopied{font-size:12.5px;color:#7fd08a;text-align:center;min-height:16px;margin-top:10px}
   .rptClose{display:block;width:100%;margin-top:12px;padding:9px;border-radius:10px;background:transparent;
     border:1px solid var(--edge);color:var(--dim);font-size:13px;font-weight:600;cursor:pointer}
+  /* homepage announcement window */
+  .annModal{position:fixed;inset:0;z-index:62;background:rgba(4,10,22,.92);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:20px}
+  .annModal.on{display:flex}
+  .annBox{width:100%;max-width:400px;background:var(--glass);border:1px solid #5b93e8;border-radius:16px;
+    padding:20px 18px;box-shadow:0 18px 50px rgba(2,8,20,.6)}
+  .annIcon{font-size:30px;text-align:center;line-height:1}
+  .annTitle{font-size:19px;font-weight:800;color:var(--ink);text-align:center;margin-top:8px}
+  .annBody{font-size:14.5px;color:var(--dim);text-align:center;margin:10px 2px 0;line-height:1.55}
+  .annBody b{color:var(--ink)}
+  .annBtn{display:block;width:100%;margin-top:18px;padding:13px;border-radius:11px;font-size:15px;font-weight:800;
+    cursor:pointer;border:1px solid #5b93e8;background:linear-gradient(180deg,#3f7bd6,#255fae);color:#fff}
   .cropHead{color:var(--ink);font-weight:700;text-align:center;font-size:15px}
   .cropHint{color:var(--dim);font-size:12.5px;text-align:center;margin:3px 0 8px}
   .cropStage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -779,6 +791,15 @@
     <button class="rptOpt" id="rptCopy">Copy address &amp; message<span class="rptOptSub">Paste into any email if the buttons above don't work</span></button>
     <div class="rptCopied" id="rptCopied"></div>
     <button class="rptClose" id="rptClose">Cancel</button>
+  </div>
+</div>
+
+<div class="annModal" id="annModal">
+  <div class="annBox">
+    <div class="annIcon">📣</div>
+    <div class="annTitle" id="annTitle">Announcement</div>
+    <div class="annBody" id="annBody"></div>
+    <button class="annBtn" id="annBtn">Got it</button>
   </div>
 </div>
 
@@ -1866,7 +1887,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v7.8 · 2026-07-26';
+  var BUILD='v7.9 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1993,6 +2014,55 @@
   function killReopen(){ if(document.visibilityState!=='visible') return; if(Date.now()-lastKill<15000) return; lastKill=Date.now(); checkKill(); }
   document.addEventListener('visibilitychange', killReopen);
   window.addEventListener('focus', killReopen);
+
+  /* ---------- homepage announcement window ----------
+     Reads announce.txt from the repo on every open (when online). Format:
+       line 1: 'off' to hide  ·  'every' to show on every open  ·  any other word = an ID (shows once until dismissed; change the ID to re-show)
+       line 2: the title
+       line 3+: the message (blank line = new paragraph)
+     Example — to tell everyone to reinstall:
+       reinstall-1
+       Update Required
+       Please delete CargoDecode from your home screen and reload it from your browser.
+     Offline devices simply won't see it until they reconnect. */
+  var _annPersistId=null;
+  function annEscape(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function annDismiss(){
+    if(_annPersistId){ try{ localStorage.setItem('ad_ann_seen', _annPersistId); }catch(e){} }
+    var el=document.getElementById('annModal'); if(el) el.classList.remove('on');
+  }
+  function showAnnounce(title, body, persistId){
+    var box=document.getElementById('annModal'); if(!box) return;
+    var tEl=document.getElementById('annTitle'); if(tEl) tEl.textContent=title||'Announcement';
+    var bEl=document.getElementById('annBody');
+    if(bEl){ bEl.innerHTML=annEscape(body).replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>'); bEl.innerHTML='<p>'+bEl.innerHTML+'</p>'; }
+    _annPersistId=persistId||null;
+    box.classList.add('on');
+  }
+  function checkAnnounce(){
+    try{
+      if(navigator.onLine===false) return;                              // offline devices can't be reached
+      var url=location.pathname.replace(/[^\/]*$/,'')+'announce.txt?t='+Date.now();
+      fetch(url,{cache:'no-store'}).then(function(r){ if(!r.ok) return null; return r.text(); }).then(function(t){
+        if(t==null) return;                                             // no announce.txt → nothing to show
+        var lines=t.replace(/\r/g,'').split('\n');
+        var first=(lines[0]||'').trim(); var firstL=first.toLowerCase();
+        if(!first || firstL==='off') return;                            // disabled
+        var mode = (firstL==='every') ? 'every' : 'once';
+        var id = (mode==='once') ? first : null;
+        if(mode==='once'){ var seen=null; try{ seen=localStorage.getItem('ad_ann_seen'); }catch(e){} if(seen===id) return; }
+        var title=(lines[1]||'').trim();
+        var body=lines.slice(2).join('\n').trim();
+        showAnnounce(title, body, id);
+      }).catch(function(){});                                           // offline/error → no-op
+    }catch(e){}
+  }
+  var annB=document.getElementById('annBtn'); if(annB) annB.onclick=annDismiss;
+  checkAnnounce();
+  var lastAnn=Date.now();
+  function annReopen(){ if(document.visibilityState!=='visible') return; if(Date.now()-lastAnn<15000) return; lastAnn=Date.now(); checkAnnounce(); }
+  document.addEventListener('visibilitychange', annReopen);
+  window.addEventListener('focus', annReopen);
 
   /* ---------- accessibility: text size + dark mode ---------- */
   (function(){
