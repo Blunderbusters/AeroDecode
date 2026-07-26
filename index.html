@@ -106,12 +106,12 @@
   .t2start{font-family:var(--mono);font-size:13px;color:#dbe9ff;font-weight:700;margin-bottom:8px}
   .t2start .t2slab{font-family:inherit;font-size:9px;color:var(--faint);letter-spacing:.5px;font-weight:800;
     border:1px solid var(--edge);border-radius:5px;padding:1px 5px;margin-right:6px}
-  .t2row{display:flex;gap:5px;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
-  .t2{flex-shrink:0;min-width:50px;display:flex;flex-direction:column;text-align:center;
-    --c:#9fb3d1}
+  .t2row{display:flex;gap:6px;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+  .t2{flex-shrink:0;display:flex;flex-direction:column;text-align:center;--c:#9fb3d1}
   .t2.buf{--c:#8ba7d4} .t2.taxi{--c:#5aa0ff} .t2.flt{--c:#f0b83f} .t2.tin{--c:#29c3e0} .t2.post{--c:#b58cff}
-  /* vertical boundary bars (REPORT / LABT / LATT) that mark points in time */
-  .t2.t2v{flex:0 0 auto;min-width:44px}
+  /* vertical boundary bars (REPORT / LABT / LATT) that mark points in time — fixed width so labels never overlap */
+  .t2.t2v{flex:0 0 64px}
+  .t2hint{font-size:10.5px;color:var(--faint);margin-top:8px;text-align:center;letter-spacing:.2px}
   .t2v.rep{--c:#cfe0ff} .t2v.key{--c:#ff6b6b}
   .t2v .t2repbar{width:5px;height:40px;margin:0 auto;border-radius:3px}
   .t2v.rep .t2repbar{background:linear-gradient(180deg,#ffffff,#9fc0ff);box-shadow:0 0 10px rgba(180,210,255,.6)}
@@ -125,7 +125,7 @@
     background:color-mix(in srgb, var(--c) 20%, transparent);border:1.5px solid color-mix(in srgb, var(--c) 55%, transparent)}
   .t2bot{margin-top:5px}
   .t2z{font-family:var(--mono);font-size:13.5px;font-weight:800;color:#eaf2ff}
-  .t2sub{font-size:9.5px;color:var(--c);text-transform:uppercase;letter-spacing:.2px;font-weight:700;margin-top:1px;line-height:1.25}
+  .t2sub{font-size:9.5px;color:var(--c);text-transform:uppercase;letter-spacing:.2px;font-weight:700;margin-top:1px;line-height:1.25;white-space:nowrap}
   .t2sub b{color:var(--gold);font-size:12px;letter-spacing:.4px}
   .t2.key .t2bar{box-shadow:0 0 0 1px var(--gold), 0 0 14px rgba(255,209,102,.25)}
   /* Reference-only "Open News Wire" button */
@@ -1455,7 +1455,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v5.8 · 2026-07-26';
+  var BUILD='v5.9 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1914,10 +1914,10 @@
           '<div class="t2bot"><div class="t2z">'+duZ(it.z)+'</div><div class="t2sub">'+esc(it.sub)+'</div></div>'+
           '</div>';
       } else {
-        // loosely proportional width: sqrt compresses the range so the long flight leg is clearly
-        // biggest, while a CSS min-width floor keeps the short legs readable (not true-to-scale).
-        var w=Math.sqrt(Math.max(1,it.dur)).toFixed(2);
-        cells+='<div class="t2 '+it.cls+'" style="flex:'+w+' 1 0">'+
+        // FIXED width per segment, loosely proportional to duration (sqrt-compressed) with a floor
+        // wide enough for the labels — never shrinks, so text can't overlap; the row scrolls instead.
+        var W=Math.round(66+Math.sqrt(Math.max(1,it.dur))*2.0);
+        cells+='<div class="t2 '+it.cls+'" style="flex:0 0 '+W+'px">'+
           '<div class="t2top">'+duHMlabel(it.dur)+'</div>'+
           '<div class="t2bar">'+esc(it.name)+'</div>'+
           '<div class="t2bot">'+(it.endz!=null?'<div class="t2z">'+duZ(it.endz)+'</div><div class="t2sub">'+esc(it.endsub)+'</div>':'')+'</div>'+
@@ -1925,7 +1925,8 @@
       }
     });
     box.innerHTML='<div class="tlwrap"><div class="tllabel">Duty timeline — report to max duty-off <span class="tlnote">(loosely to scale)</span></div>'+
-      '<div class="t2row">'+cells+'</div></div>';
+      '<div class="t2row">'+cells+'</div>'+
+      '<div class="t2hint">← swipe sideways to see the whole duty day →</div></div>';
   }
 
   /* ---- live Zulu clock + LATT/LABT countdown ---- */
