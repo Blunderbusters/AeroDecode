@@ -121,9 +121,11 @@
   .killicon{font-size:46px;line-height:1;margin-bottom:10px}
   .killtitle{font-size:22px;font-weight:800;color:#ffd3d3;letter-spacing:.3px}
   .killmsg{color:#e3b4b4;font-size:14px;margin-top:12px;line-height:1.55}
-  /* update-available pulse on the "Check for updates" button */
-  #updBtn.updpulse{border-color:var(--bad);color:#ffd0d0;animation:updpl 1.6s ease-in-out infinite}
-  @keyframes updpl{0%,100%{box-shadow:0 0 0 rgba(255,107,107,0)}50%{box-shadow:0 0 14px rgba(255,107,107,.5)}}
+  /* update-available: turn the button into a clear, tappable install control */
+  #updBtn.updpulse{background:linear-gradient(180deg,#d0453a,#a12c20)!important;border-color:#e06b5c!important;
+    color:#fff!important;font-weight:800;animation:updpl 1.6s ease-in-out infinite}
+  @keyframes updpl{0%,100%{box-shadow:0 0 0 rgba(255,107,107,0)}50%{box-shadow:0 0 16px rgba(255,107,107,.65)}}
+  #updStatus .updlink{text-decoration:underline;color:#ffd0d0;font-weight:700}
   /* Prepare-for-offline readiness outline */
   #prepBtn{transition:border-color .25s,color .25s,box-shadow .25s}
   #prepBtn.prep-red{border-color:var(--bad);color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset,0 0 12px rgba(255,107,107,.25)}
@@ -1887,7 +1889,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v7.9 · 2026-07-26';
+  var BUILD='v8.0 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1911,28 +1913,47 @@
     try{ if('serviceWorker' in navigator){ var rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function(r){return r.unregister();})); } }catch(e){}
     location.replace(location.pathname+'?v='+Date.now());   // reload fully fresh
   }
-  // manual: user tapped the button.  apply: OK to auto-reload to the new version (safe only when
-  // nothing is entered yet — on a fresh open).  Otherwise we just notify so no in-progress work is lost.
+  // Auto-updates install once per app open, then stop (prevents reload loops if the server is briefly
+  // stale). A manual tap ALWAYS installs, no matter what. This counter replaces the old ?v= URL guard,
+  // which permanently blocked updates once a cache-buster query got baked into the PWA start URL.
+  var _updGuardKey='ad_upd_reloads';
+  function _updReloads(){ try{ return (+sessionStorage.getItem(_updGuardKey))||0; }catch(e){ return 0; } }
+  function _bumpUpdReloads(){ try{ sessionStorage.setItem(_updGuardKey, String(_updReloads()+1)); }catch(e){} }
+  var _pendingUpd=null;
+  function showUpdReady(latest){
+    _pendingUpd=latest;
+    var v=latest.split(' ')[0];
+    if(ub){ ub.classList.add('updpulse'); ub.textContent='⬇ Install update '+v; }
+    if(updStatus){ updStatus.innerHTML='<span class="updlink">🔴 Update ready ('+v+') — tap to install</span>'; updStatus.style.cursor='pointer'; }
+  }
+  function clearUpdReady(){
+    _pendingUpd=null;
+    if(ub){ ub.classList.remove('updpulse'); ub.textContent='Check for updates'; }
+    if(updStatus) updStatus.style.cursor='';
+  }
   async function checkForUpdate(manual, apply){
     if(apply===undefined) apply=true;
     if(manual) setUpd('Checking…');
     var latest=await getLatestBuild();
     if(latest===null){ setUpd(manual?'Can’t check — you appear to be offline. The app still works fully offline.':''); return; }
     if(latest!==BUILD){
-      var canApply = apply && !/[?&]v=/.test(location.search);   // loop guard: don't re-reload after an update reload
+      var canApply = apply && (manual || _updReloads()<1);   // manual = always; auto = once per open
       if(canApply){
+        if(!manual) _bumpUpdReloads();
         setUpd('Updating to '+latest.split(' ')[0]+'…');
         await applyUpdate();
       } else {
-        setUpd('🔴 Update available ('+latest.split(' ')[0]+') — tap “Check for updates”.');
-        if(ub) ub.classList.add('updpulse');
+        showUpdReady(latest);
       }
     } else {
+      clearUpdReady();
       setUpd(manual?('✓ You’re on the latest ('+BUILD.split(' ')[0]+')'):'');
-      if(ub) ub.classList.remove('updpulse');
     }
   }
-  var ub=document.getElementById('updBtn'); if(ub) ub.onclick=function(){ checkForUpdate(true, true); };
+  var ub=document.getElementById('updBtn');
+  function forceUpdateNow(){ setUpd('Updating…'); applyUpdate(); }   // purge caches + SW, hard-reload fresh
+  if(ub) ub.onclick=function(){ if(_pendingUpd){ forceUpdateNow(); } else { checkForUpdate(true, true); } };
+  if(updStatus) updStatus.onclick=function(){ if(_pendingUpd) forceUpdateNow(); };
   function rptMsg(){
     return { subj:'CargoDecode issue — '+BUILD,
       body:'Describe the issue (what you were doing, which report or flight plan, and what went wrong):\n\n\n\n----------------------\nApp version: '+BUILD+'\nDevice: '+navigator.userAgent };
