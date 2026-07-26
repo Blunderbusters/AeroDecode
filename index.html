@@ -103,15 +103,19 @@
   .t2start{font-family:var(--mono);font-size:13px;color:#dbe9ff;font-weight:700;margin-bottom:8px}
   .t2start .t2slab{font-family:inherit;font-size:9px;color:var(--faint);letter-spacing:.5px;font-weight:800;
     border:1px solid var(--edge);border-radius:5px;padding:1px 5px;margin-right:6px}
-  .t2row{display:flex;gap:5px;align-items:flex-end}
-  .t2{min-width:50px;display:flex;flex-direction:column;text-align:center;
+  .t2row{display:flex;gap:5px;align-items:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+  .t2{flex-shrink:0;min-width:50px;display:flex;flex-direction:column;text-align:center;
     --c:#9fb3d1}
   .t2.buf{--c:#8ba7d4} .t2.taxi{--c:#5aa0ff} .t2.flt{--c:#f0b83f} .t2.tin{--c:#4ed3a0} .t2.post{--c:#b58cff}
-  /* report-time vertical bar that kicks off the timeline */
-  .t2.t2rep{flex:0 0 auto;min-width:0;--c:#eaf2ff;margin-right:2px}
-  .t2rep .t2repbar{width:5px;height:40px;margin:0 auto;border-radius:3px;
-    background:linear-gradient(180deg,#ffffff,#9fc0ff);box-shadow:0 0 10px rgba(180,210,255,.6)}
-  .t2rep .t2top{color:#cfe0ff}
+  /* vertical boundary bars (REPORT / LABT / LATT) that mark points in time */
+  .t2.t2v{flex:0 0 auto;min-width:44px}
+  .t2v.rep{--c:#cfe0ff} .t2v.key{--c:var(--gold)}
+  .t2v .t2repbar{width:5px;height:40px;margin:0 auto;border-radius:3px}
+  .t2v.rep .t2repbar{background:linear-gradient(180deg,#ffffff,#9fc0ff);box-shadow:0 0 10px rgba(180,210,255,.6)}
+  .t2v.key .t2repbar{background:linear-gradient(180deg,#ffe08a,#e5a11f);box-shadow:0 0 10px rgba(255,209,102,.6)}
+  .t2v .t2top{color:var(--c)}
+  .t2v.key .t2z{color:var(--gold)}
+  .t2v .t2sub{color:var(--c)}
   .t2top{font-family:var(--mono);font-size:12.5px;font-weight:800;color:var(--c);margin-bottom:4px}
   .t2bar{height:40px;display:flex;align-items:center;justify-content:center;border-radius:9px;
     font-size:11.5px;font-weight:800;color:var(--c);letter-spacing:.2px;line-height:1.1;padding:2px;
@@ -1448,7 +1452,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v5.3 · 2026-07-24';
+  var BUILD='v5.5 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1863,31 +1867,41 @@
     if(!(o.limit>0)){ box.innerHTML=''; return; }
     var hasTaxi=(o.labt!=null);
     var blockOut = hasTaxi? o.labt : o.latt;
-    var segs=[];
-    segs.push({cls:'buf', name:'Allowable Delay', dur:blockOut-o.report, end:blockOut, endname:(hasTaxi?'LABT':null), endsub:(hasTaxi?'block-out':'wheels-up')});
-    if(hasTaxi) segs.push({cls:'taxi', name:'Taxi-out', dur:o.taxiOut, end:o.latt, endname:'LATT', endsub:'wheels-up'});
-    segs.push({cls:'flt', name:'Flight', dur:o.flt, end:o.maxTd, endname:null, endsub:'touchdown'});
-    segs.push({cls:'tin', name:'Land taxi', dur:o.taxiIn, end:o.maxIn, endname:null, endsub:'block-in'});
-    segs.push({cls:'post', name:'Post-duty', dur:o.post, end:o.maxOff, endname:null, endsub:'duty-off'});
+    // ordered items: vertical boundary bars (report / LABT / LATT / duty-off) between duration segments
+    var items=[];
+    items.push({vbar:true, cls:'rep', name:'REPORT', z:o.report, sub:'start'});
+    items.push({cls:'buf', name:'Allowable Delay', dur:blockOut-o.report});
+    if(hasTaxi){
+      items.push({vbar:true, cls:'key', name:'LABT', z:o.labt, sub:'block-out'});
+      items.push({cls:'taxi', name:'Taxi-out', dur:o.taxiOut});
+      items.push({vbar:true, cls:'key', name:'LATT', z:o.latt, sub:'wheels-up'});
+    } else {
+      items.push({vbar:true, cls:'key', name:'LATT', z:o.latt, sub:'wheels-up'});
+    }
+    items.push({cls:'flt', name:'Flight', dur:o.flt, endz:o.maxTd, endsub:'touchdown'});
+    items.push({cls:'tin', name:'Land taxi', dur:o.taxiIn, endz:o.maxIn, endsub:'block-in'});
+    items.push({cls:'post', name:'Post-duty', dur:o.post, endz:o.maxOff, endsub:'duty-off'});
     var cells='';
-    segs.forEach(function(s){
-      // loosely proportional width: sqrt compresses the range so the long flight leg is clearly
-      // biggest, while a CSS min-width floor keeps the short legs readable (not true-to-scale).
-      var w=Math.sqrt(Math.max(1,s.dur)).toFixed(2);
-      cells+='<div class="t2 '+s.cls+(s.endname?' key':'')+'" style="flex:'+w+' 1 0">'+
-        '<div class="t2top">'+duHMlabel(s.dur)+'</div>'+
-        '<div class="t2bar">'+esc(s.name)+'</div>'+
-        '<div class="t2bot"><div class="t2z">'+duZ(s.end)+'</div>'+
-          '<div class="t2sub">'+(s.endname?'<b>'+s.endname+'</b><br>':'')+esc(s.endsub)+'</div></div>'+
-        '</div>';
+    items.forEach(function(it){
+      if(it.vbar){
+        cells+='<div class="t2 t2v '+it.cls+'">'+
+          '<div class="t2top">'+esc(it.name)+'</div>'+
+          '<div class="t2repbar"></div>'+
+          '<div class="t2bot"><div class="t2z">'+duZ(it.z)+'</div><div class="t2sub">'+esc(it.sub)+'</div></div>'+
+          '</div>';
+      } else {
+        // loosely proportional width: sqrt compresses the range so the long flight leg is clearly
+        // biggest, while a CSS min-width floor keeps the short legs readable (not true-to-scale).
+        var w=Math.sqrt(Math.max(1,it.dur)).toFixed(2);
+        cells+='<div class="t2 '+it.cls+'" style="flex:'+w+' 1 0">'+
+          '<div class="t2top">'+duHMlabel(it.dur)+'</div>'+
+          '<div class="t2bar">'+esc(it.name)+'</div>'+
+          '<div class="t2bot">'+(it.endz!=null?'<div class="t2z">'+duZ(it.endz)+'</div><div class="t2sub">'+esc(it.endsub)+'</div>':'')+'</div>'+
+          '</div>';
+      }
     });
-    var startCell='<div class="t2 t2rep">'+
-      '<div class="t2top">REPORT</div>'+
-      '<div class="t2repbar"></div>'+
-      '<div class="t2bot"><div class="t2z">'+duZ(o.report)+'</div><div class="t2sub">start</div></div>'+
-      '</div>';
     box.innerHTML='<div class="tlwrap"><div class="tllabel">Duty timeline — report to max duty-off <span class="tlnote">(loosely to scale)</span></div>'+
-      '<div class="t2row">'+startCell+cells+'</div></div>';
+      '<div class="t2row">'+cells+'</div></div>';
   }
 
   /* ---- live Zulu clock + LATT/LABT countdown ---- */
