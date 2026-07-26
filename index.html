@@ -64,6 +64,9 @@
     padding:8px;font-size:16px;font-family:var(--mono);text-align:center;margin:0 4px}
   .genout{margin-top:12px;font-family:var(--mono);color:var(--gold);font-size:24px;font-weight:800;text-align:center;letter-spacing:2px}
   .genout small{display:block;color:var(--dim);font-size:12px;font-weight:400;letter-spacing:0;margin-top:4px}
+  /* update-available pulse on the "Check for updates" button */
+  #updBtn.updpulse{border-color:var(--bad);color:#ffd0d0;animation:updpl 1.6s ease-in-out infinite}
+  @keyframes updpl{0%,100%{box-shadow:0 0 0 rgba(255,107,107,0)}50%{box-shadow:0 0 14px rgba(255,107,107,.5)}}
   /* Prepare-for-offline readiness outline */
   #prepBtn{transition:border-color .25s,color .25s,box-shadow .25s}
   #prepBtn.prep-red{border-color:var(--bad);color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset,0 0 12px rgba(255,107,107,.25)}
@@ -1452,7 +1455,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v5.7 · 2026-07-26';
+  var BUILD='v5.8 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1462,40 +1465,61 @@
   function setUpd(msg){ if(updStatus) updStatus.textContent=msg||''; }
   async function getLatestBuild(){
     try{
+      if(navigator.onLine===false) return null;            // offline: skip the doomed fetch entirely
       var u=location.pathname+'?ck='+Date.now();
       var r=await fetch(u,{cache:'no-store'});
       if(!r.ok) return null;
       var t=await r.text();
       var m=t.match(/var BUILD='([^']+)'/);
       return m? m[1] : null;
-    }catch(e){ return null; }
+    }catch(e){ return null; }                              // any network error (offline) → no-op, app keeps running
   }
   async function applyUpdate(){
     try{ if('caches' in window){ var ks=await caches.keys(); await Promise.all(ks.map(function(k){return caches.delete(k);})); } }catch(e){}
     try{ if('serviceWorker' in navigator){ var rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function(r){return r.unregister();})); } }catch(e){}
     location.replace(location.pathname+'?v='+Date.now());   // reload fully fresh
   }
-  async function checkForUpdate(manual){
+  // manual: user tapped the button.  apply: OK to auto-reload to the new version (safe only when
+  // nothing is entered yet — on a fresh open).  Otherwise we just notify so no in-progress work is lost.
+  async function checkForUpdate(manual, apply){
+    if(apply===undefined) apply=true;
     if(manual) setUpd('Checking…');
     var latest=await getLatestBuild();
-    if(latest===null){ setUpd(manual?'Can’t check — you appear to be offline.':''); return; }
+    if(latest===null){ setUpd(manual?'Can’t check — you appear to be offline. The app still works fully offline.':''); return; }
     if(latest!==BUILD){
-      // loop guard: if we already reloaded once this load and it still differs, don't loop
-      if(!manual && /[?&]v=/.test(location.search)){ setUpd('Update available — tap “Check for updates”.'); return; }
-      setUpd('Updating to '+latest.split(' ')[0]+'…');
-      await applyUpdate();
+      var canApply = apply && !/[?&]v=/.test(location.search);   // loop guard: don't re-reload after an update reload
+      if(canApply){
+        setUpd('Updating to '+latest.split(' ')[0]+'…');
+        await applyUpdate();
+      } else {
+        setUpd('🔴 Update available ('+latest.split(' ')[0]+') — tap “Check for updates”.');
+        if(ub) ub.classList.add('updpulse');
+      }
     } else {
       setUpd(manual?('✓ You’re on the latest ('+BUILD.split(' ')[0]+')'):'');
+      if(ub) ub.classList.remove('updpulse');
     }
   }
-  var ub=document.getElementById('updBtn'); if(ub) ub.onclick=function(){ checkForUpdate(true); };
+  var ub=document.getElementById('updBtn'); if(ub) ub.onclick=function(){ checkForUpdate(true, true); };
   var rbtn=document.getElementById('reportBtn'); if(rbtn) rbtn.onclick=function(){
     var subj='AtlasDecode issue — '+BUILD;
     var body='Describe the issue (what you were doing, which report or flight plan, and what went wrong):\n\n\n\n----------------------\nApp version: '+BUILD+'\nDevice: '+navigator.userAgent;
     window.location.href='mailto:'+FEEDBACK_EMAIL+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
   };
-  // auto-check shortly after load (only does anything when online)
-  setTimeout(function(){ checkForUpdate(false); }, 1500);
+  // Auto-check every time the app is opened. On a fresh load, apply seamlessly (nothing entered yet).
+  // On reopen/resume (iOS keeps PWAs in memory), only notify — never force-reload over in-progress work.
+  // Offline is a silent no-op (getLatestBuild returns null), so this can't break the app with no signal.
+  var lastUpdCheck=0;
+  function autoCheck(apply){ lastUpdCheck=Date.now(); checkForUpdate(false, !!apply); }
+  setTimeout(function(){ autoCheck(true); }, 1200);                 // on load → apply
+  function onReopen(){
+    if(document.visibilityState!=='visible') return;
+    if(Date.now()-lastUpdCheck < 20000) return;                    // debounce rapid focus/visibility events
+    autoCheck(false);                                              // on reopen → notify only
+  }
+  document.addEventListener('visibilitychange', onReopen);
+  window.addEventListener('pageshow', onReopen);
+  window.addEventListener('focus', onReopen);
 
   /* ---------- accessibility: text size + dark mode ---------- */
   (function(){
