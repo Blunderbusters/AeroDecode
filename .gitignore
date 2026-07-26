@@ -6,3 +6,8 @@ Background App.png
 *.jpeg
 *.b64
 *.pdf
+
+# ...but DO publish the home-screen / PWA icons (needed for iOS "Add to Home Screen").
+!apple-touch-icon.png
+!icon-192.png
+!icon-512.png
