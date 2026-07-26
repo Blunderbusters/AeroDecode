@@ -64,6 +64,31 @@
     padding:8px;font-size:16px;font-family:var(--mono);text-align:center;margin:0 4px}
   .genout{margin-top:12px;font-family:var(--mono);color:var(--gold);font-size:24px;font-weight:800;text-align:center;letter-spacing:2px}
   .genout small{display:block;color:var(--dim);font-size:12px;font-weight:400;letter-spacing:0;margin-top:4px}
+  /* Schedule Checks rows */
+  .scchk{display:flex;align-items:center;gap:9px;color:var(--ink);font-size:14px;cursor:pointer}
+  .scchk input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+  .scrow{display:flex;align-items:flex-start;gap:12px;padding:9px 2px;border-bottom:1px solid rgba(120,160,220,.12)}
+  .scrow:last-child{border-bottom:0}
+  .scz{flex:0 0 auto;font-family:var(--mono);font-size:16px;font-weight:800;color:var(--gold);min-width:82px}
+  .scinfo{flex:1;min-width:0}
+  .sct{font-size:13.5px;color:#dbe9ff;font-weight:700;line-height:1.3}
+  .scs{font-size:11.5px;color:var(--faint);margin-top:1px}
+  .scw{font-size:12.5px;color:var(--dim);line-height:1.5;padding:5px 2px;border-bottom:1px solid rgba(120,160,220,.1)}
+  .scw:last-child{border-bottom:0} .scw b{color:#dbe9ff}
+  /* Schedule Checks prototype tab + banner */
+  .tab-proto{position:relative}
+  .protopill{display:inline-block;font-size:8.5px;font-weight:900;letter-spacing:.5px;vertical-align:middle;
+    padding:1px 5px;border-radius:6px;margin-left:4px;background:rgba(255,107,107,.22);
+    color:#ff8f8f;border:1px solid rgba(255,107,107,.5)}
+  .tab.on .protopill{background:rgba(120,20,20,.35);color:#7a1414;border-color:rgba(120,20,20,.5)}
+  .protobanner{margin-top:16px;border-radius:16px;padding:16px 18px;
+    background:repeating-linear-gradient(45deg,rgba(60,32,12,.5),rgba(60,32,12,.5) 14px,rgba(40,22,8,.5) 14px,rgba(40,22,8,.5) 28px);
+    border:1.5px dashed rgba(255,180,90,.55)}
+  .protobanner-tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:1px;color:#241a05;
+    background:var(--warn);border-radius:6px;padding:2px 9px;margin-bottom:8px}
+  .protobanner-title{font-size:17px;font-weight:800;color:#ffe0a0;margin-bottom:6px}
+  .protobanner-body{margin:0;font-size:13.5px;line-height:1.55;color:#f0d79a}
+  .protobanner-body b{color:#fff}
   /* tongue-in-cheek operational advisory in the footer — subtle, collapsed by default */
   .advisory{margin-top:14px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left;
     background:rgba(60,32,12,.22);border:1px solid rgba(255,180,90,.18);border-radius:12px;padding:8px 12px}
@@ -436,6 +461,7 @@
     <button class="tab" data-view="flightlog">Flight&nbsp;Log</button>
     <button class="tab" data-view="crewrest">Crew&nbsp;Rest</button>
     <button class="tab" data-view="duty">LABT/LATT</button>
+    <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
   </div>
 
   <div class="zbox">
@@ -591,6 +617,41 @@
         <p class="dtybody">Union Crew Desk: <a href="tel:+17177272750">(717) 727-2750</a> · Option 2, Option 1.</p>
       </details>
     </div>
+  </div>
+
+  <div id="view-sched" hidden>
+    <div class="protobanner">
+      <div class="protobanner-tag">🚧 PROTOTYPE</div>
+      <div class="protobanner-title">Schedule Checks — work in progress</div>
+      <p class="protobanner-body">This tab is an early <b>prototype</b>. It has <b>not been validated or tested</b>, and it may — and will — contain errors. Do not rely on anything here for operational or scheduling decisions. Always verify against official company scheduling, your CBA, and authoritative sources.</p>
+    </div>
+    <div class="card">
+      <label class="fld">Line type</label>
+      <div class="seg" style="flex-wrap:wrap">
+        <button class="segbtn on" data-scline="sched">Primary · Scheduled</button>
+        <button class="segbtn" data-scline="adhoc">Primary · Ad-Hoc</button>
+        <button class="segbtn" data-scline="secondary">Secondary</button>
+        <button class="segbtn" data-scline="reserve">Reserve</button>
+      </div>
+      <div class="cr-grid" style="margin-top:14px">
+        <div><div class="crk">Next report time (Zulu HHMM)</div><input id="scReport" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div><div class="crk">Actual block-in — current duty (optional)</div><input id="scBlockIn" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+      </div>
+      <div class="cr-grid" style="margin-top:12px">
+        <div><div class="crk">Layover start — end of min rest (optional)</div><input id="scLayover" class="crin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div><div class="crk">Flight after the layover</div><span class="seg">
+          <button class="segbtn on" data-scnext="sched">Scheduled</button>
+          <button class="segbtn" data-scnext="adhoc">Ad-Hoc</button></span></div>
+      </div>
+      <div class="cr-row"><label class="scchk"><input type="checkbox" id="scDaysOff"> Coming from Days Off (before first Work Day)</label></div>
+      <div class="cr-row"><label class="scchk"><input type="checkbox" id="scNoTrip"> Secondary: no trip built on first Day-On</label></div>
+      <div id="scNote" class="hint" style="margin-top:8px"></div>
+    </div>
+    <div id="scOut"></div>
+    <details class="dtydets" style="margin-top:14px">
+      <summary>Authorized methods for a schedule check</summary>
+      <p class="dtybody">A required schedule check must be completed via <b>E-Crew</b>, a <b>mobile device</b>, a <b>personal computer</b>, or by <b>calling Crew Scheduling</b>. Do not rely solely on the PCD (Personal Communications Device) — it may not show the most recent version of your schedule.</p>
+    </details>
   </div>
 
   <div class="foot">
@@ -1468,7 +1529,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v6.0 · 2026-07-26';
+  var BUILD='v6.2 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1825,8 +1886,10 @@
       $('#view-decode').hidden=(v!=='decode'); $('#view-flightlog').hidden=(v!=='flightlog');
       $('#view-crewrest').hidden=(v!=='crewrest');
       $('#view-duty').hidden=(v!=='duty');
+      var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
       if(v==='crewrest'){ crBuild(); }
       if(v==='duty'){ duCompute(); }
+      if(v==='sched'){ schedCompute(); }
     };
   });
 
@@ -1897,6 +1960,59 @@
     };
   }
   function duStep(label,val,sub){ return '<li><span class="d"></span><span><b style="color:#dbe9ff">'+esc(label)+'</b> → <span style="font-family:var(--mono);color:var(--gold);font-weight:700">'+val+'</span> <span style="color:var(--faint);font-size:12px">'+esc(sub)+'</span></span></li>'; }
+
+  /* ---------- Schedule Checks (PROTOTYPE — not validated) ---------- */
+  var scLine='sched', scNext='sched';
+  function scLineName(){ return {sched:'Primary · Scheduled',adhoc:'Primary · Ad-Hoc',secondary:'Secondary',reserve:'Reserve'}[scLine]; }
+  function schedCompute(){
+    var out=document.getElementById('scOut'); if(!out) return;
+    function val(id){var e=document.getElementById(id);return e?e.value:'';}
+    var R=duHM(val('scReport')), B=duHM(val('scBlockIn')), L=duHM(val('scLayover'));
+    var daysOff=(document.getElementById('scDaysOff')||{}).checked;
+    var noTrip=(document.getElementById('scNoTrip')||{}).checked;
+    var note=document.getElementById('scNote'); if(note) note.textContent = (scLine==='adhoc'||scLine==='secondary')?'“Flight after the layover” drives the 12-hr layover checks for Ad-Hoc/Secondary lines.':'';
+    if(R==null){ out.innerHTML='<div class="hint" style="padding:2px 4px">Enter your next report time to compute required schedule checks.</div>'; return; }
+    // build a monotonic forward timeline: block-in < release(+0:30) < layover start < pre-duty(report−10h) < report
+    var release=(B==null?null:B+30), mL=L, mR=R;
+    if(mL!=null && release!=null){ while(mL<release) mL+=1440; }
+    var lowerR=(mL!=null?mL:release);
+    if(lowerR!=null){ while(mR<lowerR) mR+=1440; }
+    var preDuty=mR-600;
+    var req=[], waived=[], notes=[];
+    if(release!=null) req.push({min:release, t:'Before release from duty', s:'release = block-in + 0:30'});
+    if(daysOff){ waived.push(['Check before Pre-Duty Rest','Waived on Days Off before your first Work Day — a schedule check is duty and would break the 32 hrs free from all duty (32/168).']); }
+    else { req.push({min:preDuty, t:'Before entering Pre-Duty Rest', s:'pre-duty rest = report − 10:00'}); }
+    req.push({min:mR, t:'At report time — Company comms / schedule change', s:'actual report'});
+    // 12-hr layover contactability
+    if(mL!=null){
+      var layoverApplies=false;
+      if(scLine==='reserve'){ layoverApplies=true; notes.push('Reserve: layover checks are required during every layover period, regardless of the type of operation.'); }
+      else if(scLine==='adhoc'||scLine==='secondary'){
+        if(scNext==='adhoc'){ layoverApplies=true; }
+        else { waived.push(['12-hr layover contactability','Flight after the layover is Scheduled → no 12-hr checks for '+scLineName()+'.']); }
+      } else { waived.push(['Layover contactability','Domestic/International Scheduled Primary has no contactability requirement during a layover.']); }
+      if(layoverApplies){ for(var t=mL; t<preDuty; t+=720){ req.push({min:t, t:'Layover check (every 12 hrs)', s:(t===mL?'start of layover':'+'+Math.round((t-mL)/60)+' h into layover')}); } }
+    }
+    // Secondary 1700Z–1800Z daily check
+    if(scLine==='secondary' && noTrip){ notes.push('Secondary line, no trip built on first Day-On: check & acknowledge each day between 1700Z–1800Z, including the two days prior to your first Work Day. (Not waived — it still leaves 32 hrs free from all duty.)'); }
+    // Reserve waiver
+    if(scLine==='reserve' && daysOff){ notes.push('Reserve from Days Off: the Article 31.G 16–20 hr pre-assignment schedule check is waived (it would fall inside the 32 hrs free from all duty).'); }
+    // 32/168 always
+    notes.push('32/168: before any flight or deadhead duty period you must be prospectively given ≥ 32 consecutive hours free from all duty within the past 168 hours. Never check during that window, a Minimum Rest Period, or a Pre-Duty Rest Period.');
+    // normalize so the earliest shown time is day 0
+    req.sort(function(a,b){return a.min-b.min;});
+    var shift=req.length? Math.floor(Math.min.apply(null,req.map(function(r){return r.min;}))/1440)*1440 : 0;
+    var h='<div class="gcard etops" style="margin-top:14px"><div class="glab">Required schedule checks — '+esc(scLineName())+'</div>';
+    req.forEach(function(r){ h+='<div class="scrow"><div class="scz">'+duZ(r.min-shift)+'</div><div class="scinfo"><div class="sct">'+esc(r.t)+'</div><div class="scs">'+esc(r.s)+'</div></div></div>'; });
+    h+='</div>';
+    if(waived.length){ h+='<div class="gcard" style="margin-top:12px"><div class="glab">Not required / waived</div>'; waived.forEach(function(w){ h+='<div class="scw"><b>'+esc(w[0])+'</b> — '+esc(w[1])+'</div>'; }); h+='</div>'; }
+    h+='<div class="gcard" style="margin-top:12px"><div class="glab">Notes &amp; rules</div>'; notes.forEach(function(n){ h+='<div class="scw">'+esc(n)+'</div>'; }); h+='</div>';
+    out.innerHTML=h;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-scline]'),function(bn){ bn.onclick=function(){ document.querySelectorAll('[data-scline]').forEach(function(x){x.classList.remove('on');}); bn.classList.add('on'); scLine=bn.getAttribute('data-scline'); schedCompute(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-scnext]'),function(bn){ bn.onclick=function(){ document.querySelectorAll('[data-scnext]').forEach(function(x){x.classList.remove('on');}); bn.classList.add('on'); scNext=bn.getAttribute('data-scnext'); schedCompute(); }; });
+  ['scReport','scBlockIn','scLayover'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('input',schedCompute); });
+  ['scDaysOff','scNoTrip'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('change',schedCompute); });
   // duty timeline — equal-width, readable segments (NOT to scale) with labels above & below,
   // each label color-matched to its segment: duration above, resulting Zulu time below.
   function duRenderTimeline(o){
