@@ -643,7 +643,8 @@
           <button class="segbtn on" data-scnext="sched">Scheduled</button>
           <button class="segbtn" data-scnext="adhoc">Ad-Hoc</button></span></div>
       </div>
-      <div class="cr-row"><label class="scchk"><input type="checkbox" id="scDaysOff"> Coming from Days Off (before first Work Day)</label></div>
+      <div class="cr-row"><label class="scchk"><input type="checkbox" id="scDaysOff"> Coming from Days Off (before first Work Day — 32/168)</label></div>
+      <div class="cr-row"><label class="scchk"><input type="checkbox" id="scWindow"> 10-hr check would fall in a 24/7 or 32/168 window</label></div>
       <div class="cr-row"><label class="scchk"><input type="checkbox" id="scNoTrip"> Secondary: no trip built on first Day-On</label></div>
       <div id="scNote" class="hint" style="margin-top:8px"></div>
     </div>
@@ -1529,7 +1530,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v6.2 · 2026-07-26';
+  var BUILD='v6.3 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='atlasdecode.reports@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1969,6 +1970,7 @@
     function val(id){var e=document.getElementById(id);return e?e.value:'';}
     var R=duHM(val('scReport')), B=duHM(val('scBlockIn')), L=duHM(val('scLayover'));
     var daysOff=(document.getElementById('scDaysOff')||{}).checked;
+    var window2447=(document.getElementById('scWindow')||{}).checked;
     var noTrip=(document.getElementById('scNoTrip')||{}).checked;
     var note=document.getElementById('scNote'); if(note) note.textContent = (scLine==='adhoc'||scLine==='secondary')?'“Flight after the layover” drives the 12-hr layover checks for Ad-Hoc/Secondary lines.':'';
     if(R==null){ out.innerHTML='<div class="hint" style="padding:2px 4px">Enter your next report time to compute required schedule checks.</div>'; return; }
@@ -1979,10 +1981,16 @@
     if(lowerR!=null){ while(mR<lowerR) mR+=1440; }
     var preDuty=mR-600;
     var req=[], waived=[], notes=[];
-    if(release!=null) req.push({min:release, t:'Before release from duty', s:'release = block-in + 0:30'});
-    if(daysOff){ waived.push(['Check before Pre-Duty Rest','Waived on Days Off before your first Work Day — a schedule check is duty and would break the 32 hrs free from all duty (32/168).']); }
-    else { req.push({min:preDuty, t:'Before entering Pre-Duty Rest', s:'pre-duty rest = report − 10:00'}); }
-    req.push({min:mR, t:'At report time — Company comms / schedule change', s:'actual report'});
+    if(release!=null) req.push({min:release, t:'Check at release from duty', s:'post-duty check, 30 min after block-in (12.H)'});
+    // 10-hr pre-duty check — required UNLESS it falls in a 24/7 or 32/168 window, or during a Minimum Rest
+    // Period following the last duty (12.H). In those cases you check at report time instead.
+    var pdWaive=null;
+    if(daysOff) pdWaive='Waived on Days Off before your first Work Day — a schedule check is duty and would break the 32 consecutive hours free from all duty (32/168). Check at report instead.';
+    else if(window2447) pdWaive='Falls within a 24/7 or 32/168 free window (Art. 12.H) — not required. Check at report instead.';
+    else if(mL!=null && preDuty < mL) pdWaive='The 10-hr point falls during your Minimum Rest Period following the last duty (Art. 12.H) — not required. Check at report instead.';
+    if(pdWaive){ waived.push(['10-hr pre-duty check', pdWaive]); }
+    else { req.push({min:preDuty, t:'Before entering Pre-Duty Rest', s:'pre-duty rest = report − 10:00 (12.H)'}); }
+    req.push({min:mR, t:'At report time — Company comms / schedule change', s:'actual report (12.H)'});
     // 12-hr layover contactability
     if(mL!=null){
       var layoverApplies=false;
@@ -1993,12 +2001,17 @@
       } else { waived.push(['Layover contactability','Domestic/International Scheduled Primary has no contactability requirement during a layover.']); }
       if(layoverApplies){ for(var t=mL; t<preDuty; t+=720){ req.push({min:t, t:'Layover check (every 12 hrs)', s:(t===mL?'start of layover':'+'+Math.round((t-mL)/60)+' h into layover')}); } }
     }
-    // Secondary 1700Z–1800Z daily check
-    if(scLine==='secondary' && noTrip){ notes.push('Secondary line, no trip built on first Day-On: check & acknowledge each day between 1700Z–1800Z, including the two days prior to your first Work Day. (Not waived — it still leaves 32 hrs free from all duty.)'); }
+    // Secondary 1700Z–1800Z daily check (News Wire #154)
+    if(scLine==='secondary' && noTrip){ notes.push('Secondary line, no trip built on the first Day-On: check & acknowledge each day between 1700Z–1800Z, two days prior to your secondary/first Work Day (this also applies on the last day of vacation before returning — News Wire #154). Not waived — it still leaves 32 hrs free from all duty.'); }
+    if(scLine==='secondary'){ notes.push('Secondary “on the road” is treated as an Ad-Hoc Primary line for the trip (Art. 25.M.5), so the 12-hr layover checks follow the Ad-Hoc rule above. (Note: older News Wire #110 stated “SCDY have layover checks every layover”; the current/precise rule per #177 and Art. 12.H.2.d.ii is next-flight-dependent.)'); }
     // Reserve waiver
     if(scLine==='reserve' && daysOff){ notes.push('Reserve from Days Off: the Article 31.G 16–20 hr pre-assignment schedule check is waived (it would fall inside the 32 hrs free from all duty).'); }
+    // Ad-Hoc scope note
+    if(scLine==='adhoc'){ notes.push('Ad-Hoc Primary: 12-hr layover checks apply only to the layover period immediately preceding the Ad-Hoc operation (Art. 12.H.2.d.ii) — not every overnight.'); }
+    // timeline sanity
+    if(release!=null && preDuty < release){ notes.push('⚠ Heads-up: your report time is less than ~10.5 h after block-in, so the 10-hr pre-duty window overlaps the current duty/rest. Double-check the times you entered.'); }
     // 32/168 always
-    notes.push('32/168: before any flight or deadhead duty period you must be prospectively given ≥ 32 consecutive hours free from all duty within the past 168 hours. Never check during that window, a Minimum Rest Period, or a Pre-Duty Rest Period.');
+    notes.push('32/168: before any flight or deadhead duty period you must be prospectively given ≥ 32 consecutive hours free from all duty within the past 168 hours. A schedule check is duty — never check during that window, a Minimum Rest Period, or a Pre-Duty Rest Period (Art. 12.H).');
     // normalize so the earliest shown time is day 0
     req.sort(function(a,b){return a.min-b.min;});
     var shift=req.length? Math.floor(Math.min.apply(null,req.map(function(r){return r.min;}))/1440)*1440 : 0;
@@ -2012,7 +2025,7 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-scline]'),function(bn){ bn.onclick=function(){ document.querySelectorAll('[data-scline]').forEach(function(x){x.classList.remove('on');}); bn.classList.add('on'); scLine=bn.getAttribute('data-scline'); schedCompute(); }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-scnext]'),function(bn){ bn.onclick=function(){ document.querySelectorAll('[data-scnext]').forEach(function(x){x.classList.remove('on');}); bn.classList.add('on'); scNext=bn.getAttribute('data-scnext'); schedCompute(); }; });
   ['scReport','scBlockIn','scLayover'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('input',schedCompute); });
-  ['scDaysOff','scNoTrip'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('change',schedCompute); });
+  ['scDaysOff','scWindow','scNoTrip'].forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('change',schedCompute); });
   // duty timeline — equal-width, readable segments (NOT to scale) with labels above & below,
   // each label color-matched to its segment: duration above, resulting Zulu time below.
   function duRenderTimeline(o){
