@@ -601,7 +601,8 @@
       <input type="file" id="flPdf" accept="application/pdf" hidden>
       <input type="file" id="flPhotos" accept="image/*" multiple hidden>
       <div class="ocr"><span class="spin" id="flSpin"></span><span class="pill" id="flStatus">Upload a flight plan PDF, or photograph the nav-log pages, to build the ETA table.</span></div>
-      <div class="hint">Type your actual departure (wheels-up) Zulu time — every ETA updates instantly. <b style="color:var(--dim)">PDF upload is the most accurate.</b> Photos work for any number of pages, but these dense tables can misread, so review the result. PDF/photo engines load once online, then work offline.</div>
+      <div class="hint" id="flReady" style="margin-top:6px"></div>
+      <div class="hint">Type your actual departure (wheels-up) Zulu time — every ETA updates instantly. <b style="color:var(--dim)">PDF upload is the most accurate.</b> Photos work for any number of pages, but these dense tables can misread, so review the result. The PDF &amp; photo readers <b style="color:var(--dim)">cache automatically whenever you open the app with signal</b> — so open it once before pushback and it works offline in the air.</div>
       <button class="minibtn" id="flDemoBtn" style="margin-top:10px;background:linear-gradient(180deg,#ffd36b,#e5a11f);border:1px solid #ffe0a0;color:#241a05;font-weight:800">▶ Try it — load demo OFP (ORD → ZHEC)</button>
       <div id="flDemoNote" class="hint" style="margin-top:6px"></div>
       <details id="flDemoView" style="margin-top:8px" hidden>
@@ -1889,7 +1890,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v8.0 · 2026-07-26';
+  var BUILD='v8.1 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2251,7 +2252,7 @@
       worker=await Tesseract.createWorker('eng');
       await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /-+().:'});
       tessReady=true; setPill('Camera OCR: ready · cached offline','ready',false);
-      setPrepBtn(true); try{localStorage.setItem('ad_ocr_ready','1');}catch(e){} return true;
+      setPrepBtn(true); try{localStorage.setItem('ad_ocr_ready','1');}catch(e){} if(typeof setFlReady==='function') setFlReady(); return true;
     }catch(e){ setPill('Camera OCR: needs internet once','',false); setPrepBtn(false); return false; }
   }
   $('#prepBtn').onclick=function(){ensureTess()};
@@ -2834,14 +2835,38 @@
   }
 
   var pdfReady=false;
-  async function ensurePdf(){
+  async function ensurePdf(silent){
     if(pdfReady)return true;
-    flStatus('Loading PDF engine…',true);
+    if(!silent) flStatus('Loading PDF engine…',true);
     try{
       if(typeof pdfjsLib==='undefined') await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
       pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-      pdfReady=true; return true;
-    }catch(e){ flStatus('Could not load PDF engine (needs internet once).',false); return false; }
+      try{ await fetch(pdfjsLib.GlobalWorkerOptions.workerSrc); }catch(_){}   // prime the worker file into the offline cache
+      pdfReady=true; try{localStorage.setItem('ad_pdf_ready','1');}catch(e){} setFlReady();
+      return true;
+    }catch(e){
+      if(!silent) flStatus('Could not load the OFP reader — it needs internet once to cache. Open the app on wi-fi before your flight, then it works offline.',false);
+      return false;
+    }
+  }
+  // Reflect offline readiness of the OFP readers on the Flight Log card.
+  function setFlReady(){
+    var el=document.getElementById('flReady'); if(!el) return;
+    var pdfC=pdfReady, ocrC=tessReady;
+    try{ pdfC=pdfC||localStorage.getItem('ad_pdf_ready')==='1'; ocrC=ocrC||localStorage.getItem('ad_ocr_ready')==='1'; }catch(e){}
+    if(pdfC && ocrC){ el.innerHTML='<b style="color:var(--good)">✓ Offline ready</b> — the PDF and photo OFP readers are cached and work with no signal.'; }
+    else if(navigator.onLine===false){ el.innerHTML='<b style="color:var(--warn)">Offline</b> — the OFP readers need internet once to cache. Open the app on wi-fi before your next flight.'; }
+    else { el.innerHTML='Caching the offline OFP readers… keep the app open with signal for a moment.'; }
+  }
+  // Auto-cache the heavy engines in the background whenever we have signal, so simply
+  // opening the app on the ground makes photo/PDF upload work offline in flight.
+  var _prewarmed=false;
+  async function prewarmEngines(){
+    if(navigator.onLine===false){ setFlReady(); return; }
+    setFlReady();
+    try{ await ensurePdf(true); }catch(e){}     // silent — don't disturb the flight-log status line
+    try{ await ensureTess(); }catch(e){}         // reflects in the OCR pill
+    _prewarmed=true; setFlReady();
   }
   async function extractPdfText(file){
     const buf=await file.arrayBuffer();
@@ -3043,6 +3068,11 @@
     }
     box.addEventListener('input',run);
   })();
+
+  /* ---- auto-cache the OFP readers when online, so opening the app on the ground = ready in flight ---- */
+  setFlReady();
+  setTimeout(function(){ prewarmEngines(); }, 2500);
+  window.addEventListener('online', function(){ prewarmEngines(); });
 
   /* ---------- offline app-shell cache when hosted ---------- */
   if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
