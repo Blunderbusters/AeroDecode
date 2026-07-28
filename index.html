@@ -121,9 +121,11 @@
   .killicon{font-size:46px;line-height:1;margin-bottom:10px}
   .killtitle{font-size:22px;font-weight:800;color:#ffd3d3;letter-spacing:.3px}
   .killmsg{color:#e3b4b4;font-size:14px;margin-top:12px;line-height:1.55}
-  /* update-available pulse on the "Check for updates" button */
-  #updBtn.updpulse{border-color:var(--bad);color:#ffd0d0;animation:updpl 1.6s ease-in-out infinite}
-  @keyframes updpl{0%,100%{box-shadow:0 0 0 rgba(255,107,107,0)}50%{box-shadow:0 0 14px rgba(255,107,107,.5)}}
+  /* update-available: turn the button into a clear, tappable install control */
+  #updBtn.updpulse{background:linear-gradient(180deg,#d0453a,#a12c20)!important;border-color:#e06b5c!important;
+    color:#fff!important;font-weight:800;animation:updpl 1.6s ease-in-out infinite}
+  @keyframes updpl{0%,100%{box-shadow:0 0 0 rgba(255,107,107,0)}50%{box-shadow:0 0 16px rgba(255,107,107,.65)}}
+  #updStatus .updlink{text-decoration:underline;color:#ffd0d0;font-weight:700}
   /* Prepare-for-offline readiness outline */
   #prepBtn{transition:border-color .25s,color .25s,box-shadow .25s}
   #prepBtn.prep-red{border-color:var(--bad);color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset,0 0 12px rgba(255,107,107,.25)}
@@ -363,6 +365,27 @@
   .annBody b{color:var(--ink)}
   .annBtn{display:block;width:100%;margin-top:18px;padding:13px;border-radius:11px;font-size:15px;font-weight:800;
     cursor:pointer;border:1px solid #5b93e8;background:linear-gradient(180deg,#3f7bd6,#255fae);color:#fff}
+  /* manual UTC-offset editor */
+  .tzModal{position:fixed;inset:0;z-index:63;background:rgba(4,10,22,.92);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:20px}
+  .tzModal.on{display:flex}
+  .tzBox{width:100%;max-width:360px;background:var(--glass);border:1px solid var(--edge);border-radius:16px;
+    padding:18px 16px;box-shadow:0 18px 50px rgba(2,8,20,.6)}
+  .tzTitle{font-size:18px;font-weight:800;color:var(--ink);text-align:center}
+  .tzSub{font-size:12.5px;color:var(--dim);text-align:center;margin:6px 2px 12px;line-height:1.5}
+  .tzSub b{color:var(--ink);font-family:var(--mono)}
+  .tzInput{width:100%;padding:12px;border-radius:11px;border:1px solid var(--edge);background:rgba(6,14,28,.7);
+    color:var(--ink);font-size:18px;text-align:center;font-family:var(--mono);letter-spacing:1px}
+  .tzErr{color:var(--bad);font-size:12px;min-height:15px;margin-top:8px;text-align:center}
+  .tzOpt{display:block;width:100%;margin-top:9px;padding:12px;border-radius:11px;font-size:14.5px;font-weight:700;
+    cursor:pointer;border:1px solid var(--edge);background:rgba(24,44,76,.8);color:var(--ink)}
+  .tzOpt.primary{background:linear-gradient(180deg,#3f7bd6,#255fae);border-color:#5b93e8;color:#fff}
+  .tzClose{display:block;width:100%;margin-top:12px;padding:9px;border-radius:10px;background:transparent;
+    border:1px solid var(--edge);color:var(--dim);font-size:13px;font-weight:600;cursor:pointer}
+  .zloc[data-icao]{cursor:pointer;border-radius:8px;transition:background .15s}
+  .zloc[data-icao]:active{background:rgba(120,160,220,.12)}
+  .zlocedit{font-size:12px;color:var(--faint)}
+  .zloctime.zlocna{color:#7fb0ff;font-size:14px}
   .cropHead{color:var(--ink);font-weight:700;text-align:center;font-size:15px}
   .cropHint{color:var(--dim);font-size:12.5px;text-align:center;margin:3px 0 8px}
   .cropStage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -599,7 +622,8 @@
       <input type="file" id="flPdf" accept="application/pdf" hidden>
       <input type="file" id="flPhotos" accept="image/*" multiple hidden>
       <div class="ocr"><span class="spin" id="flSpin"></span><span class="pill" id="flStatus">Upload a flight plan PDF, or photograph the nav-log pages, to build the ETA table.</span></div>
-      <div class="hint">Type your actual departure (wheels-up) Zulu time — every ETA updates instantly. <b style="color:var(--dim)">PDF upload is the most accurate.</b> Photos work for any number of pages, but these dense tables can misread, so review the result. PDF/photo engines load once online, then work offline.</div>
+      <div class="hint" id="flReady" style="margin-top:6px"></div>
+      <div class="hint">Type your actual departure (wheels-up) Zulu time — every ETA updates instantly. <b style="color:var(--dim)">PDF upload is the most accurate.</b> Photos work for any number of pages, but these dense tables can misread, so review the result. The PDF &amp; photo readers <b style="color:var(--dim)">cache automatically whenever you open the app with signal</b> — so open it once before pushback and it works offline in the air.</div>
       <button class="minibtn" id="flDemoBtn" style="margin-top:10px;background:linear-gradient(180deg,#ffd36b,#e5a11f);border:1px solid #ffe0a0;color:#241a05;font-weight:800">▶ Try it — load demo OFP (ORD → ZHEC)</button>
       <div id="flDemoNote" class="hint" style="margin-top:6px"></div>
       <details id="flDemoView" style="margin-top:8px" hidden>
@@ -800,6 +824,18 @@
     <div class="annTitle" id="annTitle">Announcement</div>
     <div class="annBody" id="annBody"></div>
     <button class="annBtn" id="annBtn">Got it</button>
+  </div>
+</div>
+
+<div class="tzModal" id="tzModal">
+  <div class="tzBox">
+    <div class="tzTitle">Local time offset</div>
+    <div class="tzSub" id="tzSub">Enter hours from UTC</div>
+    <input class="tzInput" id="tzInput" inputmode="text" autocapitalize="off" autocomplete="off" placeholder="e.g. -6, +5.5, +5:45">
+    <div class="tzErr" id="tzErr"></div>
+    <button class="tzOpt primary" id="tzSave">Save offset</button>
+    <button class="tzOpt" id="tzAuto">Use automatic zone</button>
+    <button class="tzClose" id="tzCancel">Cancel</button>
   </div>
 </div>
 
@@ -1658,6 +1694,17 @@
     MMHO:'America/Hermosillo',MMTJ:'America/Tijuana',MMLP:'America/Mazatlan',
     MMGM:'America/Hermosillo',MMPR:'America/Bahia_Banderas',MMSD:'America/Mazatlan',
     MMBT:'America/Merida',MMVR:'America/Mexico_City',MMAS:'America/Mexico_City',
+    // non-Central Mexico (Pacific / Mountain / Eastern / US-DST border) — override the MM fallback below
+    MMML:'America/Tijuana',MMES:'America/Tijuana',
+    MMCL:'America/Mazatlan',MMLM:'America/Mazatlan',MMLT:'America/Mazatlan',
+    MMCM:'America/Cancun',
+    MMCS:'America/Ciudad_Juarez',
+    MMMA:'America/Matamoros',MMRX:'America/Matamoros',MMNL:'America/Matamoros',
+    // common Central-time airports listed explicitly (also covered by the MM fallback)
+    MMSM:'America/Mexico_City',MMLO:'America/Mexico_City',MMTC:'America/Monterrey',
+    MMTM:'America/Monterrey',MMDO:'America/Monterrey',MMZC:'America/Mexico_City',
+    MMMM:'America/Mexico_City',MMAA:'America/Mexico_City',MMOX:'America/Mexico_City',
+    MMTG:'America/Mexico_City',MMVA:'America/Mexico_City',MMCE:'America/Merida',
 
     // ===== Brazil (SBxx / SBxx, SNxx, SWxx, SDxx) =====
     SBGR:'America/Sao_Paulo',SBSP:'America/Sao_Paulo',SBKP:'America/Sao_Paulo',SBGL:'America/Sao_Paulo',
@@ -1689,7 +1736,7 @@
     UWKD:'Europe/Moscow',UWGG:'Europe/Moscow',UWWW:'Europe/Samara',USSS:'Asia/Yekaterinburg',
     USCC:'Asia/Yekaterinburg',UNNT:'Asia/Novosibirsk',UNKL:'Asia/Krasnoyarsk',UIII:'Asia/Irkutsk',
     UEEE:'Asia/Yakutsk',UHWW:'Asia/Vladivostok',UHHH:'Asia/Vladivostok',UHMM:'Asia/Magadan',
-    UHPP:'Asia/Kamchatka',UHSS:'Asia/Sakhalin',URWA:'Europe/Astrakhan',
+    UHPP:'Asia/Kamchatka',UHSS:'Asia/Sakhalin',URWA:'Europe/Astrakhan',UMKK:'Europe/Kaliningrad',
     // Central Asia
     UAAA:'Asia/Almaty',UACC:'Asia/Almaty',UATT:'Asia/Aqtau',UARR:'Asia/Aqtobe',UAKD:'Asia/Aqtau',
     UTTT:'Asia/Tashkent',UTSS:'Asia/Samarkand',UTAA:'Asia/Ashgabat',UTAV:'Asia/Ashgabat',
@@ -1764,18 +1811,38 @@
     HR:'Africa/Kigali',HB:'Africa/Bujumbura',FL:'Africa/Lusaka',FV:'Africa/Harare',FB:'Africa/Gaborone',
     FA:'Africa/Johannesburg',FY:'Africa/Windhoek',FW:'Africa/Blantyre',FQ:'Africa/Maputo',
     FD:'Africa/Mbabane',FX:'Africa/Maseru',FN:'Africa/Luanda',FP:'Africa/Sao_Tome',FS:'Indian/Mahe',
-    // ---- Central America & Caribbean ----
+    // ---- Mexico & Central America & Caribbean ----
+    // Mexico is multi-zone; most of the country is Central. Non-Central airports are in EXC above.
+    MM:'America/Mexico_City',
     MG:'America/Guatemala',MS:'America/El_Salvador',MH:'America/Tegucigalpa',MN:'America/Managua',
     MR:'America/Costa_Rica',MP:'America/Panama',MZ:'America/Belize',MK:'America/Jamaica',
     MD:'America/Santo_Domingo',MT:'America/Port-au-Prince',MU:'America/Havana',MY:'America/Nassau',
-    MB:'America/Grand_Turk',TJ:'America/Puerto_Rico',TI:'America/St_Thomas',TX:'America/Barbados',
+    MB:'America/Grand_Turk',TJ:'America/Puerto_Rico',TI:'America/St_Thomas',TX:'Atlantic/Bermuda',
     TB:'America/Barbados',TA:'America/Antigua',TV:'America/St_Vincent',TG:'America/Grenada',
     TT:'America/Port_of_Spain',TD:'America/Dominica',TK:'America/St_Kitts',TL:'America/St_Lucia',
-    TN:'America/Curacao',TU:'America/Tortola',TR:'America/Montserrat',
-    // ---- South America (single-zone) ----
+    TN:'America/Curacao',TU:'America/Tortola',TR:'America/Montserrat',TF:'America/Martinique',
+    // ---- South America ----
     SK:'America/Bogota',SE:'America/Guayaquil',SP:'America/Lima',SL:'America/La_Paz',
     SG:'America/Asuncion',SU:'America/Montevideo',SV:'America/Caracas',SY:'America/Guyana',
-    SM:'America/Paramaribo',SO:'America/Cayenne',SA:'America/Argentina/Buenos_Aires',SF:'Atlantic/Stanley'
+    SM:'America/Paramaribo',SO:'America/Cayenne',SA:'America/Argentina/Buenos_Aires',SF:'Atlantic/Stanley',
+    // Brazil is multi-zone; dominant is UTC-3 (São Paulo). Amazon/Acre airports are in EXC above.
+    SB:'America/Sao_Paulo',SD:'America/Sao_Paulo',SI:'America/Sao_Paulo',SJ:'America/Sao_Paulo',
+    SN:'America/Sao_Paulo',SS:'America/Sao_Paulo',SW:'America/Sao_Paulo',
+    // ---- Central & North Asia (ex-USSR + Mongolia) ----
+    // Kazakhstan unified to UTC+5 (2024); Uzbekistan/Turkmenistan/Tajikistan all +5.
+    UA:'Asia/Almaty',UC:'Asia/Bishkek',UT:'Asia/Tashkent',UD:'Asia/Yerevan',UG:'Asia/Tbilisi',UB:'Asia/Baku',
+    // Russia by region (2nd letter); border/edge fields can be tuned with the manual offset.
+    UU:'Europe/Moscow',UL:'Europe/Moscow',UR:'Europe/Moscow',UW:'Europe/Samara',UM:'Europe/Minsk',
+    US:'Asia/Yekaterinburg',UN:'Asia/Novosibirsk',UO:'Asia/Krasnoyarsk',UI:'Asia/Irkutsk',
+    UE:'Asia/Yakutsk',UH:'Asia/Vladivostok',
+    ZM:'Asia/Ulaanbaatar',ZK:'Asia/Pyongyang',
+    // ---- Southeast Asia archipelagos ----
+    // Indonesia is multi-zone: west (Sumatra/Java) +7, central/east +8/+9 (see EXC).
+    WI:'Asia/Jakarta',WA:'Asia/Makassar',WQ:'Asia/Jakarta',WR:'Asia/Jakarta',WP:'Asia/Dili',
+    // ---- more single-zone fills ----
+    VQ:'Asia/Thimphu',FI:'Indian/Mauritius',GQ:'Africa/Nouakchott',GS:'Africa/El_Aaiun',
+    HC:'Africa/Mogadishu',LX:'Europe/Gibraltar',LV:'Asia/Hebron',NI:'Pacific/Niue',
+    AG:'Pacific/Guadalcanal',FH:'Atlantic/St_Helena',FJ:'Indian/Chagos'
   };
 
   function norm(s){ return (s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
@@ -1887,7 +1954,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v7.9 · 2026-07-26';
+  var BUILD='v8.3 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -1911,28 +1978,47 @@
     try{ if('serviceWorker' in navigator){ var rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function(r){return r.unregister();})); } }catch(e){}
     location.replace(location.pathname+'?v='+Date.now());   // reload fully fresh
   }
-  // manual: user tapped the button.  apply: OK to auto-reload to the new version (safe only when
-  // nothing is entered yet — on a fresh open).  Otherwise we just notify so no in-progress work is lost.
+  // Auto-updates install once per app open, then stop (prevents reload loops if the server is briefly
+  // stale). A manual tap ALWAYS installs, no matter what. This counter replaces the old ?v= URL guard,
+  // which permanently blocked updates once a cache-buster query got baked into the PWA start URL.
+  var _updGuardKey='ad_upd_reloads';
+  function _updReloads(){ try{ return (+sessionStorage.getItem(_updGuardKey))||0; }catch(e){ return 0; } }
+  function _bumpUpdReloads(){ try{ sessionStorage.setItem(_updGuardKey, String(_updReloads()+1)); }catch(e){} }
+  var _pendingUpd=null;
+  function showUpdReady(latest){
+    _pendingUpd=latest;
+    var v=latest.split(' ')[0];
+    if(ub){ ub.classList.add('updpulse'); ub.textContent='⬇ Install update '+v; }
+    if(updStatus){ updStatus.innerHTML='<span class="updlink">🔴 Update ready ('+v+') — tap to install</span>'; updStatus.style.cursor='pointer'; }
+  }
+  function clearUpdReady(){
+    _pendingUpd=null;
+    if(ub){ ub.classList.remove('updpulse'); ub.textContent='Check for updates'; }
+    if(updStatus) updStatus.style.cursor='';
+  }
   async function checkForUpdate(manual, apply){
     if(apply===undefined) apply=true;
     if(manual) setUpd('Checking…');
     var latest=await getLatestBuild();
     if(latest===null){ setUpd(manual?'Can’t check — you appear to be offline. The app still works fully offline.':''); return; }
     if(latest!==BUILD){
-      var canApply = apply && !/[?&]v=/.test(location.search);   // loop guard: don't re-reload after an update reload
+      var canApply = apply && (manual || _updReloads()<1);   // manual = always; auto = once per open
       if(canApply){
+        if(!manual) _bumpUpdReloads();
         setUpd('Updating to '+latest.split(' ')[0]+'…');
         await applyUpdate();
       } else {
-        setUpd('🔴 Update available ('+latest.split(' ')[0]+') — tap “Check for updates”.');
-        if(ub) ub.classList.add('updpulse');
+        showUpdReady(latest);
       }
     } else {
+      clearUpdReady();
       setUpd(manual?('✓ You’re on the latest ('+BUILD.split(' ')[0]+')'):'');
-      if(ub) ub.classList.remove('updpulse');
     }
   }
-  var ub=document.getElementById('updBtn'); if(ub) ub.onclick=function(){ checkForUpdate(true, true); };
+  var ub=document.getElementById('updBtn');
+  function forceUpdateNow(){ setUpd('Updating…'); applyUpdate(); }   // purge caches + SW, hard-reload fresh
+  if(ub) ub.onclick=function(){ if(_pendingUpd){ forceUpdateNow(); } else { checkForUpdate(true, true); } };
+  if(updStatus) updStatus.onclick=function(){ if(_pendingUpd) forceUpdateNow(); };
   function rptMsg(){
     return { subj:'CargoDecode issue — '+BUILD,
       body:'Describe the issue (what you were doing, which report or flight plan, and what went wrong):\n\n\n\n----------------------\nApp version: '+BUILD+'\nDevice: '+navigator.userAgent };
@@ -2230,7 +2316,7 @@
       worker=await Tesseract.createWorker('eng');
       await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /-+().:'});
       tessReady=true; setPill('Camera OCR: ready · cached offline','ready',false);
-      setPrepBtn(true); try{localStorage.setItem('ad_ocr_ready','1');}catch(e){} return true;
+      setPrepBtn(true); try{localStorage.setItem('ad_ocr_ready','1');}catch(e){} if(typeof setFlReady==='function') setFlReady(); return true;
     }catch(e){ setPill('Camera OCR: needs internet once','',false); setPrepBtn(false); return false; }
   }
   $('#prepBtn').onclick=function(){ensureTess()};
@@ -2329,27 +2415,75 @@
     _zlocMin=-1; duLocalRender();   // refresh the dep/arr local-time strip for the new flight plan
   }
   // Live local time (with UTC offset) at the departure and arrival airports.
+  /* ----- manual UTC-offset overrides (per airport, saved on the device) ----- */
+  function tzOverrides(){ try{ return JSON.parse(localStorage.getItem('ad_tz_override')||'{}')||{}; }catch(e){ return {}; } }
+  function tzOverrideGet(icao){ var o=tzOverrides(); return o.hasOwnProperty(icao)? o[icao] : null; }
+  function tzOverrideSet(icao,hrs){ var o=tzOverrides(); if(hrs===null){ delete o[icao]; } else { o[icao]=hrs; } try{ localStorage.setItem('ad_tz_override',JSON.stringify(o)); }catch(e){} }
+  function _pad2(n){ n=String(n); return n.length<2?('0'+n):n; }
+  function fmtOffset(hrs){ var s=hrs<0?'-':'+'; var a=Math.abs(hrs); var h=Math.floor(a+1e-9); var m=Math.round((a-h)*60); if(m===60){h+=1;m=0;} return s+h+(m?(':'+_pad2(m)):''); }
+  function localFromOffset(hrs,now){ var d=new Date(now.getTime()+Math.round(hrs*60)*60000); return _pad2(d.getUTCHours())+':'+_pad2(d.getUTCMinutes()); }
+  function parseOffsetInput(s){
+    s=(s||'').trim().replace(/^(utc|gmt)\s*/i,'').trim();
+    if(s==='') return null;                                   // empty
+    var m;
+    if((m=s.match(/^([+-]?)(\d{1,2}):([0-5]\d)$/))){ var h=+m[2]+(+m[3])/60; return m[1]==='-'?-h:h; }
+    if((m=s.match(/^([+-]?)(\d{1,2})(?:\.(\d+))?$/))){ var v=parseFloat(m[2]+(m[3]?('.'+m[3]):'')); return m[1]==='-'?-v:v; }
+    return NaN;                                               // invalid format
+  }
   var _zlocMin=-1;
   function duLocalRender(force){
     var el=document.getElementById('zLocal'); if(!el) return;
-    if(!flId||!flId.orig||!flId.dest||typeof AIRTZ==='undefined'){ el.innerHTML=''; return; }
+    if(!flId||!flId.orig||!flId.dest){ el.innerHTML=''; return; }
     var now=new Date();
     var curMin=now.getUTCHours()*60+now.getUTCMinutes();
     if(!force && curMin===_zlocMin && el.innerHTML){ return; }   // only rebuild when the minute rolls over
     _zlocMin=curMin;
     function cell(role,cls,icao){
-      var tz=AIRTZ.icaoTz(icao);
-      var body;
-      if(tz){
-        var t=AIRTZ.localHM(tz,now), off=AIRTZ.offsetLabel(tz,now);
-        body='<div class="zloctime">'+esc(t)+' <span class="zloclcl">LCL</span> <span class="zlocoff">UTC'+esc(off)+'</span></div>';
+      var ov=tzOverrideGet(icao), body;
+      if(ov!==null){
+        body='<div class="zloctime">'+esc(localFromOffset(ov,now))+' <span class="zloclcl">LCL</span> <span class="zlocoff">UTC'+esc(fmtOffset(ov))+'</span> <span class="zlocedit">✎ set</span></div>';
       } else {
-        body='<div class="zloctime zlocna">local n/a</div>';
+        var tz=(typeof AIRTZ!=='undefined')? AIRTZ.icaoTz(icao) : null;
+        if(tz){
+          body='<div class="zloctime">'+esc(AIRTZ.localHM(tz,now))+' <span class="zloclcl">LCL</span> <span class="zlocoff">UTC'+esc(AIRTZ.offsetLabel(tz,now))+'</span></div>';
+        } else {
+          body='<div class="zloctime zlocna">Tap to set offset ✎</div>';
+        }
       }
-      return '<div class="zloc '+cls+'"><div class="zloclab">'+role+' · '+esc(icao)+'</div>'+body+'</div>';
+      return '<div class="zloc '+cls+'" data-icao="'+esc(icao)+'" role="button" tabindex="0"><div class="zloclab">'+role+' · '+esc(icao)+'</div>'+body+'</div>';
     }
     el.innerHTML=cell('Departure','dep',flId.orig)+cell('Arrival','arr',flId.dest);
   }
+  /* ----- offset editor modal ----- */
+  var _tzEditIcao=null;
+  function tzEditOpen(icao){
+    _tzEditIcao=icao;
+    var sub=document.getElementById('tzSub');
+    if(sub) sub.innerHTML='<b>'+esc(icao)+'</b> — hours from UTC (e.g. -6, +5.5, +5:45). Overrides the automatic zone; note a manual offset does not adjust for daylight-saving.';
+    var inp=document.getElementById('tzInput'), cur=tzOverrideGet(icao);
+    if(inp) inp.value = (cur!==null)? fmtOffset(cur) : '';
+    var err=document.getElementById('tzErr'); if(err) err.textContent='';
+    var auto=document.getElementById('tzAuto'); if(auto) auto.style.display = (cur!==null)?'block':'none';
+    var m=document.getElementById('tzModal'); if(m) m.classList.add('on');
+    if(inp) setTimeout(function(){ try{inp.focus();}catch(e){} },60);
+  }
+  function tzEditClose(){ var m=document.getElementById('tzModal'); if(m) m.classList.remove('on'); _tzEditIcao=null; }
+  (function(){
+    var z=document.getElementById('zLocal');
+    if(z) z.addEventListener('click',function(e){ var c=e.target.closest? e.target.closest('.zloc'):null; if(c&&c.getAttribute('data-icao')) tzEditOpen(c.getAttribute('data-icao')); });
+    var sv=document.getElementById('tzSave'); if(sv) sv.onclick=function(){
+      var inp=document.getElementById('tzInput'), err=document.getElementById('tzErr');
+      var v=parseOffsetInput(inp?inp.value:'');
+      if(v===null){ if(err)err.textContent='Enter an offset like -6, +5.5, or +5:45.'; return; }
+      if(isNaN(v)){ if(err)err.textContent='That doesn’t look like an offset — try -6, +5.5, or +5:45.'; return; }
+      if(v<-12||v>14){ if(err)err.textContent='Offset must be between -12 and +14 hours.'; return; }
+      tzOverrideSet(_tzEditIcao, v); tzEditClose(); _zlocMin=-1; duLocalRender(true);
+    };
+    var au=document.getElementById('tzAuto'); if(au) au.onclick=function(){ tzOverrideSet(_tzEditIcao,null); tzEditClose(); _zlocMin=-1; duLocalRender(true); };
+    var cx=document.getElementById('tzCancel'); if(cx) cx.onclick=tzEditClose;
+    var mm=document.getElementById('tzModal'); if(mm) mm.addEventListener('click',function(e){ if(e.target===mm) tzEditClose(); });
+    var inp2=document.getElementById('tzInput'); if(inp2) inp2.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var s=document.getElementById('tzSave'); if(s)s.click(); } });
+  })();
   function flCopyText(){
     if(!flEta.length)return '';
     var dep=(flDep.value||'').replace(/\D/g,'').padStart(4,'0');
@@ -2813,14 +2947,38 @@
   }
 
   var pdfReady=false;
-  async function ensurePdf(){
+  async function ensurePdf(silent){
     if(pdfReady)return true;
-    flStatus('Loading PDF engine…',true);
+    if(!silent) flStatus('Loading PDF engine…',true);
     try{
       if(typeof pdfjsLib==='undefined') await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
       pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-      pdfReady=true; return true;
-    }catch(e){ flStatus('Could not load PDF engine (needs internet once).',false); return false; }
+      try{ await fetch(pdfjsLib.GlobalWorkerOptions.workerSrc); }catch(_){}   // prime the worker file into the offline cache
+      pdfReady=true; try{localStorage.setItem('ad_pdf_ready','1');}catch(e){} setFlReady();
+      return true;
+    }catch(e){
+      if(!silent) flStatus('Could not load the OFP reader — it needs internet once to cache. Open the app on wi-fi before your flight, then it works offline.',false);
+      return false;
+    }
+  }
+  // Reflect offline readiness of the OFP readers on the Flight Log card.
+  function setFlReady(){
+    var el=document.getElementById('flReady'); if(!el) return;
+    var pdfC=pdfReady, ocrC=tessReady;
+    try{ pdfC=pdfC||localStorage.getItem('ad_pdf_ready')==='1'; ocrC=ocrC||localStorage.getItem('ad_ocr_ready')==='1'; }catch(e){}
+    if(pdfC && ocrC){ el.innerHTML='<b style="color:var(--good)">✓ Offline ready</b> — the PDF and photo OFP readers are cached and work with no signal.'; }
+    else if(navigator.onLine===false){ el.innerHTML='<b style="color:var(--warn)">Offline</b> — the OFP readers need internet once to cache. Open the app on wi-fi before your next flight.'; }
+    else { el.innerHTML='Caching the offline OFP readers… keep the app open with signal for a moment.'; }
+  }
+  // Auto-cache the heavy engines in the background whenever we have signal, so simply
+  // opening the app on the ground makes photo/PDF upload work offline in flight.
+  var _prewarmed=false;
+  async function prewarmEngines(){
+    if(navigator.onLine===false){ setFlReady(); return; }
+    setFlReady();
+    try{ await ensurePdf(true); }catch(e){}     // silent — don't disturb the flight-log status line
+    try{ await ensureTess(); }catch(e){}         // reflects in the OCR pill
+    _prewarmed=true; setFlReady();
   }
   async function extractPdfText(file){
     const buf=await file.arrayBuffer();
@@ -3022,6 +3180,11 @@
     }
     box.addEventListener('input',run);
   })();
+
+  /* ---- auto-cache the OFP readers when online, so opening the app on the ground = ready in flight ---- */
+  setFlReady();
+  setTimeout(function(){ prewarmEngines(); }, 2500);
+  window.addEventListener('online', function(){ prewarmEngines(); });
 
   /* ---------- offline app-shell cache when hosted ---------- */
   if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
