@@ -780,7 +780,7 @@
     <button id="reportBtn" class="minibtn" style="margin-top:8px;margin-left:6px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">✉ Report an issue</button>
     <button id="manageBtn" class="minibtn" style="margin-top:8px;margin-left:6px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Sign out</button>
     <div id="updStatus" style="margin-top:6px;font-size:12px;min-height:16px"></div>
-    <details class="advisory">
+    <details class="advisory" id="advisory" hidden>
       <summary>⚠️ Operational Advisory: Extended Captain Changeover Buffer</summary>
       <p>Please note: Changeover duration may require manual adjustment if the Captain is coming off rest. This accounts for necessary transit time, looking at the FMC time remaining, walking back to pee, walking back up because he forgot the time remaining, starting the coffee, picking through catering, stretching/scratching, pouring coffee, peeing a second time, forgetting his coffee, retrieving his coffee, and searching for his headset.</p>
     </details>
@@ -1954,7 +1954,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v8.4 · 2026-07-26';
+  var BUILD='v8.5 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2513,6 +2513,7 @@
       $('#view-crewrest').hidden=(v!=='crewrest');
       $('#view-duty').hidden=(v!=='duty');
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
+      var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
       if(v==='crewrest'){ crBuild(); }
       if(v==='duty'){ duCompute(); }
       if(v==='sched'){ schedCompute(); }
