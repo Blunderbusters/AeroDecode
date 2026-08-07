@@ -1954,7 +1954,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v8.3 · 2026-07-26';
+  var BUILD='v8.4 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2560,7 +2560,7 @@
     if(report==null||limit==null||flt==null){ duOut.innerHTML='<div class="hint" style="padding:0 4px">Enter report time, operational limit, and OFP flight time to compute LATT/LABT.</div>'; duLive.valid=false; duCountdownRender(); return; }
     var maxOff=report+limit, maxIn=maxOff-post, maxTd=maxIn-taxiIn, latt=maxTd-flt;
     var labt = (taxiOut!=null)? latt-taxiOut : null;
-    duLive={valid:true, latt:latt, labt:labt, report:report};
+    duLive={valid:true, latt:latt, labt:labt, report:report, limit:limit};
     var h='<div class="gcard" style="margin-top:14px"><div class="glab">Worked backward from max duty-off</div>'+
       '<ul class="lines" style="margin-top:4px">'+
       duStep('Max duty-off',duZ(maxOff),'report '+duZ(report)+' + limit '+duHMlabel(limit))+
@@ -2807,11 +2807,24 @@
             hh:String(d.getUTCHours()).padStart(2,'0'),
             mm:String(d.getUTCMinutes()).padStart(2,'0'),
             ss:String(d.getUTCSeconds()).padStart(2,'0')}; }
-  // seconds until an absolute target (minutes from report-day midnight), anchored to now>=report
-  function duRemSec(targetMin,reportMin){
-    var now=zNow().sec, tgt=targetMin*60, r=reportMin*60;
-    while(now<r) now+=86400;                       // in-duty: now is at/after report time
-    return tgt-now;
+  // Resolve the report time-of-day (minutes) to the correct real instant (ms), date-aware.
+  // Picks the occurrence of report-time that puts "now" inside the duty window; otherwise the
+  // occurrence nearest to now. This makes the countdown correct across midnight and before/after
+  // report — the old "minutes-since-midnight" math went ~-13 h when the limit crossed into the next day.
+  function duReportInstant(reportMin, limitMin){
+    var now=Date.now(), d=new Date(now);
+    var base=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())+reportMin*60000;  // today's report instant
+    var win=(( (limitMin||1200) )+180)*60000;        // duty limit + 3 h grace
+    for(var k=1;k>=-1;k--){ var c=base+k*86400000; if(now>=c && (now-c)<=win) return c; }   // in a duty window → use it
+    var best=base, bd=Math.abs(now-base);            // else the report occurrence nearest to now (pre/post-duty)
+    for(var j=-1;j<=1;j++){ var cc=base+j*86400000, dd=Math.abs(now-cc); if(dd<bd){ bd=dd; best=cc; } }
+    return best;
+  }
+  // seconds until an absolute target (minutes from report-day midnight), anchored to the real date
+  function duRemSec(targetMin){
+    var ri=duReportInstant(duLive.report, duLive.limit);
+    var tgt=ri + (targetMin-duLive.report)*60000;    // target = report instant + offset from report
+    return Math.round((tgt-Date.now())/1000);
   }
   function duFmtHMS(sec){ var neg=sec<0; sec=Math.abs(sec);
     var h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
@@ -2824,7 +2837,7 @@
     var rows='';
     function row(label,tgt){
       if(tgt==null) return '';
-      var s=duRemSec(tgt,duLive.report), col=duCol(s);
+      var s=duRemSec(tgt), col=duCol(s);
       var word=s<0?'EXCEEDED':'remaining';
       return '<div class="cdrow cd-'+col+'"><div class="cdlab">'+label+'<br><span class="cdsub">'+word+'</span></div>'+
              '<div class="cdval">'+duFmtHMS(s)+'</div></div>';
