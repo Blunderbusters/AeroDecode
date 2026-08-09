@@ -933,7 +933,7 @@
         <p>Catering is provided for all <b>operating and deadheading</b> Crew Members, and for <b>jumpseaters who listed at least 12 hours in advance</b>. The Company has no obligation to cater commercial deadheads or ground transportation legs.</p>
         <p>Meals should endeavor to be <b>American/Western style</b> unless otherwise approved by the Union Catering Committee.</p>
         <p><b>Choices:</b> a minimum of <b>two (2)</b> meal choices when catering is required; a minimum of <b>three (3)</b> for augmented crews or when deadheading Crew Members are travelling.</p>
-        <p><b>Rotation &amp; safety:</b> sandwiches and meal choices rotate approximately every <b>two weeks</b>. Operating crew members who choose the <b>same</b> meal must consume them at least <b>six (6) hours apart</b> to guard against food contamination.</p>
+        <p><b>Rotation:</b> sandwiches and meal choices rotate approximately every <b>two weeks</b>.</p>
       </details>
       <details class="catsec">
         <summary>Appendix 5-A — minimum standards matrix</summary>
@@ -998,7 +998,31 @@
     <div class="card">
       <button class="minibtn" id="scImportBtn" style="width:100%;background:linear-gradient(180deg,#4ea3ff,#1f74d8);border:1px solid rgba(120,180,255,.5);color:#fff;font-weight:800">📅 Import from AIMS calendar</button>
       <input type="file" id="scIcs" accept=".ics,.zip,text/calendar,application/zip" hidden>
-      <div id="scImportNote" class="schelp" style="margin-top:6px">Export your schedule from Google Calendar (Settings → Import &amp; Export → Export) and load the file here — the <b>.zip</b> works directly (no need to unzip), or a <b>.ics</b>. Parsed fully offline; nothing leaves your device.</div>
+      <div id="scImportNote" class="schelp" style="margin-top:6px">Load your calendar export here — a <b>.zip</b> works directly (no need to unzip), or a <b>.ics</b>. Parsed fully offline; nothing leaves your device.</div>
+      <details class="catsec" style="margin-top:8px">
+        <summary>How to get your calendar file (eCrew → Google / Apple)</summary>
+        <p><b>Google Calendar — calendar you own</b> (you copied eCrew events into your own calendar)</p>
+        <ol>
+          <li>On a <b>computer</b>, open <b>calendar.google.com</b> (the phone app can't export).</li>
+          <li>Click the <b>gear</b> icon (top right) → <b>Settings</b>.</li>
+          <li>Left sidebar → <b>Import &amp; export</b> → under <b>Export</b>, click <b>Export</b>.</li>
+          <li>A <b>.zip</b> downloads containing one <b>.ics</b> per calendar. Send it to your phone (AirDrop, email, Files) and load it here — the .zip works as-is.</li>
+        </ol>
+        <p><b>Google Calendar — subscribed eCrew feed</b> (added by URL, shows under “Other calendars”)</p>
+        <ol>
+          <li>Google's Export does <b>not</b> include subscribed calendars, so use the feed itself.</li>
+          <li>In Settings, click that calendar in the left sidebar → find its <b>calendar address / URL</b> (the link you originally subscribed with, ending in <b>.ics</b>).</li>
+          <li>Paste that URL into a browser — it downloads the <b>.ics</b> directly. Load that file here.</li>
+        </ol>
+        <p><b>Apple Calendar (Mac)</b></p>
+        <ol>
+          <li>Open the <b>Calendar</b> app and select the eCrew calendar in the sidebar.</li>
+          <li>Menu bar → <b>File</b> → <b>Export</b> → <b>Export…</b> and save the <b>.ics</b>.</li>
+          <li>AirDrop it to your phone (or load it on the Mac) and import here.</li>
+        </ol>
+        <p><b>iPhone / iPad only:</b> Apple's Calendar app can't export a file on its own. Use a Mac, or use the subscribed feed URL method above in Safari.</p>
+        <p><b style="color:var(--warn)">If the imported date range looks short:</b> a <b>subscribed</b> eCrew feed only publishes a limited window (often a few weeks), so that's all your calendar ever received — the app imports every event in the file. To cover more, re-export after the new month publishes, or pull the schedule straight from eCrew if it offers a calendar download.</p>
+      </details>
       <div id="scFlights"></div>
       <div class="fld" style="margin-top:16px">Line type</div>
       <div class="seg" style="flex-wrap:wrap">
@@ -2369,7 +2393,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.3 · 2026-07-28';
+  var BUILD='v9.5 · 2026-07-28';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -3864,7 +3888,7 @@
       } else if(names){
         h+='<div class="catcard" style="margin-top:12px"><div class="catttl">Hot meal service · departure '+String(Math.floor(depMin/60)).padStart(2,'0')+String(depMin%60).padStart(2,'0')+' local</div>';
         names.forEach(function(n,i){ h+='<div class="catline"><span class="catlab">'+(i===0?'1st meal':'2nd meal')+'</span><span class="catqty">'+n+'</span></div>'; });
-        h+='<div class="catnote">Crew members eating the <b>same</b> meal must consume them at least <b>six (6) hours apart</b>.</div></div>';
+        h+='</div>';
       } else {
         h+='<div class="catcard alt" style="margin-top:12px"><div class="catttl">Hot meal type</div><div class="catnote">Enter the <b>local</b> departure time to see whether the meals are breakfast, lunch or dinner.</div></div>';
       }
