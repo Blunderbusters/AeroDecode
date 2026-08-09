@@ -2046,7 +2046,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v8.8 · 2026-07-26';
+  var BUILD='v8.9 · 2026-07-26';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -3297,7 +3297,7 @@
   function lgHM(min){ return Math.floor(min/60)+':'+String(min%60).padStart(2,'0'); }
   function lgCompute(){
     var fo=lgNum(lgFuelOut), fi=lgNum(lgFuelIn), burnEl=$('#lgBurn');
-    if(burnEl){ if(fo!=null&&fi!=null){ burnEl.innerHTML='<span class="lgbig">'+Math.round(fo-fi).toLocaleString('en-US')+'</span>'; } else { burnEl.innerHTML='<span class="lgdash">—</span>'; } }
+    if(burnEl){ if(fo!=null&&fi!=null){ burnEl.innerHTML='<span class="lgbig">'+(fo-fi).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+'</span>'; } else { burnEl.innerHTML='<span class="lgdash">—</span>'; } }
     var ti=lgTime(lgTimeIn), to=lgTime(lgTimeOut), tEl=$('#lgTimeTot');
     if(tEl){
       if(ti!=null&&to!=null){ var mins=((ti-to)%1440+1440)%1440; var dec=(mins/60).toFixed(1);
