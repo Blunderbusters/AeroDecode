@@ -406,6 +406,73 @@
   .lgval .lgdec{font-size:14px;font-weight:700;color:var(--gold);margin-left:8px}
   .lgval .lgdec em{font-style:normal;font-size:11px;color:var(--faint)}
   .lgval .lgdash{color:var(--faint)}
+  /* HF Checks + Catering shared bits */
+  .warnbox{margin-top:14px;background:rgba(60,34,10,.55);border:1px solid rgba(255,194,85,.45);
+    border-radius:14px;padding:13px 15px}
+  .warnbox .wtitle{font-size:14px;font-weight:800;color:var(--warn);letter-spacing:.3px}
+  .warnbox p{font-size:13px;color:#e8d7b4;line-height:1.55;margin:7px 0 0}
+  .warnbox p b{color:#fff}
+  .linkrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .linkbtn{flex:1 1 auto;text-align:center;text-decoration:none;font-size:13px;font-weight:700;
+    padding:9px 12px;border-radius:10px;background:rgba(24,44,76,.85);border:1px solid var(--edge);color:var(--ink)}
+  .segrow{display:flex;gap:8px;margin-top:14px}
+  .segrow button{flex:1;padding:11px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;
+    background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--dim)}
+  .segrow button.on{background:linear-gradient(180deg,#3f7bd6,#255fae);border-color:#5b93e8;color:#fff}
+  .ftab{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  .ftab th{background:rgba(24,44,76,.9);color:var(--dim);font-size:11px;text-transform:uppercase;
+    letter-spacing:.4px;padding:7px 8px;text-align:center;border:1px solid var(--edge)}
+  .ftab td{padding:8px;border:1px solid rgba(120,160,220,.14);color:var(--ink);vertical-align:middle}
+  .ftab td.lbl{font-weight:700;font-size:13px}
+  .ftab td.fq{font-family:var(--mono);font-weight:800;color:#ffd88a;text-align:center;white-space:nowrap;font-size:14px}
+  .ftab td.fq2{font-family:var(--mono);font-weight:700;color:#bcd6ff;text-align:center;white-space:nowrap}
+  .grpttl{margin-top:16px;font-size:14px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+    color:#fff;background:linear-gradient(180deg,#c8322c,#9d211c);border-radius:9px;padding:8px 12px}
+  .grpfoot{font-size:12px;color:var(--dim);line-height:1.5;margin-top:8px;padding:9px 11px;
+    background:rgba(10,22,42,.6);border:1px solid var(--edge);border-radius:10px}
+  .mapthumb{width:100%;border-radius:12px;border:1px solid var(--edge);margin-top:10px;cursor:zoom-in;
+    background:#fff;display:block}
+  .mapcap{font-size:12px;color:var(--dim);text-align:center;margin-top:5px}
+  .imgModal{position:fixed;inset:0;z-index:70;background:rgba(2,6,14,.97);display:none;
+    align-items:center;justify-content:center}
+  .imgModal.on{display:flex}
+  .imgModal img{max-width:100%;max-height:100%;object-fit:contain;background:#fff}
+  .imgClose{position:fixed;top:calc(env(safe-area-inset-top) + 10px);right:12px;z-index:71;
+    background:rgba(20,30,50,.92);border:1px solid var(--edge);color:#fff;font-size:15px;font-weight:800;
+    padding:9px 15px;border-radius:10px;cursor:pointer}
+  .vhfsearch{width:100%;margin-top:10px;padding:12px;border-radius:11px;background:rgba(6,14,28,.7);
+    color:var(--ink);border:1px solid var(--edge);font-size:16px}
+  .vhfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:7px;margin-top:10px}
+  .vhfcell{background:rgba(16,32,58,.75);border:1px solid var(--edge);border-radius:9px;padding:8px 10px}
+  .vhfcity{font-size:13px;font-weight:800;color:var(--ink);font-family:var(--mono)}
+  .vhffreq{font-size:13px;font-weight:700;color:#ffd88a;font-family:var(--mono);margin-top:2px}
+  .vhfnone{font-size:13px;color:var(--faint);padding:10px 2px}
+  /* catering */
+  .catgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .catgrid .full{grid-column:1/-1}
+  .catk{font-size:12.5px;font-weight:700;color:var(--dim);margin-bottom:4px}
+  .catin{width:100%;padding:11px;border-radius:11px;background:rgba(6,14,28,.7);color:var(--ink);
+    border:1px solid var(--edge);font-size:16px;font-family:var(--mono)}
+  .catres{margin-top:14px}
+  .catcard{background:linear-gradient(160deg,rgba(20,54,38,.75),rgba(10,30,22,.75));
+    border:1px solid rgba(78,227,154,.4);border-radius:14px;padding:14px 15px}
+  .catcard.alt{background:linear-gradient(160deg,rgba(60,34,10,.6),rgba(34,20,6,.6));border-color:rgba(255,194,85,.45)}
+  .catttl{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#7fe0a6}
+  .catcard.alt .catttl{color:var(--warn)}
+  .catline{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;
+    border-bottom:1px solid rgba(120,160,220,.12);font-size:15px}
+  .catline:last-child{border-bottom:none}
+  .catlab{color:var(--ink);font-weight:600}
+  .catqty{font-family:var(--mono);font-size:19px;font-weight:800;color:#fff;white-space:nowrap}
+  .catnote{font-size:12.5px;color:var(--dim);line-height:1.5;margin-top:9px}
+  .catnote b{color:var(--ink)}
+  .catsec{margin-top:16px}
+  .catsec>summary{cursor:pointer;font-size:14.5px;font-weight:700;color:var(--accent);padding:9px 0}
+  .catsec p{font-size:13.5px;color:var(--dim);line-height:1.6;margin:8px 0 0}
+  .catsec p b{color:var(--ink)}
+  .catsec ol,.catsec ul{margin:8px 0 0;padding-left:20px}
+  .catsec li{font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px}
+  .catsec li b{color:var(--ink)}
   /* homepage announcement window */
   .annModal{position:fixed;inset:0;z-index:62;background:rgba(4,10,22,.92);backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:20px}
@@ -612,6 +679,8 @@
     <button class="tab" data-view="crewrest">Crew&nbsp;Rest</button>
     <button class="tab" data-view="duty">LABT/LATT</button>
     <button class="tab" data-view="logbook">Logbook</button>
+    <button class="tab" data-view="hf">HF&nbsp;Checks</button>
+    <button class="tab" data-view="catering">Catering</button>
     <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
   </div>
 
@@ -787,6 +856,108 @@
     </div>
   </div>
 
+  <div id="view-hf" hidden>
+    <div class="card">
+      <div class="warnbox">
+        <div class="wtitle">⚠️ Reference only — verify before use</div>
+        <p>These frequencies and charts are an <b>offline snapshot</b> and <b>may be out of date</b>. ARINC revises assignments regularly. Always confirm against a current source before relying on them.</p>
+        <p><b>In flight:</b> search <b>“ARINC”</b> in Jeppesen for the current charts and frequencies. <b>On the ground:</b> use the live pages below.</p>
+        <p style="color:var(--faint)">Snapshot taken: <b id="hfSnap"></b></p>
+        <div class="linkrow">
+          <a class="linkbtn" href="https://radio.arinc.net/pacific/" target="_blank" rel="noopener">Live ARINC Pacific ↗</a>
+          <a class="linkbtn" href="https://radio.arinc.net/atlantic/" target="_blank" rel="noopener">Live ARINC Atlantic ↗</a>
+        </div>
+      </div>
+      <div class="segrow">
+        <button id="hfPac" class="on">Pacific</button>
+        <button id="hfAtl">Atlantic</button>
+        <button id="hfVhf">VHF / Ground</button>
+      </div>
+    </div>
+    <div id="hfOut"></div>
+  </div>
+
+  <div id="view-catering" hidden>
+    <div class="card">
+      <label class="fld">Catering check — enter the leg</label>
+      <div class="catgrid">
+        <div><div class="catk">Scheduled block time</div><input id="catBlk" class="catin" inputmode="text" placeholder="7:31 or 7.5"></div>
+        <div><div class="catk">Local departure (HHMM)</div><input id="catDep" class="catin" inputmode="numeric" maxlength="4" placeholder="1815"></div>
+        <div><div class="catk">Crew members catered</div><input id="catCrew" class="catin" inputmode="numeric" value="4"></div>
+        <div><div class="catk">Fleet</div>
+          <span class="seg" style="display:flex;gap:6px">
+            <button class="segbtn on" data-cfleet="std" style="flex:1">Oven</button>
+            <button class="segbtn" data-cfleet="737" style="flex:1">B737</button>
+          </span>
+        </div>
+        <div class="full"><div class="cr-row" style="margin-top:2px"><div class="crk">Single CONUS leg in duty period, block &lt; 4:00</div><button class="segbtn" id="catShort">No</button></div></div>
+        <div class="full"><div class="cr-row" style="margin-top:2px"><div class="crk">Augmented crew or deadheaders aboard</div><button class="segbtn" id="catAug">No</button></div></div>
+      </div>
+      <div id="catOut" class="catres"></div>
+      <div class="hint" style="margin-top:12px">Quantities are <b style="color:var(--dim)">per Crew Member</b> from Appendix 5-A, based on scheduled block-out to block-in. Reference only — confirm against the CBA.</div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <details class="catsec" open>
+        <summary>Who must be catered (Art. 5.E)</summary>
+        <p>Catering is provided for all <b>operating and deadheading</b> Crew Members, and for <b>jumpseaters who listed at least 12 hours in advance</b>. The Company has no obligation to cater commercial deadheads or ground transportation legs.</p>
+        <p>Meals should endeavor to be <b>American/Western style</b> unless otherwise approved by the Union Catering Committee.</p>
+        <p><b>Choices:</b> a minimum of <b>two (2)</b> meal choices when catering is required; a minimum of <b>three (3)</b> for augmented crews or when deadheading Crew Members are travelling.</p>
+        <p><b>Rotation &amp; safety:</b> sandwiches and meal choices rotate approximately every <b>two weeks</b>. Operating crew members who choose the <b>same</b> meal must consume them at least <b>six (6) hours apart</b> to guard against food contamination.</p>
+      </details>
+      <details class="catsec">
+        <summary>Appendix 5-A — minimum standards matrix</summary>
+        <table class="ftab">
+          <tr><th style="text-align:left">Per Crew Member</th><th>0–3:59</th><th>4–7:59</th><th>8+</th></tr>
+          <tr><td class="lbl">Sandwich tray</td><td class="fq">2*</td><td class="fq">2</td><td class="fq">2</td></tr>
+          <tr><td class="lbl">Fresh whole fruit</td><td class="fq">2</td><td class="fq">2</td><td class="fq">2</td></tr>
+          <tr><td class="lbl">Assorted soda (12 oz)</td><td class="fq">2</td><td class="fq">3</td><td class="fq">3</td></tr>
+          <tr><td class="lbl">Water (litres)</td><td class="fq">1</td><td class="fq">2</td><td class="fq">3</td></tr>
+          <tr><td class="lbl">Hot meals</td><td class="fq">0</td><td class="fq">1</td><td class="fq">2</td></tr>
+        </table>
+        <p>*<b>Continental US short-flight exception:</b> the matrix does not apply to a single flight in a Duty Period within the continental United States with scheduled block time under four (4) hours. For those, the Company need only provide <b>water, coffee, soft drinks and light snacks</b> (such as protein bars).</p>
+      </details>
+      <details class="catsec">
+        <summary>Hot meal type by scheduled departure</summary>
+        <p><b>00:00–06:00:</b> 1st meal Breakfast · 2nd meal (8+ hrs) Lunch</p>
+        <p><b>06:01–14:00:</b> 1st meal Lunch · 2nd meal (8+ hrs) Dinner</p>
+        <p><b>14:01–23:59:</b> 1st meal Dinner · 2nd meal (8+ hrs) Breakfast</p>
+      </details>
+      <details class="catsec">
+        <summary>B737 hot meal alternative (MOU)</summary>
+        <p>The B737 has no onboard ovens, so the Company is structurally unable to provide hot meals. On any B737 flight with scheduled block time of <b>four (4) or more hours</b> where a Crew Member would otherwise be entitled to a hot meal, they instead receive a gross payment of <b>US $75.00 per meal</b>.</p>
+        <p>The payment appears on your paycheck and is <b>fully grossed up</b> by the Company to cover associated taxes.</p>
+      </details>
+      <details class="catsec">
+        <summary>Inoperative oven — Arbitration Award #AAI-2025-183</summary>
+        <p>If an oven is inoperative on a flight where hot meals are contractually required, there is <b>no automatic contract relief</b>. The Company must remedy in this <b>strict priority order</b>:</p>
+        <ol>
+          <li>Provision a <b>large meal-sized salad or sandwich</b> (or breakfast equivalent) — from a catering vendor first, then a local restaurant.</li>
+          <li>Provision a <b>pre-cooked hot meal</b> from a catering vendor.</li>
+          <li>If mutually agreeable, authorize the pilot to <b>purchase a meal on the Company credit card</b> (or direct reimbursement).</li>
+          <li>Provision a <b>hot meal from a local restaurant</b>.</li>
+          <li>Provide a <b>$100.00 meal voucher</b>.</li>
+        </ol>
+        <p><b>Pilot's option:</b> a pilot may unilaterally elect to bypass the priority list and take a <b>$50.00 meal voucher</b> in lieu of the remedies above.</p>
+      </details>
+      <details class="catsec">
+        <summary>EHU (Ezhou) local catering procedures</summary>
+        <p>EHU has only one local caterer, serving non-compliant meals, so alternative procedures were established:</p>
+        <p><b>Through catering:</b> where aircraft space, ground time and combined block times allow, catering is loaded at the prior station and labeled by leg.</p>
+        <p><b>Hotel carry-on catering:</b> when through-catering is impossible, place a food order with the front desk of your primary hotel (<b>Wanda Hotel Huangshi</b> or <b>Crowne Plaza Ezhou</b>) at least <b>16 hours prior to departure</b>. The hotel prepares meals cold in oven-safe tins; the crew member carries them to the aircraft to reheat and charges the cost to their card/room (pre-authorized by accounting).</p>
+      </details>
+      <details class="catsec">
+        <summary>Safety &amp; enforcement</summary>
+        <p><b>Unsecured galley items:</b> all catering, including water cases and coolers, must be properly stowed and secured in galley cabinets and bins prior to departure. Loose items on the galley or flight deck floor are a severe safety hazard and violate FAA regulations and FOM policy.</p>
+        <p><b>No obligation to depart:</b> operating crews, and Captains in particular, are under no obligation to depart until contractually compliant, safe and sanitary catering is on board.</p>
+        <p><b>Voucher refusal:</b> outside the inoperative-oven award, the union strongly advises never accepting or negotiating a voucher in lieu of contractually required food. Captains cannot unilaterally accept vouchers on behalf of their crew.</p>
+      </details>
+      <div class="warnbox" style="margin-top:14px">
+        <div class="wtitle">Reference only</div>
+        <p>This is a plain-language summary of Article 5.E, Appendix 5-A and related side letters, MOUs and awards. The <b>CBA text controls</b> — verify against the contract, and contact your union representative with any dispute.</p>
+      </div>
+    </div>
+  </div>
+
   <div id="view-sched" hidden>
     <div class="protobanner">
       <div class="protobanner-tag">🚧 PROTOTYPE</div>
@@ -930,6 +1101,8 @@
     <button class="shareClose" id="shareClose">Done</button>
   </div>
 </div>
+
+<div class="imgModal" id="imgModal"><button class="imgClose" id="imgClose">✕ Close</button><img id="imgBig" alt=""></div>
 
 <script>
 /* ============================================================================
@@ -1973,6 +2146,127 @@
 
 </script>
 <script>
+/* CargoDecode — ARINC HF/VHF reference data (offline snapshot).
+   Source: radio.arinc.net (Collins Aerospace) Pacific & Atlantic HF assignment pages,
+   Jeppesen ARINC-2 / ARINC-5 / ARINC-6 charts, and the AVS Operating Procedures Handbook.
+   FREQUENCIES CHANGE — the app shows a snapshot date and links to the live pages. */
+(function(root){
+  'use strict';
+
+  var HF = {
+    // shown in the disclaimer so the crew always knows how old this copy is
+    snapshot: 'Aug 9, 2026 · Pacific 0340Z · Atlantic 0300Z–1100Z',
+    links: {
+      pacific:'https://radio.arinc.net/pacific/',
+      atlantic:'https://radio.arinc.net/atlantic/'
+    },
+
+    pacific: {
+      note:'ALL SWA, CANADIAN AND GENERAL AVIATION REGISTRIES TO/FROM CONUS USE: 11282 | 5547',
+      groups:[
+        { title:'Mainland Departures exiting West Coast', cols:['Primary','Secondary'], rows:[
+          ['California → Hawaii tracks (AAL/DAL/ACA/WJA/Military)','11282 kHz','5547 kHz'],
+          ['California → Hawaii tracks (Others)','8843 kHz','5574 kHz'],
+          ['Pacific NW → Hawaii tracks','11282 kHz','5547 kHz'],
+          ['North America → South Pacific','8843 kHz','5574 kHz'],
+          ['North America → Asia','11282 kHz','5547 kHz']
+        ], foot:'Traffic Distribution — Flights are sorted by Airline Operator and geographic location. North America departures toward Hawaii are divided between California and the Pacific NW (Seattle and Vancouver ARTCC). Distribution does not apply for North America to Asia or the South Pacific.' },
+        { title:'Hawaii Departures', cols:['Primary','Secondary'], rows:[
+          ['Hawaii → California tracks (AAL/DAL/ACA/WJA/Military)','11282 kHz','5547 kHz'],
+          ['Hawaii → California tracks (Others)','8843 kHz','5574 kHz'],
+          ['Hawaii → Pacific NW tracks','11282 kHz','5547 kHz'],
+          ['Hawaii → Southbound','8867 kHz','13261 kHz'],
+          ['Hawaii → Westbound','17904 kHz','11384 kHz'],
+          ['Hawaii → Alaska','11282 kHz','5547 kHz']
+        ] },
+        { title:'Other Regions', cols:['Primary','Secondary','Tertiary'], rows:[
+          ['Guam Area','17904 kHz','11384 kHz',''],
+          ['Alaska / North Pacific (West of 150W)','17946 kHz','10048 kHz',''],
+          ['Polar Route','17925 kHz','11342 kHz','13348 kHz'],
+          ['Mazatlan Airspace','8843 kHz','5574 kHz','11342 kHz']
+        ] },
+        { title:'VHF', cols:['Frequency'], rows:[
+          ['Extended Range VHF — LAX/SFO/ACV/Hawaii/Guam','131.95 MHz'],
+          ['On-ground LAX','131.95 MHz']
+        ] }
+      ],
+      ldoc:'Long Distance Operational Control — call on your enroute HF primary for phone patch frequency assignment.'
+    },
+
+    atlantic: {
+      note:'Flights may call on-ground VHF for HF frequency assignments at the designated gateways, or on the extended-range VHF when airborne.',
+      groups:[
+        { title:'Air Traffic Control  ·  LDOC / Phone Patch / SELCAL Checks',
+          cols:['ATC Primary','ATC Secondary','LDOC Primary','LDOC Secondary'], rows:[
+          ['Gulf of Mexico / S. America','8918 kHz','6586 kHz','8933 kHz','6640 kHz'],
+          ['Caribbean / N. Atlantic','6577 kHz','5550 kHz','6640 kHz','3494 kHz'],
+          ['Northeast U.S.','6577 kHz','5550 kHz','6640 kHz','3494 kHz'],
+          ['Eastern Atlantic','8906 kHz','5598 kHz','8933 kHz','6640 kHz']
+        ] },
+        { title:'Coastal VHF & SatVoice', cols:['Frequency'], rows:[
+          ['Coastal VHF — Maritime Canada to Virginia','129.90 MHz'],
+          ['Coastal VHF — Carolinas to Florida and Gulf of Mexico','130.70 MHz'],
+          ['New York ARINC SatVoice','436623']
+        ] }
+      ],
+      ldoc:'For more information contact New York ARINC at +1-631-589-7272.'
+    },
+
+    // ARINC LDOC frequencies (AVS Operating Procedures Handbook)
+    ldocFreqs:['3494 kHz','6640 kHz','8933 kHz','11342 kHz','13348 kHz','17925 kHz','21964 kHz'],
+
+    // Radio Operations contacts
+    contacts:[
+      {c:'New York (NYC)', ops:'800-645-1095', patch:'631-589-7272', sat:'436623'},
+      {c:'San Francisco (SFO)', ops:'800-621-0140', patch:'925-453-3547', sat:'436625'}
+    ],
+
+    // ARINC-2 · VHF Radio Network ON-GROUND frequencies (MHz), by city
+    vhfGround:{
+      ABQ:'128.90',AMA:'128.90',ANC:'129.40',ACV:'130.40 / 131.95',BCE:'130.40',BFF:'130.40',
+      BGE:'131.175',BGR:'129.40',BIL:'131.80',BOI:'131.80',BOS:'129.40',BNA:'129.45',BTM:'131.80',
+      BTV:'129.40',BUF:'129.40',BWI:'129.40',CDV:'129.40',CHS:'131.175',CID:'129.45',CNY:'130.40',
+      CRW:'129.45',CPR:'131.80',CWA:'129.40',DEN:'130.40',DFW:'131.175',DTW:'129.40',EKO:'130.40',
+      ELP:'128.90',ELY:'130.40',ESC:'129.40',FAT:'130.40',FSD:'131.80',GCK:'130.40',GEG:'131.80',
+      GFK:'131.80',GJT:'130.40',GSO:'129.45',GTF:'131.80',HMB:'131.95',HRL:'131.175',
+      HSE:'129.45 / 129.90',HYA:'129.90',IAH:'131.175',ICT:'129.45',IDA:'131.80',IND:'129.45',
+      IPT:'129.40',JAN:'131.175',JAX:'131.175',JFK:'129.90',KTN:'129.40',LAS:'128.90',
+      LAX:'128.90 / 131.95',LGA:'129.40',LIT:'131.175',MAF:'128.90',MBG:'131.80',MCI:'129.45',
+      MCK:'130.40',MFR:'131.80',MIA:'131.175',MSP:'131.80',MSY:'131.175',MVI:'128.90',OMA:'129.45',
+      ONL:'131.80',ORD:'129.40',OXB:'129.90',PDT:'131.80',PDX:'131.80',PHX:'128.90',PIT:'129.40',
+      RAP:'131.80',RDD:'130.40',RDM:'131.80',RKD:'129.90',RKS:'130.40',RNO:'130.40',RYY:'131.175',
+      SAT:'131.175',SBA:'131.95',SEA:'131.80',SFO:'130.40',SHP:'129.90',SIT:'129.40',SLC:'130.40',
+      STL:'129.45',SVC:'128.90',TPA:'131.175',TPH:'130.40',TUL:'129.45',TUS:'128.90',WMC:'130.40',
+      WMS:'128.90',XWA:'131.80',YAK:'129.40',YUM:'128.90',YVR:'129.40',YZT:'129.40'
+    },
+    // GULFNET — all 130.70 MHz
+    gulfnet:['AHJ','CHS','CUN','EYW','GGT','GOM','JAX','MIA','MID','PLS','SJU'],
+    // ARINC-6 · MexNet on-ground coverage, all on 130.70 MHz
+    mexnet:[['ACA','ACAPULCO'],['BJX','LEON'],['CUU','CHIHUAHUA'],['GDL','GUADALAJARA'],
+      ['HMO','HERMOSILLO'],['LMM','LOS MOCHIS'],['MEX','MEXICO CITY'],['MTY','MONTERREY'],
+      ['MZT','MAZATLAN'],['PVR','PUERTO VALLARTA'],['SJD','SAN JOSE DEL CABO'],['TAM','TAMPICO'],
+      ['TRC','TORREON'],['VER','VERACRUZ'],['VSA','VILLAHERMOSA']],
+
+    procedures:[
+      ['Where to call for a radio check','For HF radio and equipment checks at <b>all</b> locations, call ARINC on-ground — or enroute on a VHF network frequency — to coordinate with the Radio Operator (RO).'],
+      ['Which centre answers','<b>San Francisco ARINC</b> monitors all contiguous US, Alaska, Hawaii, Guam and Mexico (ARINC-5) networks. <b>New York ARINC</b> monitors two international networks: 130.70 (GULFNET) and 129.90 (MARITIMENET).'],
+      ['If no reply','During busy periods responses may be delayed. If no reply within one minute, repeat the call on the <b>same</b> frequency. Do not change frequencies for at least three minutes — it may cause further delays. After three minutes, switch to the nearest adjacent VHF frequency appropriate to your location.'],
+      ['Coverage caveat','On-ground/enroute VHF coverage is based on aircraft at or above <b>FL200</b>. Coverage below FL200 may be limited by line-of-sight.'],
+      ['What to pass on a company call','1) Aircraft flight ID as filed and used with ATC, plus registration. 2) Transmitting frequency. 3) Message delivery instructions and the operating company name. 4) Aircraft SELCAL code, if applicable.']
+    ],
+    example:[
+      ['Flight','“San Francisco, this is ACME fower-too on ate-niner-tree-tree.”'],
+      ['Operator','“ACME fower-too, San Francisco, Go Ahead.”'],
+      ['Flight','“San Francisco, ACME fower-too, SELCAL AQ-HS, Request Phone Patch with company dispatch.”']
+    ]
+  };
+
+  if(typeof module!=='undefined'&&module.exports) module.exports=HF;
+  root.HFDATA=HF;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
 /* AeroDecode access gate — employee-number allowlist (offline).
    Authorized pilots are stored as SALTED HASHES (not the raw numbers), so the
    public source never shows the actual roster. Login = employee number.
@@ -2046,7 +2340,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v8.9 · 2026-07-26';
+  var BUILD='v9.0 · 2026-07-28';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2605,11 +2899,15 @@
       $('#view-crewrest').hidden=(v!=='crewrest');
       $('#view-duty').hidden=(v!=='duty');
       var vlg=$('#view-logbook'); if(vlg) vlg.hidden=(v!=='logbook');
+      var vhf=$('#view-hf'); if(vhf) vhf.hidden=(v!=='hf');
+      var vct=$('#view-catering'); if(vct) vct.hidden=(v!=='catering');
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
       var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
       if(v==='crewrest'){ crBuild(); }
       if(v==='duty'){ duCompute(); }
       if(v==='logbook'){ lgCompute(); }
+      if(v==='hf'){ hfRender(); }
+      if(v==='catering'){ catCompute(); }
       if(v==='sched'){ schedCompute(); }
     };
   });
@@ -3122,9 +3420,21 @@
   async function prewarmEngines(){
     if(navigator.onLine===false){ setFlReady(); return; }
     setFlReady();
+    try{ prefetchCharts(); }catch(e){}           // fire first & independently — must not wait on the CDN engines
     try{ await ensurePdf(true); }catch(e){}     // silent — don't disturb the flight-log status line
     try{ await ensureTess(); }catch(e){}         // reflects in the OCR pill
     _prewarmed=true; setFlReady();
+  }
+  // Pull the ARINC charts into the offline cache whenever we have signal.
+  var _chartsDone=false;
+  function prefetchCharts(){
+    if(_chartsDone || navigator.onLine===false) return Promise.resolve();
+    var names=['hf-pac.jpg','hf-atl.jpg','hf-vhf.jpg','hf-mex.jpg'];
+    return Promise.all(names.map(function(n){
+      return fetch(n).then(function(r){ return r.ok?r.blob():null; }).catch(function(){ return null; });
+    })).then(function(res){
+      if(res.every(function(x){ return x; })){ _chartsDone=true; try{ localStorage.setItem('ad_charts_ready','1'); }catch(e){} }
+    });
   }
   async function extractPdfText(file){
     const buf=await file.arrayBuffer();
@@ -3311,6 +3621,182 @@
   [lgFuelOut,lgFuelIn,lgTimeIn,lgTimeOut].forEach(function(el){ if(el) el.addEventListener('input',lgCompute); });
   var lgClearBtn=$('#lgClear'); if(lgClearBtn) lgClearBtn.onclick=function(){ lgFuelOut.value='';lgFuelIn.value='';lgTimeIn.value='';lgTimeOut.value=''; try{localStorage.removeItem('ad_logbook');}catch(e){} lgCompute(); };
   lgCompute();
+
+  /* ---------- HF Checks (offline ARINC reference) ---------- */
+  // Charts live beside index.html and are cached by the service worker, so they auto-download
+  // whenever the app is opened with signal and then stay available with no connection.
+  var MAPS={pac:'hf-pac.jpg', atl:'hf-atl.jpg', vhf:'hf-vhf.jpg', mex:'hf-mex.jpg'};
+  var hfView='pac';
+  (function(){ var s=$('#hfSnap'); if(s&&typeof HFDATA!=='undefined') s.textContent=HFDATA.snapshot; })();
+  function hfTable(g){
+    var h='<div class="grpttl">'+esc(g.title)+'</div><table class="ftab"><tr><th style="text-align:left">&nbsp;</th>';
+    g.cols.forEach(function(c){ h+='<th>'+esc(c)+'</th>'; });
+    h+='</tr>';
+    g.rows.forEach(function(r){
+      h+='<tr><td class="lbl">'+r[0]+'</td>';
+      for(var i=1;i<r.length;i++){ h+='<td class="'+(i===1?'fq':'fq2')+'">'+esc(r[i]||'—')+'</td>'; }
+      h+='</tr>';
+    });
+    h+='</table>';
+    if(g.foot) h+='<div class="grpfoot">'+esc(g.foot)+'</div>';
+    return h;
+  }
+  function hfRegion(key){
+    var D=HFDATA[key], h='<div class="card">';
+    if(D.note) h+='<div class="grpfoot" style="margin-top:0"><b style="color:var(--ink)">Note:</b> '+D.note+'</div>';
+    D.groups.forEach(function(g){ h+=hfTable(g); });
+    if(D.ldoc) h+='<div class="grpfoot">'+esc(D.ldoc)+'</div>';
+    h+='</div><div class="card" style="margin-top:14px"><div class="glab" style="font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px">Coverage map</div>';
+    if(key==='pacific'){ h+='<img class="mapthumb" data-map="pac" src="'+MAPS.pac+'" alt="ARINC HF/VHF Voice Coverage — Pacific"><div class="mapcap">ARINC HF/VHF Voice Coverage — Pacific · tap to enlarge</div>'; }
+    else { h+='<img class="mapthumb" data-map="atl" src="'+MAPS.atl+'" alt="ARINC HF/VHF Voice Coverage — Atlantic/Caribbean"><div class="mapcap">ARINC HF/VHF Voice Coverage — Atlantic / Caribbean · tap to enlarge</div>'; }
+    h+='</div>';
+    return h;
+  }
+  function hfVhfPanel(){
+    var D=HFDATA, h='<div class="card">';
+    h+='<div class="grpttl" style="margin-top:0">ARINC-2 · VHF on-ground frequencies</div>';
+    h+='<div class="grpfoot" style="margin-top:8px">For HF radio and equipment checks at <b style="color:var(--ink)">all</b> locations, call ARINC on-ground — or enroute on a VHF network frequency — to coordinate with the Radio Operator.</div>';
+    h+='<input id="vhfQ" class="vhfsearch" placeholder="Search a city code (ORD, LAX, ANC…)" autocomplete="off" autocapitalize="characters">';
+    h+='<div id="vhfList"></div>';
+    h+='<div class="grpttl">GULFNET · 130.70 MHz</div><div class="grpfoot" style="margin-top:8px;font-family:var(--mono);color:#ffd88a">'+D.gulfnet.join(' · ')+'</div>';
+    h+='<div class="grpttl">ARINC-6 · MexNet on-ground · 130.70 MHz</div><div class="vhfgrid">';
+    D.mexnet.forEach(function(m){ h+='<div class="vhfcell"><div class="vhfcity">'+esc(m[0])+'</div><div class="vhffreq" style="font-size:11px;color:var(--dim)">'+esc(m[1])+'</div></div>'; });
+    h+='</div></div>';
+    h+='<div class="card" style="margin-top:14px"><div class="grpttl" style="margin-top:0">Procedures</div>';
+    D.procedures.forEach(function(p){ h+='<div class="grpfoot" style="margin-top:8px"><b style="color:var(--ink)">'+esc(p[0])+'</b><br>'+p[1]+'</div>'; });
+    h+='<div class="grpttl">Example call</div><table class="ftab">';
+    D.example.forEach(function(e){ h+='<tr><td class="lbl" style="width:86px">'+esc(e[0])+'</td><td style="font-size:13px">'+esc(e[1])+'</td></tr>'; });
+    h+='</table>';
+    h+='<div class="grpttl">ARINC LDOC frequencies</div><div class="grpfoot" style="margin-top:8px;font-family:var(--mono);color:#ffd88a">'+D.ldocFreqs.join(' · ')+'</div>';
+    h+='<div class="grpttl">Radio Operations</div><table class="ftab"><tr><th style="text-align:left">Centre</th><th>Radio Ops</th><th>Phone Patch</th><th>SatVoice</th></tr>';
+    D.contacts.forEach(function(c){ h+='<tr><td class="lbl">'+esc(c.c)+'</td><td class="fq2"><a href="tel:'+esc(c.ops.replace(/\D/g,''))+'" style="color:#bcd6ff">'+esc(c.ops)+'</a></td><td class="fq2"><a href="tel:'+esc(c.patch.replace(/\D/g,''))+'" style="color:#bcd6ff">'+esc(c.patch)+'</a></td><td class="fq">'+esc(c.sat)+'</td></tr>'; });
+    h+='</table></div>';
+    h+='<div class="card" style="margin-top:14px"><div class="glab" style="font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px">Charts</div>'+
+       '<img class="mapthumb" data-map="vhf" src="'+MAPS.vhf+'" alt="ARINC VHF Radio Networks Enroute Above FL200"><div class="mapcap">ARINC VHF Radio Networks — Enroute Above FL200 · tap to enlarge</div>'+
+       '<img class="mapthumb" data-map="mex" src="'+MAPS.mex+'" alt="ARINC MexNet Voice Coverage Map"><div class="mapcap">ARINC-5 MexNet Voice Coverage Map · tap to enlarge</div></div>';
+    return h;
+  }
+  function vhfListRender(q){
+    var el=document.getElementById('vhfList'); if(!el) return;
+    var G=HFDATA.vhfGround, keys=Object.keys(G).sort();
+    q=(q||'').trim().toUpperCase();
+    if(q) keys=keys.filter(function(k){ return k.indexOf(q)===0; });
+    if(!keys.length){ el.innerHTML='<div class="vhfnone">No city code matches “'+esc(q)+'”. Try the first letters of the 3-letter code.</div>'; return; }
+    var h='<div class="vhfgrid">';
+    keys.forEach(function(k){ h+='<div class="vhfcell"><div class="vhfcity">'+esc(k)+'</div><div class="vhffreq">'+esc(G[k])+'</div></div>'; });
+    el.innerHTML=h+'</div>';
+  }
+  function hfRender(){
+    var out=$('#hfOut'); if(!out||typeof HFDATA==='undefined') return;
+    if(hfView==='vhf'){ out.innerHTML=hfVhfPanel(); vhfListRender('');
+      var q=document.getElementById('vhfQ'); if(q) q.addEventListener('input',function(){ vhfListRender(q.value); });
+    }
+    else { out.innerHTML=hfRegion(hfView==='pac'?'pacific':'atlantic'); }
+    Array.prototype.forEach.call(out.querySelectorAll('.mapthumb'),function(im){
+      im.onclick=function(){ var big=$('#imgBig'); if(big) big.src=im.src; var m=$('#imgModal'); if(m) m.classList.add('on'); };
+      im.onerror=function(){                       // not cached yet and no signal → say so plainly
+        var cap=im.nextElementSibling; im.style.display='none';
+        if(cap&&cap.className==='mapcap') cap.innerHTML='<span style="color:var(--warn)">Chart not cached yet</span> — open the app once with signal and it will download for offline use.';
+      };
+    });
+  }
+  (function(){
+    function pick(v,btn){ hfView=v; ['hfPac','hfAtl','hfVhf'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.toggle('on', b===btn); }); hfRender(); }
+    var a=$('#hfPac'), b=$('#hfAtl'), c=$('#hfVhf');
+    if(a) a.onclick=function(){ pick('pac',a); };
+    if(b) b.onclick=function(){ pick('atl',b); };
+    if(c) c.onclick=function(){ pick('vhf',c); };
+    var ic=$('#imgClose'), im=$('#imgModal');
+    function closeImg(){ if(im) im.classList.remove('on'); }
+    if(ic) ic.onclick=closeImg;
+    if(im) im.addEventListener('click',function(e){ if(e.target===im) closeImg(); });
+  })();
+
+  /* ---------- Catering (Art. 5.E / Appendix 5-A compliance check) ---------- */
+  var catFleet='std', catShortOn=false, catAugOn=false;
+  function catBlockMin(s){
+    s=(s||'').trim(); if(!s) return null;
+    if(s.indexOf(':')>-1){ var a=s.split(':'); return (parseInt(a[0],10)||0)*60+(parseInt(a[1],10)||0); }
+    if(s.indexOf('.')>-1){ var f=parseFloat(s); return isNaN(f)?null:Math.round(f*60); }
+    var d=s.replace(/\D/g,''); if(!d) return null;
+    if(d.length<=2) return (+d)*60;                 // "7" → 7:00
+    d=d.padStart(4,'0'); return (+d.slice(0,d.length-2))*60+(+d.slice(-2));
+  }
+  function catMealNames(depMin,count){
+    if(depMin==null) return null;
+    var set;
+    if(depMin<=6*60) set=['Breakfast','Lunch'];
+    else if(depMin<=14*60) set=['Lunch','Dinner'];
+    else set=['Dinner','Breakfast'];
+    return set.slice(0,count);
+  }
+  function catCompute(){
+    var out=$('#catOut'); if(!out) return;
+    var blk=catBlockMin($('#catBlk')?$('#catBlk').value:'');
+    var depRaw=($('#catDep')?$('#catDep').value:'').replace(/\D/g,'');
+    var depMin=null; if(depRaw.length>=3){ var d4=depRaw.padStart(4,'0'), hh=+d4.slice(0,2), mm=+d4.slice(2); if(hh<24&&mm<60) depMin=hh*60+mm; }
+    var crew=parseInt(($('#catCrew')?$('#catCrew').value:'')||'0',10); if(isNaN(crew)||crew<1) crew=1;
+    try{ localStorage.setItem('ad_catering',JSON.stringify({b:$('#catBlk').value,d:$('#catDep').value,c:$('#catCrew').value,f:catFleet,s:catShortOn,a:catAugOn})); }catch(e){}
+    if(blk==null){ out.innerHTML='<div class="hint" style="padding:0 4px">Enter the scheduled block time to check the catering requirement.</div>'; return; }
+    var choices = catAugOn? 3 : 2;
+    // CONUS short-flight exception
+    if(catShortOn && blk<240){
+      out.innerHTML='<div class="catcard alt"><div class="catttl">Short CONUS leg — matrix does not apply</div>'+
+        '<div class="catnote">A single flight in a Duty Period within the continental United States with scheduled block under 4:00. The Company need only provide:</div>'+
+        '<div class="catline"><span class="catlab">Water</span><span class="catqty">✓</span></div>'+
+        '<div class="catline"><span class="catlab">Coffee</span><span class="catqty">✓</span></div>'+
+        '<div class="catline"><span class="catlab">Soft drinks</span><span class="catqty">✓</span></div>'+
+        '<div class="catline"><span class="catlab">Light snacks (e.g. protein bars)</span><span class="catqty">✓</span></div>'+
+        '<div class="catnote">If this is <b>not</b> the only leg in the duty period, or it leaves the continental US, switch the toggle off — the full matrix then applies.</div></div>';
+      return;
+    }
+    var band = blk<240? 0 : (blk<480? 1 : 2);
+    var bandLbl = ['0 – 3:59','4 – 7:59','8:00 +'][band];
+    var M = { sand:[2,2,2][band], fruit:[2,2,2][band], soda:[2,3,3][band], water:[1,2,3][band], hot:[0,1,2][band] };
+    function line(lab,per){ return '<div class="catline"><span class="catlab">'+lab+'</span><span class="catqty">'+(per*crew)+'<span style="font-size:12px;color:var(--dim);font-weight:600"> ('+per+'/ea)</span></span></div>'; }
+    var h='<div class="catcard"><div class="catttl">Required for '+crew+' crew member'+(crew>1?'s':'')+' · block '+Math.floor(blk/60)+':'+String(blk%60).padStart(2,'0')+' ('+bandLbl+')</div>';
+    h+=line('Sandwiches',M.sand)+line('Fresh whole fruit',M.fruit)+line('Assorted soda (12 oz)',M.soda)+line('Water (litres)',M.water);
+    if(M.hot>0 && catFleet!=='737') h+=line('Hot meals',M.hot);
+    h+='<div class="catline"><span class="catlab">Meal choices required</span><span class="catqty">'+choices+'</span></div>';
+    h+='<div class="catnote">'+(catAugOn?'Augmented crew or deadheaders aboard → <b>three (3)</b> choices required for variety.':'Minimum <b>two (2)</b> choices. If augmented or deadheaders are aboard, it becomes three.')+'</div>';
+    h+='</div>';
+    if(M.hot>0){
+      var names=catMealNames(depMin,M.hot);
+      if(catFleet==='737'){
+        h+='<div class="catcard alt" style="margin-top:12px"><div class="catttl">B737 — no ovens · payment in lieu</div>'+
+          '<div class="catline"><span class="catlab">Hot meals owed</span><span class="catqty">'+M.hot+'/ea</span></div>'+
+          '<div class="catline"><span class="catlab">Payment per Crew Member</span><span class="catqty">$'+(75*M.hot).toFixed(2)+'</span></div>'+
+          '<div class="catline"><span class="catlab">Total for '+crew+' crew</span><span class="catqty">$'+(75*M.hot*crew).toFixed(2)+'</span></div>'+
+          '<div class="catnote">$75.00 gross per meal on any B737 flight with scheduled block of 4:00 or more where a hot meal would otherwise be owed. Paid on your paycheck and <b>fully grossed up</b> for taxes.</div></div>';
+      } else if(names){
+        h+='<div class="catcard" style="margin-top:12px"><div class="catttl">Hot meal service · departure '+String(Math.floor(depMin/60)).padStart(2,'0')+String(depMin%60).padStart(2,'0')+' local</div>';
+        names.forEach(function(n,i){ h+='<div class="catline"><span class="catlab">'+(i===0?'1st meal':'2nd meal')+'</span><span class="catqty">'+n+'</span></div>'; });
+        h+='<div class="catnote">Crew members eating the <b>same</b> meal must consume them at least <b>six (6) hours apart</b>.</div></div>';
+      } else {
+        h+='<div class="catcard alt" style="margin-top:12px"><div class="catttl">Hot meal type</div><div class="catnote">Enter the <b>local</b> departure time to see whether the meals are breakfast, lunch or dinner.</div></div>';
+      }
+    }
+    out.innerHTML=h;
+  }
+  (function(){
+    var ids=['catBlk','catDep','catCrew'];
+    ids.forEach(function(id){ var e=document.getElementById(id); if(e) e.addEventListener('input',catCompute); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cfleet]'),function(b){
+      b.onclick=function(){ document.querySelectorAll('[data-cfleet]').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); catFleet=b.getAttribute('data-cfleet'); catCompute(); };
+    });
+    var sh=$('#catShort'); if(sh) sh.onclick=function(){ catShortOn=!catShortOn; this.textContent=catShortOn?'Yes':'No'; this.classList.toggle('on',catShortOn); catCompute(); };
+    var au=$('#catAug'); if(au) au.onclick=function(){ catAugOn=!catAugOn; this.textContent=catAugOn?'Yes':'No'; this.classList.toggle('on',catAugOn); catCompute(); };
+    var s; try{ s=JSON.parse(localStorage.getItem('ad_catering')||'null'); }catch(e){ s=null; }
+    if(s){
+      if(s.b!=null&&$('#catBlk')) $('#catBlk').value=s.b;
+      if(s.d!=null&&$('#catDep')) $('#catDep').value=s.d;
+      if(s.c!=null&&$('#catCrew')) $('#catCrew').value=s.c;
+      if(s.f){ catFleet=s.f; document.querySelectorAll('[data-cfleet]').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-cfleet')===catFleet); }); }
+      if(s.s&&sh){ catShortOn=true; sh.textContent='Yes'; sh.classList.add('on'); }
+      if(s.a&&au){ catAugOn=true; au.textContent='Yes'; au.classList.add('on'); }
+    }
+    catCompute();
+  })();
 
   /* ---------- Share app with crew ---------- */
   var shareURL=(location.origin+location.pathname).replace(/index\.html?$/i,'');
