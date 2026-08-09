@@ -2369,7 +2369,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.2 · 2026-07-28';
+  var BUILD='v9.3 · 2026-07-28';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -3094,20 +3094,37 @@
     return out;
   }
   function scYMD(dt){ return ''+dt.getUTCFullYear()+String(dt.getUTCMonth()+1).padStart(2,'0')+String(dt.getUTCDate()).padStart(2,'0'); }
+  var scShowAll=false;
+  function scPrettyDate(d){ return d.slice(4,6)+'/'+d.slice(6,8)+'/'+d.slice(2,4); }
   function scRenderFlights(){
     var box=document.getElementById('scFlights'); if(!box) return;
     if(!scFlightList.length){ box.innerHTML=''; return; }
-    var today=scYMD(new Date());
-    var c=new Date(); c.setUTCDate(c.getUTCDate()-2); var cut=scYMD(c);
-    var list=scFlightList.filter(function(f){return f.date>=cut;}).slice(0,60);
-    if(!list.length) list=scFlightList.slice(-30);
-    var h='<div class="schelp" style="margin-top:10px">Tap your <b>next flight</b> — its report time fills in, plus the block-in of the leg before it:</div><div class="scfl">';
+    var today=scYMD(new Date()), now=new Date();
+    // default window: start of LAST month → end of NEXT month (covers the whole roster you care about)
+    var winA=scYMD(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()-1, 1)));
+    var winB=scYMD(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()+2, 0)));
+    var inWin=scFlightList.filter(function(f){ return f.date>=winA && f.date<=winB; });
+    var list, mode;
+    if(scShowAll || !inWin.length){ list=scFlightList; mode='all'; }
+    else { list=inWin; mode='win'; }
+    var h='<div class="schelp" style="margin-top:10px">Tap your <b>next flight</b> — its report time fills in, plus the block-in of the leg before it:</div>';
+    if(mode==='win'){
+      h+='<div class="schelp" style="margin-top:4px;color:var(--faint)">Showing <b>'+list.length+'</b> flight'+(list.length===1?'':'s')+' from last month through next month.'+
+         (scFlightList.length>list.length? ' <a id="scAll" style="color:var(--accent);cursor:pointer;text-decoration:underline">Show all '+scFlightList.length+'</a>':'')+'</div>';
+    } else if(!inWin.length && scFlightList.length){
+      h+='<div class="schelp" style="margin-top:4px;color:var(--warn)">No flights fall in last month–next month, so all <b>'+scFlightList.length+'</b> imported flights are shown. Your calendar export may cover a different date range.</div>';
+    } else {
+      h+='<div class="schelp" style="margin-top:4px;color:var(--faint)">Showing all <b>'+scFlightList.length+'</b> imported flights. <a id="scWin" style="color:var(--accent);cursor:pointer;text-decoration:underline">Show last–next month only</a></div>';
+    }
+    h+='<div class="scfl">';
     list.forEach(function(f){ var gi=scFlightList.indexOf(f);
       h+='<button class="scflb'+(f.date>=today?'':' past')+'" data-fi="'+gi+'"><span class="scfd">'+f.date.slice(4,6)+'/'+f.date.slice(6,8)+'</span>'+
          '<span class="scfr">'+f.report+'Z</span><span class="scfs">'+esc(f.sum||'—')+'</span><span class="scfa">→'+esc(f.sta)+'</span></button>';
     });
     box.innerHTML=h+'</div>';
     Array.prototype.forEach.call(box.querySelectorAll('.scflb'),function(bn){ bn.onclick=function(){ scPickFlight(+bn.getAttribute('data-fi'), bn); }; });
+    var a=document.getElementById('scAll'); if(a) a.onclick=function(){ scShowAll=true; scRenderFlights(); };
+    var w=document.getElementById('scWin'); if(w) w.onclick=function(){ scShowAll=false; scRenderFlights(); };
   }
   function scPickFlight(gi, bn){
     var f=scFlightList[gi]; if(!f) return;
@@ -3155,7 +3172,10 @@
     var note=document.getElementById('scImportNote'), b=document.getElementById('scFlights');
     try{ scFlightList=scParseIcs(text); }catch(e){ scFlightList=[]; }
     if(!scFlightList.length){ if(note) note.textContent='No flight events with Zulu block times found — make sure it’s the AIMS eCrew calendar export.'; if(b) b.innerHTML=''; return; }
-    if(note) note.innerHTML='Loaded <b>'+scFlightList.length+'</b> flights from your calendar — tap your next one below.';
+    scShowAll=false;
+    var a=scFlightList[0].date, b2=scFlightList[scFlightList.length-1].date;
+    if(note) note.innerHTML='Loaded <b>'+scFlightList.length+'</b> flights, <b>'+scPrettyDate(a)+'</b> to <b>'+scPrettyDate(b2)+'</b>. '+
+      '<span style="color:var(--faint)">Every event in the file is imported — if that range looks short, re-export a wider window from your calendar.</span>';
     scRenderFlights();
   }
   var scImportBtn=document.getElementById('scImportBtn');
