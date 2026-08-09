@@ -498,6 +498,38 @@
   .catsec ol,.catsec ul{margin:8px 0 0;padding-left:20px}
   .catsec li{font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px}
   .catsec li b{color:var(--ink)}
+  /* Wheel of Misfortune (purely for morale) */
+  .tab.tab-fun{border-color:rgba(255,209,102,.5);color:var(--gold)}
+  .tab.tab-fun.on{background:linear-gradient(180deg,#7b3fb5,#4d2278);border-color:#a76fe0;color:#fff}
+  .wheelwrap{position:relative;width:min(84vw,330px);aspect-ratio:1;margin:16px auto 0}
+  .wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;
+    border:7px solid #d9a533;box-shadow:0 0 0 4px rgba(20,10,40,.85),0 14px 40px rgba(2,8,20,.6);
+    transition:transform 5s cubic-bezier(.15,.72,.13,1)}
+  .wseg{position:absolute;left:50%;top:50%;width:50%;height:50%;transform-origin:0 0;
+    display:flex;align-items:center;justify-content:center}
+  .wq{position:absolute;left:50%;top:50%;transform-origin:0 0;color:rgba(255,255,255,.82);
+    font-size:19px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none}
+  .wheelptr{position:absolute;top:-13px;left:50%;transform:translateX(-50%);z-index:3;
+    width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;
+    border-top:26px solid #ffd166;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6))}
+  .wheelhub{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;z-index:2;
+    background:radial-gradient(circle at 40% 35%,#33204d,#150a26);border:4px solid #d9a533;
+    display:flex;align-items:center;justify-content:center;font-size:30px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  .spinbtn{display:block;width:100%;margin-top:20px;padding:16px;border-radius:14px;cursor:pointer;
+    font-size:18px;font-weight:800;letter-spacing:.5px;color:#fff;
+    background:linear-gradient(180deg,#8e4ecb,#5a2a92);border:1px solid #a76fe0;
+    box-shadow:0 8px 26px rgba(90,42,146,.45)}
+  .spinbtn:disabled{opacity:.55;cursor:default}
+  .wresult{margin-top:16px;padding:18px 16px;border-radius:16px;text-align:center;
+    background:linear-gradient(160deg,rgba(70,26,26,.9),rgba(40,14,14,.9));
+    border:1px solid rgba(255,120,120,.5);box-shadow:0 12px 34px rgba(2,8,20,.5);
+    animation:wpop .45s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes wpop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+  .wrlab{font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#ff9d9d}
+  .wrtext{font-size:21px;font-weight:800;color:#fff;line-height:1.35;margin-top:9px}
+  .wrsub{font-size:12.5px;color:#e0b4b4;margin-top:11px;font-style:italic}
+  .wheelnote{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5;margin-top:14px}
   /* homepage announcement window */
   .annModal{position:fixed;inset:0;z-index:62;background:rgba(4,10,22,.92);backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:20px}
@@ -712,6 +744,7 @@
     <button class="tab" data-view="hf">HF&nbsp;Checks</button>
     <button class="tab" data-view="catering">Catering</button>
     <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
+    <button class="tab tab-fun" data-view="wheel">🎡 Wheel of Misfortune</button>
   </div>
 
   <div class="zbox">
@@ -1069,6 +1102,21 @@
       <summary>Authorized methods for a schedule check</summary>
       <p class="dtybody">A required schedule check must be completed via <b>E-Crew</b>, a <b>mobile device</b>, a <b>personal computer</b>, or by <b>calling Crew Scheduling</b>. Do not rely solely on the PCD (Personal Communications Device) — it may not show the most recent version of your schedule.</p>
     </details>
+  </div>
+
+  <div id="view-wheel" hidden>
+    <div class="card" style="text-align:center">
+      <div class="fld" style="text-align:center">🎡 Wheel of Misfortune</div>
+      <div class="sub-codes" style="text-align:center">Spin to discover today's complimentary inconvenience.</div>
+      <div class="wheelwrap">
+        <div class="wheelptr"></div>
+        <div class="wheel" id="wheel"></div>
+        <div class="wheelhub">🎲</div>
+      </div>
+      <button class="spinbtn" id="spinBtn">SPIN THE WHEEL</button>
+      <div id="wheelOut"></div>
+      <div class="wheelnote">Entirely for morale purposes. No contractual value whatsoever — unlike the Catering tab, which sadly is real.</div>
+    </div>
   </div>
 
   <div class="foot">
@@ -2393,7 +2441,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.5 · 2026-07-28';
+  var BUILD='v9.6 · 2026-07-28';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2957,6 +3005,7 @@
       var vhf=$('#view-hf'); if(vhf) vhf.hidden=(v!=='hf');
       var vct=$('#view-catering'); if(vct) vct.hidden=(v!=='catering');
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
+      var vw=$('#view-wheel'); if(vw) vw.hidden=(v!=='wheel');
       var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
       if(v==='crewrest'){ crBuild(); }
       if(v==='duty'){ duCompute(); }
@@ -3913,6 +3962,68 @@
       if(s.a&&au){ catAugOn=true; au.textContent='Yes'; au.classList.add('on'); }
     }
     catCompute();
+  })();
+
+  /* ---------- Wheel of Misfortune ---------- */
+  var WHEEL_ITEMS=[
+    'Amex didn’t book a hotel for you!',
+    'Arrived too late for breakfast!',
+    'No ground transportation!',
+    'Entitled to business? Oh hell naw!',
+    'Gotta fly with an Aussie…',
+    'Scheduled under ULH, but blocked &gt;16',
+    'Full load on the Pegasus Van!',
+    'ANC can’t get the bags out of the bulk',
+    'CAT III currency landing',
+    'Primary line canceled. Go to China!',
+    'Capt wants to talk about his divorce',
+    'Chiller INOP!',
+    'Congrats on flying Art33 with no pay! LEAAANINNN',
+    'Copilot is outbasing, but don’t make it weird',
+    'Hommie left the heat on in the bunks'
+  ];
+  var WHEEL_QUIPS=['Better luck tomorrow.','Standard operating procedure.','You knew the job was dangerous when you took it.',
+    'That’s just the cost of doing business.','Somewhere, a scheduler is smiling.','Document it. Then let it go.',
+    'It builds character, apparently.'];
+  (function(){
+    var wheel=document.getElementById('wheel'); if(!wheel) return;
+    var N=WHEEL_ITEMS.length, seg=360/N;
+    // Segments are deliberately blank ("?") so you can never see what's coming.
+    var stops=[];
+    for(var i=0;i<N;i++){
+      var a=i*seg, b=(i+1)*seg;
+      stops.push((i%2? 'rgba(86,38,132,.95)' : 'rgba(52,22,86,.95)')+' '+a+'deg '+b+'deg');
+    }
+    wheel.style.background='conic-gradient('+stops.join(',')+')';
+    var q='';
+    for(var j=0;j<N;j++){
+      var mid=j*seg+seg/2;
+      q+='<div class="wq" style="transform:rotate('+mid+'deg) translate(0,-118px) rotate(180deg)">?</div>';
+    }
+    wheel.innerHTML=q;
+
+    var rot=0, spinning=false;
+    var btn=document.getElementById('spinBtn'), out=document.getElementById('wheelOut');
+    if(!btn) return;
+    btn.onclick=function(){
+      if(spinning) return;
+      spinning=true; btn.disabled=true; btn.textContent='SPINNING…';
+      if(out) out.innerHTML='';
+      var pick=Math.floor(Math.random()*N);
+      // land the CENTRE of the chosen wedge under the pointer at 12 o'clock
+      var want=(360-(pick*seg+seg/2))%360;
+      var cur=((rot%360)+360)%360;
+      var delta=((want-cur)%360+360)%360 + 360*(5+Math.floor(Math.random()*2));
+      rot+=delta;
+      wheel.style.transform='rotate('+rot+'deg)';
+      setTimeout(function(){
+        spinning=false; btn.disabled=false; btn.textContent='SPIN AGAIN';
+        if(out) out.innerHTML='<div class="wresult"><div class="wrlab">Today you get…</div>'+
+          '<div class="wrtext">'+WHEEL_ITEMS[pick]+'</div>'+
+          '<div class="wrsub">'+esc(WHEEL_QUIPS[Math.floor(Math.random()*WHEEL_QUIPS.length)])+'</div></div>';
+        try{ if(navigator.vibrate) navigator.vibrate(60); }catch(e){}
+      }, 5050);
+    };
   })();
 
   /* ---------- Share app with crew ---------- */
