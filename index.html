@@ -509,6 +509,7 @@
     display:flex;align-items:center;justify-content:center}
   .wq{position:absolute;left:50%;top:50%;transform-origin:0 0;color:rgba(255,255,255,.82);
     font-size:19px;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none}
+  .wq.wdot{font-size:11px;color:rgba(255,209,102,.75);text-shadow:none}
   .wheelptr{position:absolute;top:-13px;left:50%;transform:translateX(-50%);z-index:3;
     width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;
     border-top:26px solid #ffd166;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6))}
@@ -2441,7 +2442,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.6 · 2026-07-28';
+  var BUILD='v9.7 · 2026-07-28';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -3980,15 +3981,48 @@
     'Chiller INOP!',
     'Congrats on flying Art33 with no pay! LEAAANINNN',
     'Copilot is outbasing, but don’t make it weird',
-    'Hommie left the heat on in the bunks'
+    'Hommie left the heat on in the bunks',
+    'Only Chinese water onboard. Enjoy your microplastics',
+    'FO insists on explaining his crypto portfolio on a 14-hour ocean leg',
+    'Deadhead ticket issued under the wrong middle name',
+    'Pilot support has the wrong passport on file',
+    'Vietnam visa is expired',
+    'Van driver takes the “scenic route” through gridlock traffic',
+    'One Chinese minivan to pick up 4 crew and 3 DHs',
+    'Only 1 PBJ on board. Stop reading this and run!',
+    'No blue water on board',
+    'APU INOP and it’s snowing in ANC. I’m sure they’ll have an air cart…',
+    'Should’ve used that GDO — you just got extended!',
+    'It’ll be better on the Airbus',
+    'Your next training event will for sure be AQP (giggles…)',
+    'Take a minute to admire how gross this cockpit is',
+    'Time to stretch. You’re going to need to be limber to fight your way out of Liège',
+    'Don’t sweat it, Air Atlanta will pick up this route next month',
+    'Check your eCrew. Just kidding — it doesn’t work',
+    'Good news: the item you lost is in ANC lost and found. Bad news: it’ll be gone by the time you get there',
+    'You’ve got bedbugs now, you just don’t know it',
+    'It’s Ad-Hoc — what do you expect?',
+    'Thanks for donating your battery pack to the Chinese lithium consortium',
+    'Someone is getting crop-dusted in 3… 2… 1…',
+    'You’re 100% getting back to base at 0659Z, right before your GDO',
+    'You will soon have the misfortune of emailing Kim…',
+    'Amex called — they hope you enjoy the middle seat',
+    'Congrats! You’re headed to India!'
   ];
   var WHEEL_QUIPS=['Better luck tomorrow.','Standard operating procedure.','You knew the job was dangerous when you took it.',
-    'That’s just the cost of doing business.','Somewhere, a scheduler is smiling.','Document it. Then let it go.',
-    'It builds character, apparently.'];
+    'That’s just the cost of doing business.','Somewhere, a scheduler is smiling.','FCR it. Then let it go.',
+    'It builds character, apparently.','Screenshot it for the group chat.','Ops is aware. Ops is always aware.',
+    'Not a safety issue. Just a dignity issue.','Could be worse. Give it an hour.','Add it to the list. The list is long.',
+    'The layover will fix this. It will not.','This is fine. This is normal. This is Ad-Hoc.',
+    'Somewhere in Purchase, a spreadsheet says this went well.','Legal, safe, and deeply annoying.',
+    'The CBA has opinions about this.','Tell the FO it builds character.','Rest is a state of mind.',
+    'You are, technically, the backup plan.','But at least you have a baby coral named after you!'];
   (function(){
     var wheel=document.getElementById('wheel'); if(!wheel) return;
-    var N=WHEEL_ITEMS.length, seg=360/N;
-    // Segments are deliberately blank ("?") so you can never see what's coming.
+    // The wheel is theatre: a fixed dozen blank wedges that always look right.
+    // The outcome itself is drawn at random from the full list behind the scenes,
+    // so options can be added forever without ever crowding the artwork.
+    var N=12, seg=360/N;
     var stops=[];
     for(var i=0;i<N;i++){
       var a=i*seg, b=(i+1)*seg;
@@ -4009,9 +4043,10 @@
       if(spinning) return;
       spinning=true; btn.disabled=true; btn.textContent='SPINNING…';
       if(out) out.innerHTML='';
-      var pick=Math.floor(Math.random()*N);
-      // land the CENTRE of the chosen wedge under the pointer at 12 o'clock
-      var want=(360-(pick*seg+seg/2))%360;
+      var pick=Math.floor(Math.random()*WHEEL_ITEMS.length);   // the real draw
+      var wedge=Math.floor(Math.random()*N);                   // where it visually stops
+      // land the CENTRE of that wedge under the pointer at 12 o'clock
+      var want=(360-(wedge*seg+seg/2))%360;
       var cur=((rot%360)+360)%360;
       var delta=((want-cur)%360+360)%360 + 360*(5+Math.floor(Math.random()*2));
       rot+=delta;
