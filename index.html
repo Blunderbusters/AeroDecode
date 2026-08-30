@@ -644,6 +644,8 @@
   .restsep .rtop{font-size:13.5px;font-weight:800;color:var(--ink)}
   .restsep .rsub{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.45}
   .restsep.short{border-color:rgba(255,107,107,.6);background:rgba(50,16,16,.5)}
+  .restsep.off{border-style:solid;border-color:rgba(78,227,154,.4);background:rgba(10,34,26,.45)}
+  .freeday{font-size:11px;font-weight:700;color:#4ee39a;margin-top:2px}
   .tipModal{position:fixed;inset:0;z-index:72;background:rgba(4,10,22,.93);backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:22px}
   .tipModal.on{display:flex}
@@ -3384,6 +3386,33 @@
     });
     return out;
   }
+  /* Consecutive duty days, per the definition the tooltip gives: duty periods in a row
+     WITHOUT a full calendar day free of duty. Counted on the local calendar at the station
+     you are actually standing in, because that is the day you lived through - a duty that
+     ends 2330 local and the next that starts 0100 local two days later are not consecutive.
+     Sets d.consecN (1-based) and d.freeDaysBefore. */
+  function dayNum(ms, offH){
+    var d=new Date(ms + (offH||0)*3600000);
+    return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())/86400000);
+  }
+  function markConsecutive(duties, offsetForFn){
+    var run=0, prevLast=null;
+    duties.forEach(function(d){
+      var offRep=offsetForFn? offsetForFn(d.from, d.report) : 0;
+      var offRel=offsetForFn? offsetForFn(d.to,   d.release): 0;
+      if(offRep==null) offRep=0; if(offRel==null) offRel=0;
+      var first=d.report!=null? dayNum(d.report, offRep) : null;
+      var last =d.release!=null? dayNum(d.release, offRel) : first;
+      if(first==null){ d.consecN=++run; d.freeDaysBefore=0; return; }
+      var free = prevLast==null? 0 : Math.max(0, first-prevLast-1);
+      d.freeDaysBefore=free;
+      run = (prevLast==null || free>=1)? 1 : run+1;
+      d.consecN=run;
+      prevLast = last!=null? last : first;
+    });
+    return duties;
+  }
+
   /* Rest = release of one duty period to report of the next. */
   function restPeriods(duties){
     var r=[];
@@ -3419,7 +3448,7 @@
     sleep:{ label:'Sleep Reservoir',
       def:'Modelled sleep capacity remaining, 0–100%. It fills with sleep — discounted if that sleep fell outside your body night or was taken in a bunk or seat rather than a bed — and depletes steadily while awake. It is a <b>prediction</b> from your rest opportunities, not a measurement of sleep you actually got.' },
     consec:{ label:'Consecutive Duty Days',
-      def:'Number of duty periods in a row without a full calendar day free of duty. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by a single short rest, so risk rises even when each individual duty period is legal.' },
+      def:'Number of duty periods in a row without a full calendar day free of duty. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by a single short rest, so risk rises even when each individual duty period is legal.<br><br>The count <b>resets to 1</b> as soon as one whole calendar day passes with no duty on it, measured on the local calendar where you actually were. A long layover that swallows a full local day resets it just as days off at base do — and the rest period above the duty period says so when it happens.' },
     eff:{ label:'Modelled Alertness',
       def:'Predicted cognitive effectiveness on a 0–100 scale, from a two-process model in the SAFTE/FAST tradition. It combines the <b>sleep reservoir</b> (how much sleep capacity you have left, filled by the sleep the model thinks you obtained in each rest and drained steadily while awake) with the <b>circadian rhythm</b> (a ±12-point swing peaking in your body afternoon and troughing around 0500 <b>body</b> time). The figure shown is the worst value reached anywhere in the duty period, and the leg it occurs on is named. Bands: 90+ Optimal, 80–89 Good, 70–79 Reduced, 55–69 Impaired, below 55 Severely impaired.<br><br>Sleep is <b>estimated from your rest opportunity</b>, not measured. The model wakes you at the <b>company wake-up call, 3 hours before scheduled departure</b> — that is when you can count on being up — and counts hours awake from there rather than from report. It caps any one sleep at 8.5 h, adds a second or third sleep on a long layover, subtracts transit and sleep latency, and charges the waking hours in between. Sleep taken outside your body night still restores you, but never all the way back to fully rested. It also assumes you actually go to bed. Like every fatigue model it describes an ideal case — your own sleep, health, commute and workload can make the real number worse. It is a planning aid, not a fitness-for-duty determination.' },
     cum:{ label:'7-Day Block',
@@ -3551,7 +3580,7 @@
     return duties;
   }
 
-  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,limitsFor:limitsFor,buildDuties:buildDuties,restPeriods:restPeriods,
+  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,markConsecutive:markConsecutive,limitsFor:limitsFor,buildDuties:buildDuties,restPeriods:restPeriods,
            requiredRestMin:requiredRestMin,FACTORS:FACTORS,bandColor:bandColor,pct:pct};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.DUTY=API;
@@ -3708,7 +3737,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v10.7 · 2026-08-30';
+  var BUILD='v10.8 · 2026-08-30';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5693,6 +5722,7 @@
     return esc(code)+(nm? ' <span style="color:var(--faint);font-weight:600">('+esc(nm)+')</span>':'');
   }
   function dpOff(code,ms){ return (typeof AIRTZ!=='undefined'&&AIRTZ.iataOffsetAt)? AIRTZ.iataOffsetAt(code,ms):null; }
+  function dpHome(){ try{ var st=JSON.parse(localStorage.getItem('ad_fatigue')||'null'); return (st&&st.home)||'MIA'; }catch(e){ return 'MIA'; } }
   /* The hotel AIMS booked for a layover: same port, room held on a date inside the rest. */
   function dpHotel(station, fromMs, toMs){
     var list=[]; try{ list=JSON.parse(localStorage.getItem('ad_hotels')||'[]'); }catch(e){ return null; }
@@ -5732,6 +5762,7 @@
          if(st&&st.home&&typeof AIRTZ!=='undefined'){ var o=AIRTZ.iataOffsetAt(st.home,Date.now()); if(o==null&&AIRTZ.icaoTz(st.home)) o=null; if(o!=null) homeOff=o; } }catch(e){}
     // Walk the whole trip once, carrying the sleep reservoir and the body clock forward.
     // This is what makes the numbers below a trip model rather than a per-duty snapshot.
+    try{ if(DUTY.markConsecutive) DUTY.markConsecutive(duties, dpOff); }catch(e){}
     try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
 
     h+='<div class="dpcite" style="margin-top:14px"><b>Regime:</b> '+esc(L.regime)+' · '+L.crew+'-crew.<br>'+
@@ -5757,7 +5788,8 @@
       if(rp){ var req=DUTY.requiredRestMin(dpRegime, duties[i-1].blockMin);
               facs.push({k:'rest',v:dpHM(rp.min),s:DUTY.pct(req.min-rp.min,-240,360)}); }
       if(F && d.resAfterRest!=null) facs.push({k:'sleep',v:d.resAfterRest+'%',s:DUTY.pct(100-d.resAfterRest,0,60)});
-      facs.push({k:'consec',v:String(i+1),s:DUTY.pct(i+1,1,6)});
+      var cN=(d.consecN!=null? d.consecN : i+1);
+      facs.push({k:'consec',v:String(cN),s:DUTY.pct(cN,1,6)});
       var score=Math.round(facs.reduce(function(t,f){return t+f.s;},0)/facs.length);
       var bc=DUTY.bandColor(score);
 
@@ -5859,8 +5891,14 @@
       if(i<duties.length-1 && rests[i]){
         var r=rests[i], req=DUTY.requiredRestMin(dpRegime, d.blockMin);
         var shortRest=r.min<req.min;
-        h+='<div class="restsep'+(shortRest?' short':'')+'"><div class="ri">'+(shortRest?'⚠️':'🛏️')+'</div><div class="rt">'+
-           '<div class="rtop">Rest '+dpHM(r.min)+' at '+dpAirport(r.station)+'</div>'+
+        var freeD=duties[i+1]? (duties[i+1].freeDaysBefore||0) : 0;
+        var atBase=(r.station===dpHome());
+        var bigOff=freeD>=3 && atBase;                       // a real break, not just a long layover
+        h+='<div class="restsep'+(shortRest?' short':(freeD>=1?' off':''))+'"><div class="ri">'+(shortRest?'⚠️':(bigOff?'🏖️':'🛏️'))+'</div><div class="rt">'+
+           '<div class="rtop">'+(bigOff? freeD+' days off at ' : 'Rest '+dpHM(r.min)+' at ')+dpAirport(r.station)+
+             (bigOff? ' <span style="font-weight:600;color:var(--faint);font-size:12px">· '+dpHM(r.min)+' total</span>':'')+
+             (freeD>=1? '<div class="freeday">'+freeD+' full calendar day'+(freeD>1?'s':'')+' free of duty — consecutive-duty-day count resets to 1</div>':'')+
+           '</div>'+
            '<div class="rsub">'+dpBoth(r.from,r.station)+' → '+dpBoth(r.to,r.station)+'<br>'+
            'Required ≥ <b>'+dpHM(req.min)+'</b> — '+esc(req.cite)+
            (shortRest? '<br><b style="color:var(--bad)">Below the regulatory minimum.</b>':'')+
