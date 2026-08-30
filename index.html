@@ -630,6 +630,7 @@
   .rfbarwrap{flex:1;height:8px;border-radius:4px;background:rgba(6,14,28,.75);overflow:hidden}
   .rfbar{height:100%;border-radius:4px}
   .rfval{flex:0 0 76px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+  .dpsub{font-family:inherit;font-size:9.5px;font-weight:700;color:var(--faint);margin-top:2px;letter-spacing:0}
   .legfl{font-size:8.5px;font-weight:800;letter-spacing:.5px;color:var(--faint);
     border:1px solid rgba(120,160,220,.35);border-radius:4px;padding:1px 3px;margin-right:4px;vertical-align:2px}
   .rfband{display:block;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;opacity:.85}
@@ -4267,6 +4268,11 @@
         'performance is impaired to about the same degree as a <b>blood alcohol concentration of '+x.bac.bac+'</b>. '+
         'I would not be allowed to fly at that blood alcohol level. <span style="color:var(--faint)">(Dawson &amp; Reid, <i>Nature</i> 1997)</span>');
     }
+    if(x.allDeadhead){
+      add(x.dutyMin>=12*60?3:2,'This whole duty period is deadheading, and the contract is explicit that this still counts — '+
+        'Art. 12.D.3.a: <i>"Deadheading at the direction of the Company is duty."</i> I am awake, in transit and unable to rest properly for '+
+        hm(x.dutyMin)+', and it puts me down with my body clock further out of step than when I started. It does not count as flight time, but it is not rest.');
+    }
     // 2. Circadian low - explained without the acronym
     if(x.woclH>=0.5){
       add(x.woclH>=3?3:(x.woclH>=1.5?2:1),
@@ -4330,9 +4336,11 @@
     // 6b. The week behind this duty
     if(x.cum){
       var wk=x.cum.d168, dh=wk.dutyMin/60, bh=wk.blockMin/60;
+      var fh=wk.flightMin/60;
       if(dh>=50 || wk.periods>=5){
-        add(dh>=60?3:2,'In the 7 days ending at this report I have <b>'+dh.toFixed(1)+' hours of duty</b> and <b>'+
-          bh.toFixed(1)+' hours of block</b> across '+wk.periods+' duty periods.');
+        add(dh>=60?3:2,'In the 7 days ending at this report I have <b>'+dh.toFixed(1)+' hours of duty</b> across '+
+          wk.periods+' duty periods — '+fh.toFixed(1)+' hours of that flying and '+(bh-fh).toFixed(1)+
+          ' hours deadheading. Under the contract, <b>deadheading at the direction of the Company is duty</b> (Art. 12.D.3.a): it does not count as flight time, but it is time I am not resting.');
         sum.push(dh.toFixed(0)+' h duty in 7 days');
       }
       // Real, binding cumulative limits - reported when they are actually close or breached.
@@ -4355,7 +4363,8 @@
     }
     // 7. Consecutive duty days
     if(x.consecN>=4){
-      add(x.consecN>=6?3:2,'This is my <b>'+x.consecN+'th duty period in a row</b> without a full day off. Sleep debt builds up across a trip — it is not reset by one layover.');
+      add(x.consecN>=6?3:2,'This is <b>day '+x.consecN+' of this pattern</b> — '+x.consecN+
+        ' duty periods deep with no day off in between. Sleep debt builds up across a trip; a long layover does not clear it.');
       sum.push(x.consecN+' duty days in a row');
     }
     // 8. The model's own bottom line
@@ -4408,10 +4417,35 @@
     return TWO[2];
   }
 
-  /* opts: {operateThenDH, article33, reserveR2R3, reserveFollowedByFlight} */
+  /* ---- Article 12.D.3 — Deadhead ---------------------------------------------------
+     12.D.3.a is the whole answer to anyone who suggests riding does not count:
+     "Deadheading at the direction of the Company is duty." */
+  var DEADHEAD={
+    isDuty:'Art. 12.D.3.a — "Deadheading at the direction of the Company is duty."',
+    soloH:17, premiumH:20, reserveExtraH:4,
+    soloCite:'Art. 12.D.3.b — a duty period consisting solely of deadheading will not be scheduled to exceed 17 hours; this may be exceeded on a commercial deadhead in business class or better, or a non-stop deadhead on a Company aircraft, up to a maximum of 20 hours of duty.',
+    reserveCite:'Art. 12.D.3.e — a Crew Member on R-2 or R-3 assigned deadhead gets the 12.D.3.b limits plus 4 hours.',
+    connectH:5,
+    connectCite:'Art. 12.D.3.f — when a deadhead follows flight deck duty in the same duty period, no more than 5 hours will be scheduled between block-in of the operating flight and scheduled departure of the deadhead.',
+    waiver:'Art. 12.D.3.c/d — a Primary Line Holder with all operating segments complete and under 48 hours left in the pairing MAY ELECT to waive rest and duty requirements for the deadhead home. It is your election, not the Company\'s, and other Crew Members need Company concurrence.'
+  };
+
+  /* opts: {operateThenDH, article33, reserveR2R3, reserveFollowedByFlight, allDeadhead, premiumDH} */
   function dutyLimits(crew, reportHour, opts){
     opts=opts||{}; crew=Math.max(2,Math.min(4,crew||2));
     var r={source:SRC, crew:crew, cite:'', note:'', band:null};
+    /* A duty period that is nothing but deadheading is governed by 12.D.3.b, not by the
+       operating-crew report bands - the Critical band's 9:30 does not apply to a day spent
+       riding in the back. */
+    if(opts.allDeadhead){
+      var h=opts.premiumDH? DEADHEAD.premiumH : DEADHEAD.soloH;
+      if(opts.reserveR2R3) h+=DEADHEAD.reserveExtraH;
+      r.scheduled=h; r.operational=h; r.deadheadOnly=true;
+      r.cite='CBA '+DEADHEAD.soloCite.replace(/^Art\. /,'Art. ');
+      r.note=DEADHEAD.isDuty+(opts.premiumDH? '' : ' The 20-hour figure applies only to a commercial deadhead in business class or better, or a non-stop deadhead on a Company aircraft.')+
+             (opts.reserveR2R3? ' R-2/R-3 adds 4 hours (Art. 12.D.3.e).' : '');
+      return r;
+    }
     if(crew===2){
       var b=bandFor(reportHour); r.band=b.band+' ('+b.label+')';
       r.scheduled = opts.operateThenDH? b.opDH : (opts.reserveFollowedByFlight? b.resFlt : b.sched);
@@ -4529,7 +4563,7 @@
     ]
   };
 
-  var API={SRC:SRC, TWO:TWO, bandFor:bandFor, dutyLimits:dutyLimits, controlling:controlling,
+  var API={SRC:SRC, TWO:TWO, bandFor:bandFor, dutyLimits:dutyLimits, controlling:controlling, DEADHEAD:DEADHEAD,
            restMinimum:restMinimum, REST_AFTER_CRITICAL:REST_AFTER_CRITICAL, THIRTYTWO:THIRTYTWO,
            REST_STARTS:REST_STARTS, REST_DISRUPTED:REST_DISRUPTED, LANDINGS:LANDINGS,
            FATIGUE_CALL:FATIGUE_CALL, EXCEEDANCE:EXCEEDANCE};
@@ -4611,7 +4645,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v11.7 · 2026-08-31';
+  var BUILD='v11.8 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6862,7 +6896,8 @@
          '<div class="dpstat"><div class="k">Report</div><div class="v">'+dpBoth(d.report,d.from)+'</div></div>'+
          '<div class="dpstat"><div class="k">Release</div><div class="v">'+dpBoth(d.release,d.to)+'</div></div>'+
          '<div class="dpstat"><div class="k">Duty</div><div class="v">'+dpHM(d.dutyMin)+'</div></div>'+
-         '<div class="dpstat"><div class="k">Block</div><div class="v">'+dpHM(d.blockMin)+'</div></div>'+
+         '<div class="dpstat"><div class="k">Block</div><div class="v">'+dpHM(d.blockMin)+
+           (d.flightMin!=null && d.flightMin!==d.blockMin? '<div class="dpsub">'+dpHM(d.flightMin)+' flight time</div>':'')+'</div></div>'+
          (d.effDutyMin!=null&&d.effDutyMin!==d.dutyMin? '<div class="dpstat"><div class="k">Duty excl. gateway</div><div class="v" style="color:var(--gold)">'+dpHM(d.effDutyMin)+'</div></div>':'')+
          '</div>';
 
@@ -6927,7 +6962,9 @@
         var opThenDH=false;
         for(var q=1;q<d.legs.length;q++){ if(!d.legs[q-1].dh && d.legs[q].dh) opThenDH=true; }
         if(d.legs.length===1 && d.legs[0].dh) opThenDH=false;
-        var cb=CBA.dutyLimits(dpCrew, repLocalH, {operateThenDH:opThenDH, article33:dpArt33, reserveR2R3:dpReserve});
+        var allDH=d.legs.length>0 && d.legs.every(function(l){ return l.dh; });
+        var cb=CBA.dutyLimits(dpCrew, repLocalH, {operateThenDH:opThenDH, article33:dpArt33,
+                 reserveR2R3:dpReserve, allDeadhead:allDH});
         var ctl=CBA.controlling(cb.operational, L.maxDutyH);
         ctlH=ctl.h; ctlWho=(ctl.who==='CBA'? 'the CBA operational limit' : 'the FAR limit');
         schedH=cb.scheduled; operH=cb.operational;
@@ -6940,6 +6977,22 @@
           '  ·  <b>Operational:</b> '+cb.operational.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30')+
           (overCba? ' <span style="color:var(--bad)">— EXCEEDS the operational limit</span>' : (overSch? ' <span style="color:var(--warn)">— beyond the scheduled limit (within operational)</span>':''))+
           (cb.note? '<br><span style="color:var(--faint)">'+esc(cb.note)+'</span>':'')+
+          (function(){
+            /* 12.D.3.f — the sit between an operating block-in and the deadhead departure. */
+            if(!CBA.DEADHEAD) return '';
+            var worst=null;
+            for(var z=1;z<d.legs.length;z++){
+              var prev=d.legs[z-1], cur=d.legs[z];
+              if(prev.dh || !cur.dh || prev['in']==null || cur.out==null) continue;
+              var gap=(cur.out-prev['in'])/3600000;
+              if(worst==null || gap>worst) worst=gap;
+            }
+            if(worst==null) return '';
+            var over=worst>CBA.DEADHEAD.connectH;
+            return '<br><b>Deadhead connection:</b> '+dpHM(Math.round(worst*60))+' between the operating block-in and the deadhead departure'+
+              (over? ' <span style="color:var(--bad)">— over the 5:00 maximum</span>' : ' (5:00 maximum)')+
+              '<br><span style="color:var(--faint)">'+esc(CBA.DEADHEAD.connectCite)+'</span>';
+          })()+
           '<br><b>Controlling limit:</b> <b style="color:'+(ctl.who==='CBA'?'#ffd166':'#5b93e8')+'">'+esc(ctl.who)+' '+(ctl.h!=null?ctl.h.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30'):'—')+'</b> — '+esc(ctl.text)+
           '</div>';
       }
@@ -6969,7 +7022,7 @@
           dutyMin:(d.effDutyMin!=null?d.effDutyMin:d.dutyMin),
           limitH:ctlH, limitWho:ctlWho, consecN:(d.consecN||i+1),
           schedLimitH:schedH, operLimitH:operH, awakeContinuousH:d.awakeContinuousH,
-          schedLimitH:schedH, operLimitH:operH, awakeContinuousH:d.awakeContinuousH,
+          allDeadhead:(d.legs.length>0 && d.legs.every(function(l){ return l.dh; })),
           eff:d.effWorst, effLabel:(d.effBand&&d.effBand.label), score:score, band:bc.l
         };
         h+='<button class="whybtn" data-why="'+d.n+'">⚠︎ Why am I fatigued? — what to tell scheduling</button>';
@@ -7093,6 +7146,16 @@
     CBA.EXCEEDANCE.points.forEach(function(t){ h+='<p class="dtybody">• '+t+'</p>'; });
     h+='<p class="dtybody" style="color:var(--faint)">'+esc(CBA.EXCEEDANCE.cite)+'</p></details>';
 
+    if(CBA.DEADHEAD){
+      var DH=CBA.DEADHEAD;
+      h+='<details class="dtydets"><summary>Deadhead — Art. 12.D.3</summary>'+
+         '<p class="dtybody"><b style="color:var(--gold)">'+esc(DH.isDuty)+'</b></p>'+
+         '<p class="dtybody">'+esc(DH.soloCite)+'</p>'+
+         '<p class="dtybody">'+esc(DH.reserveCite)+'</p>'+
+         '<p class="dtybody">'+esc(DH.connectCite)+'</p>'+
+         '<p class="dtybody">'+esc(DH.waiver)+'</p>'+
+         '<p class="dtybody" style="color:var(--faint)">In this app, deadhead counts toward <b>duty time</b>, hours awake and the fatigue model, but not toward <b>flight time</b> — the cumulative FAR caps are flight-time caps, and riding is not flying.</p></details>';
+    }
     var C=CBA.FATIGUE_CALL;
     h+='<details class="dtydets"><summary>Calling fatigued — what the contract gives you</summary>';
     C.steps.forEach(function(st){ h+='<p class="dtybody"><b style="color:var(--ink)">'+esc(st.k)+'.</b> '+st.t+'</p>'; });
@@ -7295,7 +7358,8 @@
           (ok?'meets the 32-hour rule':(okr?'meets the reduced 30 hours':
              (cum.thirtyTwoCovered? 'below the 30-hour floor'
               : 'not enough imported history to check')))+'</div></div>'+
-        '<div class="ovs"><div class="k">Block, last 7 days</div><div class="v">'+(cum.d168.blockMin/60).toFixed(1)+' h</div><div class="s">'+cum.d168.periods+' duty periods</div></div>'+
+        '<div class="ovs"><div class="k">Flight time, last 7 days</div><div class="v">'+(cum.d168.flightMin/60).toFixed(1)+' h</div>'+
+          '<div class="s">'+(cum.d168.blockMin/60).toFixed(1)+' h block incl. deadhead</div></div>'+
         '<div class="ovs"><div class="k">Duty, last 28 days</div><div class="v">'+(cum.d672.dutyMin/60).toFixed(1)+' h</div><div class="s">block '+(cum.d672.blockMin/60).toFixed(1)+' h</div></div>'+
         '<div class="ovs"><div class="k">Landings 0100–0459</div><div class="v">'+cum.criticalLandings168+'</div><div class="s">last 7 days, base local</div></div>'+
       '</div>';
