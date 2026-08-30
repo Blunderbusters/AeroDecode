@@ -3112,7 +3112,7 @@
     consec:{ label:'Consecutive Duty Days',
       def:'Number of duty periods in a row without a full calendar day free of duty. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by a single short rest, so risk rises even when each individual duty period is legal.' },
     eff:{ label:'Modelled Alertness',
-      def:'Predicted cognitive effectiveness on a 0–100 scale, from a two-process model in the SAFTE/FAST tradition. It combines the <b>sleep reservoir</b> (how much sleep capacity you have left, filled by the sleep the model thinks you obtained in each rest and drained steadily while awake) with the <b>circadian rhythm</b> (a ±12-point swing peaking in your body afternoon and troughing around 0500 <b>body</b> time). The figure shown is the worst value reached anywhere in the duty period, and the leg it occurs on is named. Bands: 90+ Optimal, 80–89 Good, 70–79 Reduced, 55–69 Impaired, below 55 Severely impaired.<br><br>Sleep is <b>estimated from your rest opportunity</b>, not measured. The model assumes you sleep so as to wake about an hour before report, caps any one sleep at 8.5 h, adds a second or third sleep on a long layover, subtracts transit and sleep latency, and charges the waking hours in between. Sleep taken outside your body night still restores you, but never all the way back to fully rested. It also assumes you actually go to bed. Like every fatigue model it describes an ideal case — your own sleep, health, commute and workload can make the real number worse. It is a planning aid, not a fitness-for-duty determination.' },
+      def:'Predicted cognitive effectiveness on a 0–100 scale, from a two-process model in the SAFTE/FAST tradition. It combines the <b>sleep reservoir</b> (how much sleep capacity you have left, filled by the sleep the model thinks you obtained in each rest and drained steadily while awake) with the <b>circadian rhythm</b> (a ±12-point swing peaking in your body afternoon and troughing around 0500 <b>body</b> time). The figure shown is the worst value reached anywhere in the duty period, and the leg it occurs on is named. Bands: 90+ Optimal, 80–89 Good, 70–79 Reduced, 55–69 Impaired, below 55 Severely impaired.<br><br>Sleep is <b>estimated from your rest opportunity</b>, not measured. The model wakes you at the <b>company wake-up call, 3 hours before scheduled departure</b> — that is when you can count on being up — and counts hours awake from there rather than from report. It caps any one sleep at 8.5 h, adds a second or third sleep on a long layover, subtracts transit and sleep latency, and charges the waking hours in between. Sleep taken outside your body night still restores you, but never all the way back to fully rested. It also assumes you actually go to bed. Like every fatigue model it describes an ideal case — your own sleep, health, commute and workload can make the real number worse. It is a planning aid, not a fitness-for-duty determination.' },
     cum:{ label:'7-Day Block',
       def:'Total block time flown in the preceding 168 hours (a rolling 7 days), prorated so a duty period only partly inside the window contributes only the part that falls inside. Compared against the applicable cumulative flight-time limit for the regime.' }
   };
@@ -3146,9 +3146,18 @@
     if(!F) return duties;
     var OVERHEAD=1.5;              // hotel transit, meals, winding down, sleep latency
     var MAXSLEEP=8.5;              // most anyone banks in one layover rest
+    var CALLBEFORE=3.0;            // company wake-up call: 3 h before scheduled departure
     var res=100;                   // sleep reservoir, carried across the whole trip
     var bodyOff=homeOffH;          // body clock's effective UTC offset
     duties.forEach(function(d,i){
+      // When the crew actually gets up. Atlas calls 3 hours before departure, so that -
+      // not the report time - is the end of the sleep opportunity and the start of the
+      // hours-awake count. Falls back to an hour before report if no block-out is known.
+      var firstOut=null;
+      for(var z=0;z<d.legs.length;z++){ if(d.legs[z].out!=null){ firstOut=d.legs[z].out; break; } }
+      d.wakeMs = firstOut!=null ? firstOut-CALLBEFORE*3600000
+               : (d.report!=null ? d.report-3600000 : null);
+      if(d.report!=null && d.wakeMs!=null && d.wakeMs>d.report) d.wakeMs=d.report-3600000;
       // --- rest BEFORE this duty period ---
       if(i>0 && rests[i-1]){
         var r=rests[i-1], restH=r.min/60;
@@ -3157,11 +3166,12 @@
         // sleep is anchored to the end of the rest and any earlier sleeps are stepped back
         // one wake-cycle at a time. A short layover therefore yields one sleep; a long one
         // yields two or three, with the intervening wake time still depleting the reservoir.
-        var GAP=1.0;          // wake to report
         var WAKECYCLE=16;     // hours awake between sleeps on the ground
         var restStartH=(new Date(r.from)).getUTCHours()+(new Date(r.from)).getUTCMinutes()/60;
         var earliest=OVERHEAD/2;                 // cannot be asleep before reaching the hotel
-        var plan=[], wakeAt=restH-GAP;
+        // The wake-up call ends the sleep opportunity - not the report time.
+        var wakeRel = d.wakeMs!=null ? (d.wakeMs-r.from)/3600000 : restH-1;
+        var plan=[], wakeAt=Math.max(0, Math.min(restH, wakeRel));
         while(plan.length<3 && wakeAt>earliest+1){
           var st=Math.max(earliest, wakeAt-MAXSLEEP);
           var sH=wakeAt-st;
@@ -3181,7 +3191,7 @@
           if(res<ceil) res += (ceil-res)*(1-Math.exp(-(sp.h*qk)/5));
           nightH+=bodyNightHours(sStart, sp.h, bodyOff);
           sleepH+=sp.h; prevEnd=sp.st+sp.h;
-          if(k===plan.length-1) q=qk;                                  // quality of the sleep before report
+          if(k===plan.length-1) q=qk;                                  // quality of the sleep before the call
         });
         var nOpp=plan.length, night=nightH>0;
         // body clock drifts toward the layover station across the rest
@@ -3196,12 +3206,13 @@
       d.bodyOffset=Math.round(bodyOff*10)/10;
 
       // --- effectiveness through the duty period, sampled at every block-in (~TOD) ---
-      var wakeUtcH=F.norm24(((new Date(d.report)).getUTCHours()+(new Date(d.report)).getUTCMinutes()/60)-1);
+      // Hours awake are counted from the company wake-up call, 3 h before departure.
+      var wakeRef = d.wakeMs!=null ? d.wakeMs : d.report-3600000;
       var worst=100, worstAt=null;
       d.legs.forEach(function(l){
         if(l['in']==null) return;
         var tH=(new Date(l['in'])).getUTCHours()+(new Date(l['in'])).getUTCMinutes()/60;
-        var awake=(l['in']-d.report)/3600000+1;
+        var awake=(l['in']-wakeRef)/3600000;
         var e=F.effectiveness(res, awake, F.norm24(tH), bodyOff);
         l.effAtIn=Math.round(e);
         if(e<worst){ worst=e; worstAt=l; }
@@ -3210,9 +3221,10 @@
       d.effWorstLeg=worstAt? (worstAt.flight+' '+worstAt.from+'→'+worstAt.to) : null;
       d.effBand=F.band(worst);
 
-      // reservoir depletes across the duty period itself
-      var dutyH=(d.dutyMin||0)/60;
-      res=F.reservoirAt(res, dutyH+1);
+      // reservoir depletes from the wake-up call through to release
+      var awakeSpanH=(d.release!=null && wakeRef!=null)? (d.release-wakeRef)/3600000 : ((d.dutyMin||0)/60+3);
+      d.awakeAtRelease=Math.round(awakeSpanH*10)/10;
+      res=F.reservoirAt(res, Math.max(0,awakeSpanH));
       d.resAfterDuty=Math.round(res);
     });
     return duties;
@@ -3375,7 +3387,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v10.5 · 2026-08-30';
+  var BUILD='v10.6 · 2026-08-30';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5379,11 +5391,14 @@
            '<div class="effval" style="color:'+eb.color+'">'+d.effWorst+'<span class="effpc">%</span></div></div>'+
            '<div class="effband" style="color:'+eb.color+'">'+esc(eb.label)+(d.effWorstLeg? ' · worst at '+esc(d.effWorstLeg):'')+'</div>'+
            '<div class="effgrid">'+
+             '<div class="effi"><div class="k">Wake-up call</div><div class="v">'+
+               (d.wakeMs!=null? dpBoth(d.wakeMs,d.from)+' <span style="color:var(--faint);font-weight:600">(3 h before departure)</span>' : '—')+'</div></div>'+
              '<div class="effi"><div class="k">Sleep modelled in prior rest</div><div class="v">'+
                (d.restSleepH!=null? d.restSleepH.toFixed(1)+' h'+(d.restSleeps>1? ' × '+d.restSleeps+' sleeps':'')+
                  (d.restInBodyNight!=null? ' <span style="color:var(--faint);font-weight:600">('+d.restInBodyNight.toFixed(1)+' h in body night)</span>':'') : '<span style="color:var(--faint)">first duty of trip</span>')+'</div></div>'+
-             '<div class="effi"><div class="k">Reservoir at report</div><div class="v">'+d.resAfterRest+'%</div></div>'+
-             '<div class="effi"><div class="k">Reservoir at release</div><div class="v">'+d.resAfterDuty+'%</div></div>'+
+             '<div class="effi"><div class="k">Reservoir at wake-up</div><div class="v">'+d.resAfterRest+'%</div></div>'+
+             '<div class="effi"><div class="k">Reservoir at release</div><div class="v">'+d.resAfterDuty+'%'+
+               (d.awakeAtRelease!=null? ' <span style="color:var(--faint);font-weight:600">('+d.awakeAtRelease.toFixed(1)+' h awake)</span>':'')+'</div></div>'+
              '<div class="effi"><div class="k">Body clock</div><div class="v">UTC'+(d.bodyOffset>=0?'+':'')+d.bodyOffset.toFixed(1)+
                ' <span style="color:var(--faint);font-weight:600">('+(mis<0.5?'acclimated':mis.toFixed(1)+' h out of step')+')</span></div></div>'+
            '</div>';
@@ -5437,7 +5452,8 @@
            (duties[i+1]&&duties[i+1].restSleepH!=null? '<br>Modelled sleep obtained: <b>'+duties[i+1].restSleepH.toFixed(1)+' h</b>'+
               (duties[i+1].restSleeps>1? ' across <b>'+duties[i+1].restSleeps+'</b> sleep opportunities':'')+
               (duties[i+1].restInBodyNight!=null? ' ('+duties[i+1].restInBodyNight.toFixed(1)+' h of it in your body night)':'')+
-              ' → reservoir <b>'+duties[i+1].resAfterRest+'%</b> at next report' : '')+
+              ' → reservoir <b>'+duties[i+1].resAfterRest+'%</b> at the wake-up call'+
+              (duties[i+1].wakeMs!=null? ' ('+dpBoth(duties[i+1].wakeMs, duties[i+1].from)+')':'') : '')+
            '<br><span style="color:var(--faint)">Hotel: not in the CSV export — add it manually if you want it here.</span>'+
            '</div></div></div>';
       }
