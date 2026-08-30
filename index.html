@@ -531,6 +531,36 @@
   .wrtext{font-size:21px;font-weight:800;color:#fff;line-height:1.35;margin-top:9px}
   .wrsub{font-size:12.5px;color:#e0b4b4;margin-top:11px;font-style:italic}
   .wheelnote{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5;margin-top:14px}
+  /* Fatigue tab */
+  .ftgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .ftgrid .full{grid-column:1/-1}
+  .ftk{font-size:12px;font-weight:700;color:var(--dim);margin-bottom:4px}
+  .ftin{width:100%;padding:11px;border-radius:11px;background:rgba(6,14,28,.7);color:var(--ink);
+    border:1px solid var(--edge);font-size:16px;font-family:var(--mono)}
+  .ftbig{background:linear-gradient(160deg,rgba(20,44,78,.8),rgba(10,24,46,.8));border:1px solid var(--edge);
+    border-radius:16px;padding:16px;margin-top:14px;text-align:center}
+  .ftbiglab{font-size:11.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--faint)}
+  .ftbigval{font-family:var(--mono);font-size:38px;font-weight:800;color:#eaf2ff;line-height:1.05;margin-top:6px}
+  .ftbigsub{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .ftbigsub b{color:var(--ink)}
+  .ftrow{display:flex;gap:10px;margin-top:12px}
+  .ftcard{flex:1;min-width:0;border-radius:14px;padding:13px 12px;text-align:center;
+    background:linear-gradient(160deg,rgba(16,32,58,.8),rgba(10,22,42,.8));border:1px solid var(--edge)}
+  .ftcardlab{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+  .ftcardval{font-family:var(--mono);font-size:30px;font-weight:800;margin-top:4px;line-height:1}
+  .ftcardband{font-size:12px;font-weight:700;margin-top:5px}
+  .ftmeter{height:9px;border-radius:5px;background:rgba(6,14,28,.8);overflow:hidden;margin-top:9px}
+  .ftmeter i{display:block;height:100%;border-radius:5px}
+  .ftline{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:14px;
+    border-bottom:1px solid rgba(120,160,220,.12)}
+  .ftline:last-child{border-bottom:none}
+  .ftline .k{color:var(--dim)} .ftline .v{font-family:var(--mono);font-weight:800;color:var(--ink);text-align:right}
+  .ftchart{width:100%;height:132px;margin-top:12px;display:block}
+  .ftrec{margin-top:14px;padding:13px 14px;border-radius:14px;
+    background:linear-gradient(160deg,rgba(20,54,38,.8),rgba(10,30,22,.8));border:1px solid rgba(78,227,154,.42)}
+  .ftrec .t{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#7fe0a6}
+  .ftrec p{font-size:13.5px;color:var(--dim);line-height:1.55;margin:8px 0 0}
+  .ftrec p b{color:var(--ink)}
   /* homepage announcement window */
   .annModal{position:fixed;inset:0;z-index:62;background:rgba(4,10,22,.92);backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:20px}
@@ -744,6 +774,7 @@
     <button class="tab" data-view="logbook">Logbook</button>
     <button class="tab" data-view="hf">HF&nbsp;Checks</button>
     <button class="tab" data-view="catering">Catering</button>
+    <button class="tab" id="ftTab" data-view="fatigue" hidden>Fatigue <span class="protopill">DEV</span></button>
     <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
     <button class="tab tab-fun" data-view="wheel">🎡 Wheel of Misfortune</button>
   </div>
@@ -1020,6 +1051,34 @@
         <div class="wtitle">Reference only</div>
         <p>This is a plain-language summary of Article 5.E, Appendix 5-A and related side letters, MOUs and awards. The <b>CBA text controls</b> — verify against the contract, and contact your union representative with any dispute.</p>
       </div>
+    </div>
+  </div>
+
+  <div id="view-fatigue" hidden>
+    <div class="card">
+      <div class="warnbox">
+        <div class="wtitle">⚠️ Planning aid — not a measurement, not a legality check</div>
+        <p>This predicts alertness from what you enter. It <b>cannot know the sleep you actually got</b>. Use it to plan rest and spot risk, never as proof you are fit — that judgement is always yours.</p>
+        <p><b>Legal is not the same as safe.</b> Duty legality lives in the LABT/LATT and Schedule Checks tabs. Under Part 121 Subpart R (flag all-cargo) there is <b>no maximum duty period at all</b> — only flight-time caps — so your CBA is the only duty backstop. A schedule can be entirely legal and still unflyable.</p>
+      </div>
+      <label class="fld" style="margin-top:14px">Your body clock</label>
+      <div class="ftgrid">
+        <div><div class="ftk">Home base (ICAO)</div><input id="ftHome" class="ftin" maxlength="4" autocapitalize="characters" placeholder="KJFK"></div>
+        <div><div class="ftk">Where you are now</div><input id="ftStn" class="ftin" maxlength="4" autocapitalize="characters" placeholder="ZHEC"></div>
+        <div><div class="ftk">Days in this zone</div><input id="ftDays" class="ftin" inputmode="decimal" value="0"></div>
+        <div><div class="ftk">Woke up (Zulu)</div><input id="ftWake" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div><div class="ftk">Sleep obtained (h)</div><input id="ftSleep" class="ftin" inputmode="decimal" placeholder="7.5"></div>
+        <div><div class="ftk">Slept in a…</div>
+          <span class="seg" style="display:flex;gap:5px">
+            <button class="segbtn on" data-ftfac="bed" style="flex:1">Bed</button>
+            <button class="segbtn" data-ftfac="bunk" style="flex:1">Bunk</button>
+            <button class="segbtn" data-ftfac="seat" style="flex:1">Seat</button>
+          </span>
+        </div>
+        <div class="full"><div class="ftk">Top of descent (Zulu) — when alertness actually matters</div><input id="ftTod" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+      </div>
+      <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
+      <div id="ftOut"></div>
     </div>
   </div>
 
@@ -2369,6 +2428,157 @@
 
 </script>
 <script>
+/* CargoDecode — fatigue model (Stage 1: circadian phase + sleep reservoir).
+   A two-process model in the tradition of SAFTE/FAST and the Three-Process Model,
+   simplified and fully documented so every number on screen is traceable.
+
+   TWO THINGS THIS IS NOT:
+   1. A measurement. It predicts from what you tell it; it cannot know the sleep you
+      actually got. Planning aid only.
+   2. A legality check. Regulatory compliance is a SEPARATE axis (Subpart R/S + CBA).
+      A perfectly legal schedule can be unflyable. Never read "legal" as "safe". */
+(function(root){
+  'use strict';
+
+  var CFG={
+    depletionPerHour:1.75,   // effectiveness points lost per hour awake
+    idealSleepH:      8.0,   // sleep that fully restores the reservoir
+    shortSleepPenalty: 5.0,  // points lost per hour of sleep short of ideal
+    reservoirFloor:    30,   // a bad night does not put you at zero on waking
+    circadianAmp:      12,   // +/- effectiveness points from body clock alone
+    nadirBodyHour:      5,   // circadian trough ~0500 BODY time
+    eastRatePerDay:   1.0,   // eastbound = phase ADVANCE, adapts ~1.0 h/day
+    westRatePerDay:   1.5    // westbound = phase DELAY,   adapts ~1.5 h/day
+  };
+
+  function norm24(h){ h=h%24; return h<0? h+24 : h; }
+  function hhmmToH(s){                                  // "1815" -> 18.25
+    var d=String(s||'').replace(/\D/g,''); if(d.length<3) return null;
+    d=d.padStart(4,'0'); var h=+d.slice(0,2), m=+d.slice(2);
+    if(h>23||m>59) return null; return h+m/60;
+  }
+  function hToHHMM(h){
+    h=norm24(h); var H=Math.floor(h+1e-9), M=Math.round((h-H)*60);
+    if(M===60){H=norm24(H+1);M=0;}
+    return String(H).padStart(2,'0')+String(M).padStart(2,'0');
+  }
+  function fmtSigned(h){
+    var s=h<0?'−':'+', a=Math.abs(h), H=Math.floor(a+1e-9), M=Math.round((a-H)*60);
+    if(M===60){H+=1;M=0;}
+    return s+H+':'+String(M).padStart(2,'0');
+  }
+  // shortest signed shift between two UTC offsets, in (-12,+12]
+  function shortestShift(fromOff, toOff){
+    var d=toOff-fromOff;
+    while(d>12) d-=24;
+    while(d<=-12) d+=24;
+    return d;
+  }
+  /* Body-clock adaptation toward the station. */
+  function adaptation(homeOff, stationOff, daysInZone){
+    var req=shortestShift(homeOff, stationOff);
+    var rate=(req>=0)? CFG.eastRatePerDay : CFG.westRatePerDay;
+    var mag=Math.min(Math.abs(req), Math.max(0,daysInZone||0)*rate);
+    var adapted=(req>=0?1:-1)*mag;
+    return { required:req, adapted:adapted, remaining:req-adapted, ratePerDay:rate,
+             direction: req>0?'east':(req<0?'west':'none'),
+             daysToFull: Math.abs(req)>0 ? Math.abs(req)/rate : 0 };
+  }
+  /* Effective UTC offset of your BODY clock: anchored at home, drifting to the station. */
+  function bodyOffset(homeOff, stationOff, daysInZone){
+    return homeOff + adaptation(homeOff, stationOff, daysInZone).adapted;
+  }
+  function bodyHourAt(utcHour, bOff){ return norm24(utcHour+bOff); }
+
+  /* -1 at the body-clock trough, +1 at its peak ~12h later. */
+  function circadian(utcHour, bOff){
+    return -Math.cos(2*Math.PI*(bodyHourAt(utcHour,bOff)-CFG.nadirBodyHour)/24);
+  }
+  /* Sleep quality: was it in your body night, and where did you lie down? */
+  function sleepQuality(inBodyNight, facility){
+    var q= inBodyNight? 1.0 : 0.7;
+    if(facility==='bunk') q*=0.9; else if(facility==='seat') q*=0.7;
+    return q;
+  }
+  /* Was a sleep centred inside the body night (2200-0700 body time)? */
+  function sleepInBodyNight(startUtc, hours, bOff){
+    var mid=norm24(startUtc + (hours||0)/2 + bOff);
+    return (mid>=22 || mid<7);
+  }
+  /* Reservoir on waking. Effective sleep = hours x quality; each hour short of the
+     ideal 8 costs points. Floored, because a poor night does not put you at zero. */
+  function reservoirAtWake(sleepHours, quality, carryDebt){
+    var eff=(sleepHours||0)*(quality==null?1:quality);
+    var r=100 - Math.max(0, CFG.idealSleepH-eff)*CFG.shortSleepPenalty - (carryDebt||0);
+    return Math.max(CFG.reservoirFloor, Math.min(100, r));
+  }
+  function reservoirAt(r0, hoursAwake){
+    return Math.max(0, r0 - Math.max(0,hoursAwake)*CFG.depletionPerHour);
+  }
+  function effectiveness(r0, hoursAwake, utcHour, bOff){
+    var e=reservoirAt(r0,hoursAwake) + CFG.circadianAmp*circadian(utcHour,bOff);
+    return Math.max(0, Math.min(100, e));
+  }
+  function band(e){
+    if(e>=90) return {key:'optimal', label:'Optimal',            color:'#4ee39a'};
+    if(e>=80) return {key:'good',    label:'Good',               color:'#9bdc7a'};
+    if(e>=70) return {key:'reduced', label:'Reduced',            color:'#ffd166'};
+    if(e>=55) return {key:'impaired',label:'Impaired',           color:'#ff9d4d'};
+    return           {key:'severe',  label:'Severely impaired',  color:'#ff6b6b'};
+  }
+  function riskIndex(e){ return Math.max(0, Math.min(10, Math.round((100-e)/5))); }
+
+  /* YOUR circadian low (0200-0559 body time) expressed in UTC. This is the number that
+     differs from the crew-room "0200-0600 local" rule whenever you are not adapted. */
+  function wocl(bOff){ return { startUtc:norm24(2-bOff), endUtc:norm24(6-bOff) }; }
+  function inWocl(utcHour,bOff){
+    var w=wocl(bOff);
+    return (w.startUtc<w.endUtc)? (utcHour>=w.startUtc && utcHour<w.endUtc)
+                                : (utcHour>=w.startUtc || utcHour<w.endUtc);
+  }
+  /* Interval overlap with the circadian low - NOT endpoint sampling. */
+  function woclOverlapHours(aUtc,bUtc,bOff){
+    if(bUtc<aUtc) bUtc+=24;
+    var hit=0;
+    for(var t=aUtc;t<bUtc;t+=1/12){ if(inWocl(norm24(t),bOff)) hit+=1/12; }
+    return Math.round(hit*12)/12;
+  }
+  function curve(r0,wakeUtc,fromUtc,toUtc,bOff,stepH){
+    stepH=stepH||0.25;
+    if(toUtc<fromUtc) toUtc+=24;
+    var pts=[];
+    for(var t=fromUtc;t<=toUtc+1e-9;t+=stepH){
+      var awake=t-wakeUtc; if(awake<0) awake+=24;
+      pts.push({utc:norm24(t), awake:awake, e:effectiveness(r0,awake,norm24(t),bOff)});
+    }
+    return pts;
+  }
+  /* Best bunk break for landing alertness: the one whose sleep buys most effectiveness at TOD. */
+  function rankBreaks(breaks,r0,wakeUtc,todUtc,bOff,facility){
+    return breaks.map(function(b,i){
+      var hrs=b.dur/60, night=sleepInBodyNight(b.startUtc,hrs,bOff);
+      var q=sleepQuality(night,facility);
+      var gained=Math.min(60, hrs*q*CFG.shortSleepPenalty*1.6);   // partial top-up from an in-flight break
+      var endUtc=norm24(b.startUtc+hrs);
+      var awakeAtTod=norm24(todUtc-endUtc);                 // re-awake at break end
+      var e=effectiveness(Math.min(100,reservoirAt(r0,norm24(b.startUtc-wakeUtc))+gained),
+                          awakeAtTod, todUtc, bOff);
+      return {idx:i, startUtc:b.startUtc, dur:b.dur, inBodyNight:night, quality:q,
+              effAtTod:e, band:band(e)};
+    }).sort(function(a,b){ return b.effAtTod-a.effAtTod; });
+  }
+
+  var API={CFG:CFG,norm24:norm24,hhmmToH:hhmmToH,hToHHMM:hToHHMM,fmtSigned:fmtSigned,
+    shortestShift:shortestShift,adaptation:adaptation,bodyOffset:bodyOffset,bodyHourAt:bodyHourAt,
+    circadian:circadian,sleepQuality:sleepQuality,sleepInBodyNight:sleepInBodyNight,
+    reservoirAtWake:reservoirAtWake,reservoirAt:reservoirAt,effectiveness:effectiveness,
+    band:band,riskIndex:riskIndex,wocl:wocl,inWocl:inWocl,woclOverlapHours:woclOverlapHours,
+    curve:curve,rankBreaks:rankBreaks};
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.FATIGUE=API;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
 /* AeroDecode access gate — employee-number allowlist (offline).
    Authorized pilots are stored as SALTED HASHES (not the raw numbers), so the
    public source never shows the actual roster. Login = employee number.
@@ -2442,7 +2652,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.7 · 2026-07-28';
+  var BUILD='v9.8 · 2026-08-30';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -3005,6 +3215,7 @@
       var vlg=$('#view-logbook'); if(vlg) vlg.hidden=(v!=='logbook');
       var vhf=$('#view-hf'); if(vhf) vhf.hidden=(v!=='hf');
       var vct=$('#view-catering'); if(vct) vct.hidden=(v!=='catering');
+      var vft=$('#view-fatigue'); if(vft) vft.hidden=(v!=='fatigue');
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
       var vw=$('#view-wheel'); if(vw) vw.hidden=(v!=='wheel');
       var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
@@ -3013,6 +3224,7 @@
       if(v==='logbook'){ lgCompute(); }
       if(v==='hf'){ hfRender(); }
       if(v==='catering'){ catCompute(); }
+      if(v==='fatigue'){ ftCompute(); }
       if(v==='sched'){ schedCompute(); }
     };
   });
@@ -3698,6 +3910,7 @@
     try{ duLoadFromOfp(); }catch(e){}
     try{ crLoadFromLog(); }catch(e){}
     try{ catLoadFromOfp(); }catch(e){}
+    try{ ftLoadFromOfp(); }catch(e){}
   }
   function goFlightLog(){ var t=document.querySelector('.tab[data-view="flightlog"]'); if(t) t.click(); }
   $('#flPasteGo').onclick=function(){ var t=$('#flPaste').value||''; if(t.trim()){ ofpIngest(t); goFlightLog(); } };
@@ -4059,6 +4272,156 @@
         try{ if(navigator.vibrate) navigator.vibrate(60); }catch(e){}
       }, 5050);
     };
+  })();
+
+
+  /* ---------- Fatigue (Stage 1: circadian phase + sleep reservoir) ----------
+     OWNER-ONLY while in development: the tab stays hidden unless the stored
+     credential is the owner override. NOTE this hides it from the UI, not from
+     anyone who reads the page source. */
+  var ftFacility='bed';
+  (function(){
+    var owner=false;
+    try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); owner=!!(c&&c.owner); }catch(e){}
+    var t=document.getElementById('ftTab'); if(t&&owner) t.hidden=false;
+  })();
+  function ftNum(el){ var v=parseFloat((el&&el.value||'').replace(/[^0-9.\-]/g,'')); return isNaN(v)?null:v; }
+  function ftOffH(icao){ var m=tzOffsetMin(icao); return m==null? null : m/60; }
+  function ftSave(){
+    try{ localStorage.setItem('ad_fatigue', JSON.stringify({
+      home:$('#ftHome').value, stn:$('#ftStn').value, days:$('#ftDays').value,
+      wake:$('#ftWake').value, sleep:$('#ftSleep').value, tod:$('#ftTod').value, fac:ftFacility })); }catch(e){}
+  }
+  function ftLoadFromOfp(){
+    var n=[];
+    if(typeof flId!=='undefined' && flId && flId.dest && $('#ftStn') && !$('#ftStn').value){ $('#ftStn').value=flId.dest; n.push('destination '+flId.dest); }
+    if(typeof flOrig!=='undefined' && flOrig && typeof flTrip!=='undefined' && flTrip && flTrip.min!=null && $('#ftTod')){
+      var dep=(+flOrig.slice(0,2))*60+(+flOrig.slice(2));
+      var tod=((dep+flTrip.min-30)%1440+1440)%1440;                 // TOD ~ 30 min before landing
+      $('#ftTod').value=String(Math.floor(tod/60)).padStart(2,'0')+String(tod%60).padStart(2,'0');
+      n.push('top of descent '+$('#ftTod').value+'Z');
+    }
+    var el=$('#ftNote'); if(el) el.textContent = n.length? ('Loaded from OFP — '+n.join(' · ')+'.') : '';
+    ftCompute();
+  }
+  function ftBar(pct,color){ return '<div class="ftmeter"><i style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+'"></i></div>'; }
+  function ftCompute(){
+    var out=$('#ftOut'); if(!out||typeof FATIGUE==='undefined') return;
+    ftSave();
+    var F=FATIGUE;
+    var home=($('#ftHome').value||'').toUpperCase().trim(), stn=($('#ftStn').value||'').toUpperCase().trim();
+    var days=ftNum($('#ftDays'))||0, sleep=ftNum($('#ftSleep'));
+    var wake=F.hhmmToH($('#ftWake').value), tod=F.hhmmToH($('#ftTod').value);
+    if(!home||!stn||wake==null||sleep==null){
+      out.innerHTML='<div class="hint" style="padding:0 4px;margin-top:12px">Enter your home base, where you are now, when you woke (Zulu) and how much sleep you got.</div>';
+      return;
+    }
+    var hOff=ftOffH(home), sOff=ftOffH(stn);
+    if(hOff==null||sOff==null){
+      out.innerHTML='<div class="warnbox" style="margin-top:12px"><div class="wtitle">Unknown airport</div><p>I don’t have a time zone for <b>'+esc(hOff==null?home:stn)+'</b>. Open the Zulu strip at the top with a flight plan loaded and tap that airport to set its UTC offset manually — I will not guess one.</p></div>';
+      return;
+    }
+    var ad=F.adaptation(hOff,sOff,days), bOff=F.bodyOffset(hOff,sOff,days);
+    var sleepStart=F.norm24(wake-sleep);
+    var night=F.sleepInBodyNight(sleepStart,sleep,bOff), q=F.sleepQuality(night,ftFacility);
+    var r0=F.reservoirAtWake(sleep,q,0);
+    var now=new Date(); var nowH=now.getUTCHours()+now.getUTCMinutes()/60;
+    var awakeNow=F.norm24(nowH-wake);
+    var eNow=F.effectiveness(r0,awakeNow,nowH,bOff), bNow=F.band(eNow);
+    var w=F.wocl(bOff);
+
+    var h='';
+    // headline: body-clock misalignment
+    var mis=ad.remaining;
+    h+='<div class="ftbig"><div class="ftbiglab">Body clock vs local time at '+esc(stn)+'</div>'+
+       '<div class="ftbigval" style="color:'+(Math.abs(mis)>=4?'#ff9d4d':(Math.abs(mis)>=2?'#ffd166':'#4ee39a'))+'">'+
+       (Math.abs(mis)<0.05?'aligned':F.fmtSigned(mis))+'</div>'+
+       '<div class="ftbigsub">'+(Math.abs(mis)<0.05
+         ? 'Your body clock has caught up with local time here.'
+         : 'Local time runs <b>'+F.fmtSigned(mis).replace(/^[+−]/,'')+'</b> '+(mis>0?'ahead of':'behind')+' your body clock. Right now your body thinks it is <b>'+F.hToHHMM(F.bodyHourAt(nowH,bOff))+'</b>.')+
+       '<br>Adapted <b>'+Math.abs(ad.adapted).toFixed(1)+'h</b> of <b>'+Math.abs(ad.required).toFixed(1)+'h</b> ('+ad.direction+'bound, ~'+ad.ratePerDay+'h/day). Full adaptation takes about <b>'+ad.daysToFull.toFixed(1)+' days</b>.</div>'+
+       ftBar(Math.abs(ad.required)>0? Math.abs(ad.adapted)/Math.abs(ad.required)*100 : 100, '#5b93e8')+'</div>';
+
+    // now / at TOD
+    h+='<div class="ftrow"><div class="ftcard"><div class="ftcardlab">Now ('+F.hToHHMM(nowH)+'Z)</div>'+
+       '<div class="ftcardval" style="color:'+bNow.color+'">'+Math.round(eNow)+'</div>'+
+       '<div class="ftcardband" style="color:'+bNow.color+'">'+bNow.label+'</div>'+
+       '<div class="ftcardlab" style="margin-top:7px">Risk '+F.riskIndex(eNow)+'/10</div></div>';
+    if(tod!=null){
+      var awakeTod=F.norm24(tod-wake);
+      var eTod=F.effectiveness(r0,awakeTod,tod,bOff), bTod=F.band(eTod);
+      h+='<div class="ftcard"><div class="ftcardlab">At TOD ('+F.hToHHMM(tod)+'Z)</div>'+
+         '<div class="ftcardval" style="color:'+bTod.color+'">'+Math.round(eTod)+'</div>'+
+         '<div class="ftcardband" style="color:'+bTod.color+'">'+bTod.label+'</div>'+
+         '<div class="ftcardlab" style="margin-top:7px">Risk '+F.riskIndex(eTod)+'/10 · awake '+awakeTod.toFixed(1)+'h</div></div>';
+    }
+    h+='</div>';
+
+    // detail lines
+    h+='<div class="gcard" style="margin-top:14px"><div class="glab">Detail</div>'+
+       '<div class="ftline"><span class="k">Sleep reservoir at wake</span><span class="v">'+Math.round(r0)+'%</span></div>'+
+       '<div class="ftline"><span class="k">Sleep quality applied</span><span class="v">'+(q*100).toFixed(0)+'% '+(night?'(body night)':'(against phase)')+'</span></div>'+
+       '<div class="ftline"><span class="k">Reservoir now</span><span class="v">'+Math.round(F.reservoirAt(r0,awakeNow))+'%</span></div>'+
+       '<div class="ftline"><span class="k">Hours awake</span><span class="v">'+awakeNow.toFixed(1)+'h</span></div>'+
+       '<div class="ftline"><span class="k">Your circadian low (body 0200–0600)</span><span class="v">'+F.hToHHMM(w.startUtc)+'Z–'+F.hToHHMM(w.endUtc)+'Z</span></div>'+
+       '<div class="ftline"><span class="k">Same window in '+esc(stn)+' local</span><span class="v">'+F.hToHHMM(w.startUtc+sOff)+'–'+F.hToHHMM(w.endUtc+sOff)+' LCL</span></div>';
+    if(tod!=null){
+      var ov=F.woclOverlapHours(wake,tod,bOff);
+      h+='<div class="ftline"><span class="k">Circadian low crossed before TOD</span><span class="v">'+(ov>0? ov.toFixed(2)+'h' : 'none')+'</span></div>';
+    }
+    h+='</div>';
+
+    // recommendation
+    var rec=[];
+    if(tod!=null){
+      var eT=F.effectiveness(r0,F.norm24(tod-wake),tod,bOff);
+      if(eT<70) rec.push('Predicted alertness at top of descent is <b>'+F.band(eT).label.toLowerCase()+'</b>. Plan a controlled rest or bunk break so you wake at least <b>2–3 hours before TOD</b> — that clears sleep inertia and puts you on the rising side of the curve.');
+      else rec.push('Predicted alertness at top of descent is <b>'+F.band(eT).label.toLowerCase()+'</b>. Protect it: avoid pushing your last break too early in the flight.');
+    }
+    if(Math.abs(mis)>=4) rec.push('You are <b>'+Math.abs(mis).toFixed(1)+'h out of phase</b> with local time. Your body’s low sits at <b>'+F.hToHHMM(w.startUtc)+'Z–'+F.hToHHMM(w.endUtc)+'Z</b>, not the local small hours — plan sleep around <b>that</b> window, not the hotel clock.');
+    if(r0<75) rec.push('You started this duty with a <b>'+Math.round(r0)+'% reservoir</b>. That deficit does not clear with coffee — it needs recovery sleep, and it carries into tomorrow.');
+    if(rec.length) h+='<div class="ftrec"><div class="t">What this means</div><p>'+rec.join('</p><p>')+'</p></div>';
+
+    h+='<button id="ftCopy" class="minibtn" style="margin-top:14px;width:100%;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy factual summary</button>';
+    out.innerHTML=h;
+
+    var cb=document.getElementById('ftCopy');
+    if(cb) cb.onclick=function(){
+      var L=['FATIGUE SNAPSHOT (predicted — planning aid, not a measurement)',
+        'Home base '+home+' (UTC'+(hOff>=0?'+':'')+hOff+')  ·  Location '+stn+' (UTC'+(sOff>=0?'+':'')+sOff+')',
+        'Days in zone: '+days+'   Body clock adapted '+Math.abs(ad.adapted).toFixed(1)+'h of '+Math.abs(ad.required).toFixed(1)+'h required ('+ad.direction+'bound)',
+        'Body-clock misalignment: '+F.fmtSigned(-mis)+'   (body time now '+F.hToHHMM(F.bodyHourAt(nowH,bOff))+')',
+        'Woke '+F.hToHHMM(wake)+'Z after '+sleep+'h sleep ('+(night?'in body night':'against phase')+', '+ftFacility+')',
+        'Hours awake: '+awakeNow.toFixed(1)+'   Reservoir: '+Math.round(F.reservoirAt(r0,awakeNow))+'%',
+        'Predicted effectiveness now: '+Math.round(eNow)+'/100 ('+bNow.label+'), risk '+F.riskIndex(eNow)+'/10',
+        'Personal circadian low: '+F.hToHHMM(w.startUtc)+'Z-'+F.hToHHMM(w.endUtc)+'Z'];
+      if(tod!=null){ var e2=F.effectiveness(r0,F.norm24(tod-wake),tod,bOff);
+        L.push('At TOD '+F.hToHHMM(tod)+'Z: '+Math.round(e2)+'/100 ('+F.band(e2).label+'), awake '+F.norm24(tod-wake).toFixed(1)+'h');
+        L.push('Circadian low crossed before TOD: '+F.woclOverlapHours(wake,tod,bOff).toFixed(2)+'h'); }
+      L.push('');
+      L.push('Model: two-process (circadian phase + sleep reservoir). Predicted, not measured.');
+      L.push('Regulatory legality is a separate question — see CBA duty limits.');
+      var txt=L.join('\n');
+      try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(e){}
+      this.textContent='Copied ✓'; var b=this; setTimeout(function(){b.textContent='Copy factual summary';},1400);
+    };
+  }
+  (function(){
+    ['ftHome','ftStn','ftDays','ftWake','ftSleep','ftTod'].forEach(function(id){
+      var e=document.getElementById(id); if(e) e.addEventListener('input',ftCompute);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ftfac]'),function(b){
+      b.onclick=function(){ document.querySelectorAll('[data-ftfac]').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on'); ftFacility=b.getAttribute('data-ftfac'); ftCompute(); };
+    });
+    var st; try{ st=JSON.parse(localStorage.getItem('ad_fatigue')||'null'); }catch(e){ st=null; }
+    if(st){
+      if(st.home)$('#ftHome').value=st.home; if(st.stn)$('#ftStn').value=st.stn;
+      if(st.days!=null)$('#ftDays').value=st.days; if(st.wake)$('#ftWake').value=st.wake;
+      if(st.sleep!=null)$('#ftSleep').value=st.sleep; if(st.tod)$('#ftTod').value=st.tod;
+      if(st.fac){ ftFacility=st.fac; document.querySelectorAll('[data-ftfac]').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-ftfac')===ftFacility); }); }
+    }
+    ftCompute();
   })();
 
   /* ---------- Share app with crew ---------- */

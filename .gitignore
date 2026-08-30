@@ -17,3 +17,7 @@ Background App.png
 !hf-atl.jpg
 !hf-vhf.jpg
 !hf-mex.jpg
+
+# Source backup archives — never publish these to the public repo.
+*.zip
+_source/
