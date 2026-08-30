@@ -613,6 +613,12 @@
   .rfbarwrap{flex:1;height:8px;border-radius:4px;background:rgba(6,14,28,.75);overflow:hidden}
   .rfbar{height:100%;border-radius:4px}
   .rfval{flex:0 0 66px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+  .impspan{font-size:11px;color:var(--faint);margin-top:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .impspan b{color:var(--dim)}
+  .impclear{background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.45);color:#ff9d9d;
+    border-radius:7px;padding:2px 9px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .resthotel{display:block;margin-top:4px;font-size:11.5px;color:var(--dim);line-height:1.45}
+  .resthotel b{color:var(--ink)}
   .effcard{margin-top:12px;padding:10px 12px;border-radius:12px;cursor:pointer;
     border:1px solid rgba(120,160,220,.28);background:linear-gradient(180deg,rgba(10,24,46,.75),rgba(6,14,28,.6))}
   .effhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -1151,23 +1157,26 @@
       <div class="impcard">
         <button id="impBtn" class="impbtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-          Upload schedule (CSV)
+          Upload schedule (CSV or XLS)
         </button>
-        <input type="file" id="impFile" accept=".csv,text/csv" hidden>
+        <input type="file" id="impFile" accept=".csv,.xls,text/csv,application/vnd.ms-excel" multiple hidden>
         <div id="impStat" class="impstat"></div>
+        <div id="impSpan" class="impspan"></div>
         <details class="imphow">
           <summary>Where do I get this file? (step by step)</summary>
           <ol>
             <li>On a computer or phone browser, go to <b>aims.atlasair.com/eCrew</b> and log in with your normal eCrew credentials.</li>
             <li>Open <b>My Schedule</b>.</li>
-            <li>Set the <b>date range</b> you want. Past months work too — import several and the app keeps them all.</li>
+            <li>Set the <b>date range</b> you want — one month at a time is easiest.</li>
             <li>Choose <b>UTC</b> for the times. Local Station also works, but UTC is unambiguous — see the note below.</li>
             <li>Click <b>PRINT</b>.</li>
-            <li>On the print/export screen, save the file as <b>CSV</b> (not PDF).</li>
-            <li>Come back here and tap <b>Upload schedule (CSV)</b> above, then pick that file.</li>
+            <li>Save the file as <b>CSV</b> or <b>XLS</b> — both are read. On a phone eCrew usually only offers <b>XLS</b>, and that is fine: the XLS is actually the <i>better</i> file (see below).</li>
+            <li>Come back here and tap <b>Upload schedule</b> above. You can select <b>several files at once</b>, or add them one at a time.</li>
           </ol>
+          <p><b>Covering more than one month:</b> every upload <b>adds to</b> what is already stored — nothing is replaced. Export each month, upload them all, and the fatigue model runs continuously across the whole span, carrying your sleep debt and body clock from one month into the next. Re-uploading a month you already have just refreshes it rather than duplicating it. The stored span is shown under the button, with a Clear control if you want to start over.</p>
+          <p><b>Why XLS is better:</b> the CSV export is written in a character set that cannot hold the superscript <b>+1</b> / <b>−1</b> day markers, so both come out as the same character and a westbound date-line arrival is indistinguishable from an eastbound one. The XLS keeps the sign. The app resolves the CSV case by picking the reading that yields a believable block time, but the XLS never has to guess. The XLS also carries your <b>hotels</b>, which the CSV omits entirely.</p>
           <p><b>UTC or Local Station?</b> Both are supported — the export writes which one it used on line 2 of the file, so the app reads it and never has to guess. <b>UTC is recommended:</b> on duties that cross midnight or the date line, the Local export dates the row in a way that can be ambiguous, and UTC removes that entirely.</p>
-          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically.</p>
+          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically. From an XLS the app also reads the <b>hotel</b> for each layover and shows it on the matching rest period.</p>
           <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
         </details>
       </div>
@@ -2845,6 +2854,208 @@
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
+/* CargoDecode — legacy .xls (BIFF8 inside an OLE2/CFB container) reader, offline and
+   dependency-free. AIMS eCrew on mobile only offers XLS, and that file is a real
+   Compound Document, not an HTML table with an .xls name, so it has to be decoded
+   properly: CFB sector chains, then BIFF records, then the shared-string table.
+
+   Returns a plain grid of strings: grid[row][col]. Empty cells are ''. */
+(function(root){
+  'use strict';
+
+  /* ---------- OLE2 / Compound File Binary container ---------- */
+  function readCFB(buf){
+    var dv=new DataView(buf), u8=new Uint8Array(buf);
+    var SIG=[0xD0,0xCF,0x11,0xE0,0xA1,0xB1,0x1A,0xE1];
+    for(var i=0;i<8;i++) if(u8[i]!==SIG[i]) throw new Error('Not a compound document (.xls) file.');
+    var ssz=1<<dv.getUint16(30,true), msz=1<<dv.getUint16(32,true);
+    var dirStart=dv.getUint32(48,true), miniCut=dv.getUint32(56,true),
+        miniFatStart=dv.getUint32(60,true), difatStart=dv.getUint32(68,true);
+    var FREE=0xFFFFFFFA;
+    function off(n){ return (n+1)*ssz; }
+
+    var fatSecs=[], v;
+    for(i=0;i<109;i++){ v=dv.getUint32(76+i*4,true); if(v<FREE) fatSecs.push(v); }
+    var ds=difatStart, per=(ssz/4)-1, guard=0;
+    while(ds<FREE && guard++<65536){
+      var b=off(ds);
+      for(i=0;i<per;i++){ v=dv.getUint32(b+i*4,true); if(v<FREE) fatSecs.push(v); }
+      ds=dv.getUint32(b+per*4,true);
+    }
+    var fat=new Uint32Array(fatSecs.length*(ssz/4)), k=0;
+    for(var f=0;f<fatSecs.length;f++){ var fb=off(fatSecs[f]);
+      for(i=0;i<ssz/4;i++) fat[k++]=dv.getUint32(fb+i*4,true); }
+
+    function readChain(start,size){
+      var out=[], s=start, g=0, total=0;
+      while(s<FREE && g++<1048576){ out.push(s); total+=ssz; s=fat[s]; if(s===undefined) break; }
+      var res=new Uint8Array(total), o=0;
+      for(i=0;i<out.length;i++){ res.set(u8.subarray(off(out[i]), off(out[i])+ssz), o); o+=ssz; }
+      return size!=null&&size<res.length? res.subarray(0,size) : res;
+    }
+
+    var dirB=readChain(dirStart,null);
+    var ddv=new DataView(dirB.buffer, dirB.byteOffset, dirB.byteLength);
+    var entries=[], rootE=null;
+    for(var p=0;p+128<=dirB.length;p+=128){
+      var nlen=ddv.getUint16(p+64,true);
+      if(nlen<2){ entries.push(null); continue; }
+      var nm='';
+      for(i=0;i<nlen-2;i+=2){ var ch=ddv.getUint16(p+i,true); if(ch) nm+=String.fromCharCode(ch); }
+      var e={name:nm, type:dirB[p+66], start:ddv.getUint32(p+116,true), size:ddv.getUint32(p+120,true)};
+      entries.push(e); if(e.type===5) rootE=e;
+    }
+
+    var miniFat=null, miniData=null;
+    function readStream(e){
+      if(e.size>=miniCut || e===rootE) return readChain(e.start, e.size);
+      if(!miniFat){
+        var mb=readChain(miniFatStart,null);
+        var mdv=new DataView(mb.buffer,mb.byteOffset,mb.byteLength);
+        miniFat=new Uint32Array(mb.length>>2);
+        for(i=0;i<miniFat.length;i++) miniFat[i]=mdv.getUint32(i*4,true);
+        miniData=readChain(rootE.start, rootE.size);
+      }
+      var out=new Uint8Array(e.size), o=0, s=e.start, g=0;
+      while(s<FREE && o<e.size && g++<1048576){
+        var n=Math.min(msz, e.size-o);
+        out.set(miniData.subarray(s*msz, s*msz+n), o); o+=n; s=miniFat[s];
+      }
+      return out;
+    }
+    return { find:function(nm){ for(var j=0;j<entries.length;j++) if(entries[j]&&entries[j].name===nm) return entries[j]; return null; },
+             read:readStream };
+  }
+
+  /* ---------- BIFF8 ---------- */
+  function rkToNum(rk){
+    var n;
+    if(rk & 2) n = rk>>2;                                  // integer, already signed by >>
+    else {
+      var b=new ArrayBuffer(8), d=new DataView(b);
+      d.setUint32(0, rk & 0xFFFFFFFC); d.setUint32(4,0);   // high word carries sign/exponent/mantissa
+      n=d.getFloat64(0);                                   // big-endian read: high word first
+    }
+    return (rk & 1)? n/100 : n;
+  }
+  function numStr(n){
+    if(!isFinite(n)) return '';
+    var s=(Math.round(n*1e10)/1e10).toString();
+    return s;
+  }
+
+  function readBIFF(bytes){
+    var dv=new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    var recs=[], p=0;
+    while(p+4<=bytes.length){
+      var t=dv.getUint16(p,true), len=dv.getUint16(p+2,true);
+      if(p+4+len>bytes.length) break;
+      recs.push({t:t, p:p+4, len:len});
+      p+=4+len;
+    }
+
+    /* Shared string table. Strings may be split across CONTINUE records, and when the
+       split falls inside the characters the CONTINUE restarts with a fresh flags byte
+       saying whether the remainder is 8- or 16-bit. Getting that wrong shreds the text. */
+    var sst=[];
+    for(var i=0;i<recs.length;i++){
+      if(recs[i].t!==0x00FC) continue;
+      var chunks=[recs[i]];
+      for(var j=i+1;j<recs.length && recs[j].t===0x003C;j++) chunks.push(recs[j]);
+      var ci=0, off=8, count=dv.getUint32(recs[i].p+4,true);
+      function avail(){ return chunks[ci].len-off; }
+      function roll(){ while(ci<chunks.length && off>=chunks[ci].len){ ci++; off=0; } return ci<chunks.length; }
+      function u8r(){ if(!roll()) return 0; return dv.getUint8(chunks[ci].p+off++); }
+      function u16r(){ if(!roll()) return 0; var v=dv.getUint16(chunks[ci].p+off,true); off+=2; return v; }
+      function u32r(){ if(!roll()) return 0; var v=dv.getUint32(chunks[ci].p+off,true); off+=4; return v; }
+      function skip(n){ while(n>0 && roll()){ var take=Math.min(n, avail()); off+=take; n-=take; } }
+      for(var s=0; s<count && roll(); s++){
+        var cch=u16r(), flags=u8r();
+        var high=flags&1, ext=flags&4, rich=flags&8;
+        var cRun=rich? u16r():0, cbExt=ext? u32r():0;
+        var str='', got=0;
+        while(got<cch){
+          if(avail()<=0){
+            ci++; off=0;
+            if(ci>=chunks.length) break;
+            high=dv.getUint8(chunks[ci].p+off)&1; off++;    // fresh flags byte on the continuation
+          }
+          var room=avail(), n=high? Math.min(cch-got, room>>1) : Math.min(cch-got, room);
+          if(n<=0){ if(high && room===1){ off++; continue; } break; }
+          var base=chunks[ci].p+off;
+          for(var x=0;x<n;x++) str+=String.fromCharCode(high? dv.getUint16(base+x*2,true) : dv.getUint8(base+x));
+          off+=high? n*2 : n; got+=n;
+        }
+        if(cRun) skip(cRun*4);
+        if(cbExt) skip(cbExt);
+        sst.push(str);
+      }
+      break;
+    }
+
+    /* Cells from the first worksheet substream. */
+    var cells={}, maxR=-1, maxC=-1, inSheet=false, seenSheet=false;
+    function put(r,c,v){
+      if(v==null||v==='') return;
+      (cells[r]||(cells[r]={}))[c]=v;
+      if(r>maxR) maxR=r; if(c>maxC) maxC=c;
+    }
+    function inlineStr(pos){
+      var cch=dv.getUint16(pos,true), fl=dv.getUint8(pos+2), h=fl&1, out='';
+      for(var x=0;x<cch;x++) out+=String.fromCharCode(h? dv.getUint16(pos+3+x*2,true) : dv.getUint8(pos+3+x));
+      return out;
+    }
+    for(i=0;i<recs.length;i++){
+      var R=recs[i];
+      if(R.t===0x0809){                       // BOF — 0x0010 marks a worksheet substream
+        var dt=R.len>=4? dv.getUint16(R.p+2,true):0;
+        if(dt===0x0010){ if(seenSheet){ break; } inSheet=true; seenSheet=true; }
+        else inSheet=false;
+        continue;
+      }
+      if(R.t===0x000A){ if(inSheet) break; continue; }   // EOF of the sheet
+      if(!inSheet) continue;
+      var r0=dv.getUint16(R.p,true), c0=dv.getUint16(R.p+2,true);
+      if(R.t===0x00FD)      put(r0,c0, sst[dv.getUint32(R.p+6,true)]);      // LABELSST
+      else if(R.t===0x0204) put(r0,c0, inlineStr(R.p+6));                   // LABEL
+      else if(R.t===0x0203) put(r0,c0, numStr(dv.getFloat64(R.p+6,true)));  // NUMBER
+      else if(R.t===0x027E) put(r0,c0, numStr(rkToNum(dv.getUint32(R.p+6,true))));  // RK
+      else if(R.t===0x00BD){                                               // MULRK
+        var n=(R.len-6)/6;
+        for(var m=0;m<n;m++) put(r0, c0+m, numStr(rkToNum(dv.getUint32(R.p+4+m*6+2,true))));
+      }
+      else if(R.t===0x0006){                                               // FORMULA w/ string result
+        var isStr=dv.getUint16(R.p+12,true)===0xFFFF && dv.getUint8(R.p+6)===0;
+        if(isStr && recs[i+1] && recs[i+1].t===0x0207) put(r0,c0, inlineStr(recs[i+1].p));
+        else if(!isStr) put(r0,c0, numStr(dv.getFloat64(R.p+6,true)));
+      }
+    }
+
+    var grid=[];
+    for(var rr=0;rr<=maxR;rr++){
+      var row=new Array(maxC+1), have=cells[rr]||{};
+      for(var cc=0;cc<=maxC;cc++) row[cc]=have[cc]!=null? have[cc] : '';
+      grid.push(row);
+    }
+    return grid;
+  }
+
+  /* ArrayBuffer -> grid of strings */
+  function toGrid(buf){
+    var cfb=readCFB(buf);
+    var wb=cfb.find('Workbook') || cfb.find('Book');
+    if(!wb) throw new Error('No Workbook stream in that .xls file.');
+    return readBIFF(cfb.read(wb));
+  }
+  function isXls(buf){
+    var u=new Uint8Array(buf);
+    return u.length>8 && u[0]===0xD0 && u[1]===0xCF && u[2]===0x11 && u[3]===0xE0;
+  }
+
+  var API={toGrid:toGrid, isXls:isXls};
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.XLSREAD=API;
+})(typeof window!=='undefined'?window:globalThis);
 /* CargoDecode — AIMS eCrew "Personal Crew Schedule Report" CSV parser (deterministic).
    Handles BOTH export modes; the file declares its own on line 2, so nothing is guessed:
        "08/01/2026 - 08/31/2026 (All times in Local Station)"
@@ -2853,7 +3064,12 @@
      * prefix on Details  -> deadhead leg
      [77F]                -> aircraft type on an operating leg
      A prefix on a time   -> Actual (vs scheduled)
-     superscript 1 (0xB9) -> that time falls on the NEXT day
+     superscript +1       -> that time falls on the NEXT day
+     superscript -1       -> that time falls on the PREVIOUS day (west-bound date line)
+       NOTE: the CSV export is ISO-8859, so the superscript plus and minus BOTH degrade to
+       "?" and only the trailing 0xB9 survives - a CSV literally cannot say which way the
+       day moves. The XLS export is UTF-16 internally and keeps the sign, so it is the more
+       accurate source. For CSV we resolve the ambiguity by plausibility of the block time.
      /HH:MM after a time  -> delay, not part of the clock time
    IMPORTANT: in LOCAL mode, report and block-OUT are in the DEPARTURE station's local
    time, while block-IN and debrief are in the ARRIVAL station's. Getting that wrong
@@ -2878,18 +3094,23 @@
     return rows;
   }
 
-  var NEXTDAY=/[¹⁰-⁹]|\?¹|\+1/;      // superscript 1 (or +1) = next day
-  /* "A12:05", "18:25", "A14:53/00:13", "01:00?¹" -> {h, actual, plusDay, delay} */
+  var DAYMARK=/[¹⁰-⁹]|\?[¹\uFFFD?]|\+1|\-1/;   // a day-shift marker is present at all
+  var PREVDAY=/[⁻]\s*[¹⁰-⁹]|\-1(?!\d)/;  // explicit superscript minus = previous day
+  var NEXTDAY=/[⁺]\s*[¹⁰-⁹]|\+1(?!\d)/;  // explicit superscript plus  = next day
+  /* "A12:05", "18:25", "A14:53/00:13", "22:45?¹" -> {h, actual, dayOff, ambigDay, delay} */
   function parseTime(sRaw){
     if(sRaw==null) return null;
     var s=String(sRaw).trim(); if(!s) return null;
-    var plus = NEXTDAY.test(s) ? 1 : 0;
+    var dayOff=0, ambig=false;
+    if(PREVDAY.test(s))      dayOff=-1;
+    else if(NEXTDAY.test(s)) dayOff=1;
+    else if(DAYMARK.test(s)){ dayOff=1; ambig=true; }   // CSV lost the sign - assume next, verify later
     var actual = /^A/.test(s);
     var delay=null;
     var dm=s.match(/\/(\d{1,2}):(\d{2})/); if(dm){ delay=(+dm[1])*60+(+dm[2]); s=s.replace(dm[0],''); }
     var m=s.match(/(\d{1,2}):(\d{2})/); if(!m) return null;
     var h=+m[1], mi=+m[2]; if(h>23||mi>59) return null;
-    return { h:h+mi/60, hh:h, mm:mi, actual:actual, plusDay:plus, delay:delay };
+    return { h:h+mi/60, hh:h, mm:mi, actual:actual, dayOff:dayOff, ambigDay:ambig, delay:delay };
   }
   function parseDate(s){                                  // "08/04/2026 Tue" -> {y,m,d}
     var m=String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); if(!m) return null;
@@ -2902,8 +3123,12 @@
   }
   function utcMs(o,hours){ return Date.UTC(o.y,o.m-1,o.d) + Math.round(hours*3600000); }
 
-  function parse(text){
-    var rows=splitCsv(text);
+  function parse(text){ return parseGrid(splitCsv(text)); }
+  /* rows[][] in the CSV column order:
+       0 Date · 1 Duties · 2 Details · 3 Report · 4 Actual · 5 (spare) · 6 Debrief · 7 Indicators · 8 Crew
+     Both the CSV and the XLS importer funnel through here, so there is exactly one
+     interpretation of a duty day in the app. */
+  function parseGrid(rows){
     var mode=null, period=null, who=null;
     for(var i=0;i<Math.min(rows.length,6);i++){
       var line=rows[i].join(',');
@@ -2929,7 +3154,7 @@
         var detail=(details[L]!=null?details[L]:'').trim();
         var blk=(blocks[L]!=null?blocks[L]:'').trim();
         if(!duty && !detail) continue;
-        var rec={ date:d, ymd:ymd(d), duty:duty, detail:detail, mode:mode, leg:L, legs:legs,
+        var rec={ date:d, ymd:ymd(d), src:r, duty:duty, detail:detail, mode:mode, leg:L, legs:legs,
                   indicators:(c[7]||'').trim(), crewRaw:(c[8]||'') };
         rec.deadhead = /^\*/.test(detail) || (legs===1 && /\bDH\b/.test(rec.crewRaw));
         var ac=duty.match(/\[([A-Z0-9]+)\]/); rec.aircraft = ac? ac[1] : null;
@@ -2963,15 +3188,30 @@
         offArr=offsetFor(rec.to,   utcMs(rec.date,12));
         if(offDep==null||offArr==null){ rec.tzError=(offDep==null?rec.from:rec.to); return; }
       }
-      function abs(t, off, base){
+      function abs(t, off, base, dayOverride){
         if(!t) return null;
-        var day = t.plusDay? addDays(base,1) : base;
+        var dOff = dayOverride!=null? dayOverride : t.dayOff;
+        var day = dOff? addDays(base,dOff) : base;
         return utcMs(day, t.h-off);                    // local -> UTC (off=0 when file is UTC)
       }
       rec.utc.report   = abs(rec.report,   offDep, rec.date);
       rec.utc.blockOut = abs(rec.blockOut, offDep, rec.date);
       rec.utc.blockIn  = abs(rec.blockIn,  offArr, rec.date);
       rec.utc.debrief  = abs(rec.debrief,  offArr, rec.date);
+      /* A CSV cannot say which way an ambiguous day marker points, so pick the reading
+         that yields a believable block time rather than trusting a coin flip. */
+      if(rec.blockIn && rec.blockIn.ambigDay && rec.utc.blockOut!=null){
+        var best=rec.utc.blockIn, bestScore=-1;
+        [1,-1,0].forEach(function(cand){
+          var v=abs(rec.blockIn, offArr, rec.date, cand);
+          var h=(v-rec.utc.blockOut)/3600000;
+          var score = (h>0 && h<=20)? (20-Math.abs(h-8)) : -1;
+          if(score>bestScore){ bestScore=score; best=v; rec.blockIn.dayOff=cand; }
+        });
+        rec.utc.blockIn=best;
+        if(rec.debrief && rec.debrief.ambigDay)
+          rec.utc.debrief=abs(rec.debrief, offArr, rec.date, rec.blockIn.dayOff);
+      }
       if(rec.utc.blockOut!=null && rec.utc.blockIn!=null && rec.utc.blockIn<rec.utc.blockOut)
         rec.utc.blockIn += 86400000;                   // safety net if the +1 marker was missing
       if(rec.utc.blockOut!=null && rec.utc.blockIn!=null)
@@ -2981,12 +3221,14 @@
         rec.dutyMin = dmin<0? dmin+1440 : dmin;
       }
     });
-    /* Enforce chronological order within each duty day. AIMS' +1 markers are reliable on
+    /* Enforce chronological order within each duty day. AIMS' day markers are reliable on
        single-leg rows but ambiguous on multi-leg / date-line duties, so rather than trust
        them blindly we roll each event forward to the first instant >= the previous one.
-       Self-correcting, and it cannot invent a backwards duty period. */
+       Self-correcting, and it cannot invent a backwards duty period.
+       Grouped by SOURCE ROW, not by calendar date: a date can carry two separate duty
+       periods, and chaining one onto the other pushes the second forward by whole days. */
     var byDay={};
-    parsed.rows.forEach(function(r){ if(r.from){ (byDay[r.ymd]=byDay[r.ymd]||[]).push(r); } });
+    parsed.rows.forEach(function(r){ if(r.from){ var k=r.src!=null?('r'+r.src):('d'+r.ymd); (byDay[k]=byDay[k]||[]).push(r); } });
     Object.keys(byDay).forEach(function(k){
       var seq=byDay[k].sort(function(a,b){ return a.leg-b.leg; }), prev=null;
       seq.forEach(function(r){
@@ -3004,7 +3246,74 @@
     return parsed;
   }
 
-  var API={parse:parse,toUtc:toUtc,splitCsv:splitCsv,parseTime:parseTime,parseDate:parseDate,addDays:addDays,utcMs:utcMs};
+  /* ---- XLS grid -> the same nine columns ------------------------------------------
+     The XLS lays the report out across 29 sparse spreadsheet columns instead of nine
+     CSV fields, so map by HEADER TEXT rather than by position - a merged cell moving
+     one column to the left must not silently shift every time into the wrong field. */
+  var XLSCOL=[['Date',0],['Duties',1],['Details',2],['Report times',3],
+              ['Actual times/Delays',4],['Debrief times',6],['Indicators',7],['Crew',8]];
+  function fromXls(grid){
+    var rows=[], hotels=[], hdr=-1, map=null;
+    for(var r=0;r<grid.length;r++){
+      var row=grid[r]||[], joined=row.join(' ').trim();
+      if(hdr<0){
+        var isHdr=false, m={};
+        for(var c=0;c<row.length;c++){
+          var v=String(row[c]||'').trim();
+          for(var k=0;k<XLSCOL.length;k++) if(v===XLSCOL[k][0]){ m[XLSCOL[k][1]]=c; if(XLSCOL[k][0]==='Date') isHdr=true; }
+        }
+        if(isHdr && m[1]!=null && m[2]!=null){ hdr=r; map=m; continue; }
+        rows.push([joined,'','','','','','','','']);        // preamble: mode, period, crew id
+        continue;
+      }
+      // the schedule table ends where the next titled section begins
+      if(/^(Total Hours|Expiry Dates|Hotel Information|Transfer Information|Pax Transfer|Memos|Rest and Contactable|Descriptions)/i.test(joined)) break;
+      var out=['','','','','','','','',''];
+      for(var f in map) if(map.hasOwnProperty(f)) out[f]=String(row[map[f]]||'');
+      if(out[0].trim()) rows.push(out);
+    }
+    // Hotel Information: Port · Phone · Address · Locators (dates the room is held)
+    var hs=-1;
+    for(r=0;r<grid.length;r++){ if(/^Hotel Information/i.test(String((grid[r]||[])[0]||'').trim())){ hs=r; break; } }
+    if(hs>=0){
+      var hmap=null;
+      for(r=hs+1;r<grid.length;r++){
+        var hr=grid[r]||[], first=String(hr[0]||'').trim();
+        if(!hmap){
+          var hm={};
+          for(c=0;c<hr.length;c++){ var hv=String(hr[c]||'').trim();
+            if(/^Port$/i.test(hv)) hm.port=c; else if(/^Phone$/i.test(hv)) hm.phone=c;
+            else if(/^Address$/i.test(hv)) hm.addr=c; else if(/^Locators?$/i.test(hv)) hm.loc=c; }
+          if(hm.port!=null&&hm.addr!=null){ hmap=hm; continue; }
+          if(first) break;
+          continue;
+        }
+        if(!first) continue;
+        if(!/^[A-Z]{3}$/.test(first)) break;                 // out of the hotel table
+        var addr=String(hr[hmap.addr]||'').split('\n');
+        var locs=String(hr[hmap.loc]!=null?hr[hmap.loc]:'').split('\n');
+        locs.forEach(function(ln){
+          var lm=ln.match(/(\d{2}\/\d{2}\/\d{4})\s*-\s*(\S+)/); if(!lm) return;
+          hotels.push({ port:first, date:lm[1], locator:lm[2],
+                        name:(addr[0]||'').trim(), address:addr.slice(1).join(', ').replace(/,\s*\.$/,'').trim(),
+                        phone:String(hr[hmap.phone]||'').split('\n')[0].trim() });
+        });
+        if(!locs.length||!hotels.length) hotels.push({port:first,date:null,locator:null,
+          name:(addr[0]||'').trim(), address:addr.slice(1).join(', ').trim(),
+          phone:String(hr[hmap.phone]||'').split('\n')[0].trim()});
+      }
+    }
+    return { rows:rows, hotels:hotels };
+  }
+  function parseXls(grid){
+    var x=fromXls(grid);
+    var out=parseGrid(x.rows);
+    out.hotels=x.hotels;
+    return out;
+  }
+
+  var API={parse:parse,parseGrid:parseGrid,parseXls:parseXls,fromXls:fromXls,
+           toUtc:toUtc,splitCsv:splitCsv,parseTime:parseTime,parseDate:parseDate,addDays:addDays,utcMs:utcMs};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.AIMSCSV=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -3171,17 +3480,33 @@
         var earliest=OVERHEAD/2;                 // cannot be asleep before reaching the hotel
         // The wake-up call ends the sleep opportunity - not the report time.
         var wakeRel = d.wakeMs!=null ? (d.wakeMs-r.from)/3600000 : restH-1;
+        // Days off at home are genuine recovery, so a long break gets as many sleeps as it
+        // holds rather than an arbitrary three - otherwise a fortnight off still reads tired.
+        var maxOpp = restH>36? 8 : 3;
         var plan=[], wakeAt=Math.max(0, Math.min(restH, wakeRel));
-        while(plan.length<3 && wakeAt>earliest+1){
+        while(plan.length<maxOpp && wakeAt>earliest+1){
           var st=Math.max(earliest, wakeAt-MAXSLEEP);
           var sH=wakeAt-st;
           if(sH<1) break;
           plan.unshift({st:st, h:sH});
           wakeAt=st-WAKECYCLE;
         }
+        // The body clock re-entrains DURING the rest, so it has to be advanced as we walk
+        // the sleeps - otherwise a fortnight at home is scored against the body clock you
+        // arrived home with, and every one of those nights reads as out of phase.
+        var need0=F.shortestShift(bodyOff, stnOff);
+        var ratePerH=(need0>=0? F.CFG.eastRatePerDay : F.CFG.westRatePerDay)/24;
+        var mark=0;
+        function driftBy(hours){
+          if(hours<=0) return;
+          var rem=F.shortestShift(bodyOff, stnOff);
+          if(!rem) return;
+          bodyOff += Math.min(Math.abs(rem), ratePerH*hours)*(rem>=0?1:-1);
+        }
         var sleepH=0, nightH=0, q=1, prevEnd=0;
         plan.forEach(function(sp,k){
           res=F.reservoirAt(res, Math.max(0, sp.st-prevEnd));          // awake since last sleep
+          driftBy(sp.st-mark); mark=sp.st;
           var sStart=F.norm24(restStartH+sp.st);
           var qk=F.sleepQuality(F.sleepInBodyNight(sStart, sp.h, bodyOff),'bed');
           // Recovery is proportional to the deficit and saturating, so a long layover cannot
@@ -3194,11 +3519,7 @@
           if(k===plan.length-1) q=qk;                                  // quality of the sleep before the call
         });
         var nOpp=plan.length, night=nightH>0;
-        // body clock drifts toward the layover station across the rest
-        var need=F.shortestShift(bodyOff, stnOff);
-        var rate=(need>=0? F.CFG.eastRatePerDay : F.CFG.westRatePerDay)*(restH/24);
-        var move=Math.min(Math.abs(need), rate)*(need>=0?1:-1);
-        bodyOff+=move;
+        driftBy(restH-mark);                       // remainder of the rest after the last sleep
         d.restSleepH=Math.round(sleepH*10)/10; d.restQuality=q;
         d.restSleeps=nOpp; d.restInBodyNight=Math.round(nightH*10)/10;
         d.resAfterRest=Math.round(res);
@@ -3387,7 +3708,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v10.6 · 2026-08-30';
+  var BUILD='v10.7 · 2026-08-30';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5231,15 +5552,27 @@
       return all.length;
     }catch(e){ return null; }
   }
-  function impHandle(text, name){
-    if(typeof AIMSCSV==='undefined'){ impSay('Parser unavailable.','impbad'); return; }
-    var parsed;
-    try{ parsed=AIMSCSV.toUtc(AIMSCSV.parse(text), impOffsetFor); }
-    catch(err){ impSay('Could not read that file — '+esc(err.message),'impbad'); return; }
+  /* Hotels come from the XLS only; keyed by port + the date the room is held. */
+  function impSaveHotels(list){
+    if(!list||!list.length) return;
+    try{
+      var all=JSON.parse(localStorage.getItem('ad_hotels')||'[]');
+      list.forEach(function(h){
+        if(!h.port||!h.date) return;
+        var hit=-1;
+        for(var i=0;i<all.length;i++) if(all[i].port===h.port && all[i].date===h.date){ hit=i; break; }
+        if(hit<0) all.push(h); else all[hit]=h;
+      });
+      localStorage.setItem('ad_hotels', JSON.stringify(all));
+    }catch(e){}
+  }
+  function impHandle(parsed, name){
+    if(typeof AIMSCSV==='undefined'){ impSay('Parser unavailable.','impbad'); return null; }
     var legs=parsed.rows.filter(function(r){ return r.from && r.utc && r.utc.blockOut!=null; });
     var tzBad=parsed.rows.filter(function(r){ return r.tzError; })
                          .map(function(r){ return r.tzError; });
-    if(!legs.length){ impSay('No flight legs found in that CSV. Make sure it is the <b>Personal Crew Schedule Report</b> exported as CSV.','impbad'); return; }
+    if(!legs.length){ return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'}; }
+    impSaveHotels(parsed.hotels);
     var store=legs.map(function(r){
       return { k:r.utc.blockOut+'|'+r.flight, src:parsed.mode, flight:r.flight, from:r.from, to:r.to,
                dh:!!r.deadhead, ac:r.aircraft||null, report:r.utc.report, out:r.utc.blockOut,
@@ -5251,31 +5584,99 @@
     var f=function(d){ return d.toISOString().slice(0,10); };
     var ops=legs.filter(function(r){return !r.deadhead;});
     var blk=ops.reduce(function(t,r){return t+(r.blockMin||0);},0);
-    var msg='<b class="impok">✓ Imported '+legs.length+' legs</b> ('+ops.length+' operating, '+
-      (legs.length-ops.length)+' deadhead) from <b>'+esc(f(a))+'</b> to <b>'+esc(f(b))+'</b>.<br>'+
-      'Times in file: <b>'+esc(parsed.mode==='UTC'?'UTC':'Local Station')+'</b> · operating block <b>'+(blk/60).toFixed(1)+'h</b>'+
-      (total!=null? '<br><span style="color:var(--faint)">Roster now holds <b>'+total+'</b> legs across all imports.</span>':'');
-    if(tzBad.length){
-      var uniq=tzBad.filter(function(v,i,s2){return s2.indexOf(v)===i;});
-      msg+='<br><span class="impwarn">⚠ Unknown station'+(uniq.length>1?'s':'')+': <b>'+esc(uniq.join(', '))+
-           '</b> — those legs were skipped rather than guessed. Re-export in <b>UTC</b> and they will import fine.</span>';
-    }
-    impSay(msg,''); try{ dpRender(); }catch(e){}
+    var uniq=tzBad.filter(function(v,i,s2){return s2.indexOf(v)===i;});
+    return { name:name, legs:legs.length, ops:ops.length, dh:legs.length-ops.length,
+             from:f(a), to:f(b), mode:parsed.mode, blk:blk, total:total,
+             hotels:(parsed.hotels||[]).length, bad:uniq };
+  }
+  /* One stored roster, however many files it came from. */
+  function impSpan(){
+    var el=$('#impSpan'); if(!el) return;
+    var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
+    if(!r.length){ el.innerHTML=''; return; }
+    var outs=r.map(function(x){return x.out;}).filter(function(v){return v!=null;});
+    var f=function(ms){ return new Date(ms).toISOString().slice(0,10); };
+    var hn=0; try{ hn=JSON.parse(localStorage.getItem('ad_hotels')||'[]').length; }catch(e){}
+    el.innerHTML='<b>Stored roster:</b> '+r.length+' legs, '+esc(f(Math.min.apply(null,outs)))+
+      ' → '+esc(f(Math.max.apply(null,outs)))+(hn? ' · '+hn+' hotel nights':'')+
+      ' <button id="impClear" class="impclear">Clear</button>';
+    var cb=$('#impClear');
+    if(cb) cb.onclick=function(){
+      if(!confirm('Remove every imported leg and hotel? Your gateway ticks are kept.')) return;
+      try{ localStorage.removeItem('ad_roster'); localStorage.removeItem('ad_hotels'); }catch(e){}
+      impSay('Roster cleared.',''); impSpan(); try{ dpRender(); }catch(e){}
+    };
+  }
+  /* eCrew hands out a CSV on desktop and a real BIFF8 .xls on mobile. Sniff the bytes
+     rather than trusting the extension, and decode the CSV as ISO-8859-1 because that is
+     what the export actually is - reading it as UTF-8 destroys the day markers. */
+  function impReadOne(file){
+    return new Promise(function(resolve){
+      var rd=new FileReader();
+      rd.onerror=function(){ resolve({err:'Could not open <b>'+esc(file.name)+'</b>.'}); };
+      rd.onload=function(){
+        var buf=rd.result;
+        try{
+          var parsed;
+          if(typeof XLSREAD!=='undefined' && XLSREAD.isXls(buf)){
+            parsed=AIMSCSV.toUtc(AIMSCSV.parseXls(XLSREAD.toGrid(buf)), impOffsetFor);
+          } else {
+            var txt;
+            try{ txt=new TextDecoder('iso-8859-1').decode(new Uint8Array(buf)); }
+            catch(_){ txt=String.fromCharCode.apply(null, new Uint8Array(buf)); }
+            parsed=AIMSCSV.toUtc(AIMSCSV.parse(txt), impOffsetFor);
+          }
+          resolve(impHandle(parsed, file.name));
+        }catch(err){ resolve({err:'Could not read <b>'+esc(file.name)+'</b> — '+esc(err.message)}); }
+      };
+      rd.readAsArrayBuffer(file);
+    });
   }
   (function(){
     var b=$('#impBtn'), f=$('#impFile');
     if(b&&f) b.onclick=function(){ f.click(); };
     if(f) f.onchange=function(e){
-      var file=e.target.files&&e.target.files[0]; e.target.value=''; if(!file) return;
-      impSay('Reading '+esc(file.name)+' …','');
-      var rd=new FileReader();
-      rd.onload=function(){ impHandle(String(rd.result), file.name); };
-      rd.onerror=function(){ impSay('Could not open that file.','impbad'); };
-      try{ rd.readAsText(file,'ISO-8859-1'); }catch(_){ rd.readAsText(file); }
+      var files=Array.prototype.slice.call(e.target.files||[]); e.target.value='';
+      if(!files.length) return;
+      files.sort(function(x,y){ return x.name<y.name?-1:1; });
+      impSay('Reading '+files.length+' file'+(files.length>1?'s':'')+' …','');
+      var done=[], errs=[];
+      (function next(i){
+        if(i>=files.length){ impReport(done,errs); return; }
+        impReadOne(files[i]).then(function(r){
+          if(!r) errs.push('Nothing readable in <b>'+esc(files[i].name)+'</b>.');
+          else if(r.err) errs.push(r.err);
+          else done.push(r);
+          next(i+1);
+        });
+      })(0);
     };
+    impSpan();
     try{ var n=JSON.parse(localStorage.getItem('ad_roster')||'[]').length;
-      if(n) impSay('<span style="color:var(--faint)">Roster holds <b>'+n+'</b> legs from previous imports. Upload another month to add to it.</span>',''); }catch(e){}
+      if(n) impSay('<span style="color:var(--faint)">Roster holds <b>'+n+'</b> legs from previous imports. Upload another month to add to it — nothing is replaced.</span>',''); }catch(e){}
   })();
+  function impReport(done, errs){
+    var msg='';
+    if(done.length){
+      var legs=0, ops=0, blk=0, hot=0, total=null, bad=[];
+      var lo=null, hi=null, modes={};
+      done.forEach(function(d){
+        legs+=d.legs; ops+=d.ops; blk+=d.blk; hot+=d.hotels; total=d.total; modes[d.mode]=1;
+        if(lo==null||d.from<lo) lo=d.from; if(hi==null||d.to>hi) hi=d.to;
+        d.bad.forEach(function(x){ if(bad.indexOf(x)<0) bad.push(x); });
+      });
+      msg+='<b class="impok">✓ Imported '+legs+' legs</b> ('+ops+' operating, '+(legs-ops)+' deadhead) from <b>'+
+        esc(lo)+'</b> to <b>'+esc(hi)+'</b>'+(done.length>1? ' across <b>'+done.length+'</b> files':'')+'.<br>'+
+        'Times in file: <b>'+esc(Object.keys(modes).map(function(m){return m==='UTC'?'UTC':'Local Station';}).join(' + '))+
+        '</b> · operating block <b>'+(blk/60).toFixed(1)+'h</b>'+(hot? ' · <b>'+hot+'</b> hotel nights':'')+
+        (total!=null? '<br><span style="color:var(--faint)">Roster now holds <b>'+total+'</b> legs across all imports.</span>':'');
+      if(bad.length) msg+='<br><span class="impwarn">⚠ Unknown station'+(bad.length>1?'s':'')+': <b>'+esc(bad.join(', '))+
+        '</b> — those legs were skipped rather than guessed. Re-export in <b>UTC</b> and they will import fine.</span>';
+    }
+    if(errs.length) msg+=(msg?'<br>':'')+'<span class="impwarn">'+errs.join('<br>')+'</span>';
+    impSay(msg||'Nothing was imported.', done.length?'':'impbad');
+    impSpan(); try{ dpRender(); }catch(e){}
+  }
 
 
   /* ---------- duty-period timeline, limits, rest and risk ---------- */
@@ -5292,6 +5693,20 @@
     return esc(code)+(nm? ' <span style="color:var(--faint);font-weight:600">('+esc(nm)+')</span>':'');
   }
   function dpOff(code,ms){ return (typeof AIRTZ!=='undefined'&&AIRTZ.iataOffsetAt)? AIRTZ.iataOffsetAt(code,ms):null; }
+  /* The hotel AIMS booked for a layover: same port, room held on a date inside the rest. */
+  function dpHotel(station, fromMs, toMs){
+    var list=[]; try{ list=JSON.parse(localStorage.getItem('ad_hotels')||'[]'); }catch(e){ return null; }
+    if(!list.length||!station) return null;
+    var off=dpOff(station, fromMs); if(off==null) off=0;
+    var best=null;
+    list.forEach(function(h){
+      if(h.port!==station||!h.date) return;
+      var m=h.date.match(/(\d{2})\/(\d{2})\/(\d{4})/); if(!m) return;
+      var mid=Date.UTC(+m[3], +m[1]-1, +m[2], 12) - off*3600000;   // local midday of that date
+      if(mid>=fromMs-12*3600000 && mid<=toMs+12*3600000) best=h;
+    });
+    return best;
+  }
   /* One instant shown as station local AND Zulu — never one without the other. */
   function dpBoth(ms,code){
     if(ms==null) return '—';
@@ -5454,7 +5869,13 @@
               (duties[i+1].restInBodyNight!=null? ' ('+duties[i+1].restInBodyNight.toFixed(1)+' h of it in your body night)':'')+
               ' → reservoir <b>'+duties[i+1].resAfterRest+'%</b> at the wake-up call'+
               (duties[i+1].wakeMs!=null? ' ('+dpBoth(duties[i+1].wakeMs, duties[i+1].from)+')':'') : '')+
-           '<br><span style="color:var(--faint)">Hotel: not in the CSV export — add it manually if you want it here.</span>'+
+           (function(){
+             var ht=dpHotel(r.station, r.from, r.to);
+             if(ht) return '<br><span class="resthotel">🏨 <b>'+esc(ht.name)+'</b>'+
+               (ht.phone? ' · '+esc(ht.phone):'')+(ht.locator? ' · conf '+esc(ht.locator):'')+
+               (ht.address? '<br><span style="color:var(--faint)">'+esc(ht.address)+'</span>':'')+'</span>';
+             return '<br><span style="color:var(--faint)">Hotel: none found — the <b>XLS</b> export carries hotels, the CSV does not.</span>';
+           })()+
            '</div></div></div>';
       }
     });
