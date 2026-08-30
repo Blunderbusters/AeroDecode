@@ -2652,7 +2652,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.8 · 2026-08-30';
+  var BUILD='v9.9 · 2026-08-30';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -2892,12 +2892,13 @@
       if(!r){ pinErr.textContent='Not authorized. Check your number or contact the owner.'; return; }
       save(r.owner? {owner:true} : {id:r.id});
       pinErr.textContent=''; hideLock();
+      try{ if(window.ftApplyOwner) window.ftApplyOwner(); }catch(e){}
     }
     if(pinBtn) pinBtn.onclick=tryUnlock;
     if(pinInput) pinInput.addEventListener('keydown',function(e){ if(e.key==='Enter') tryUnlock(); });
     if(lockClose) lockClose.onclick=hideLock;
     // footer: sign out (clears this device + re-locks)
-    var mBtn=document.getElementById('manageBtn'); if(mBtn) mBtn.onclick=function(){ clear(); pinInput.value=''; lockClose.style.display='none'; showLock(); };
+    var mBtn=document.getElementById('manageBtn'); if(mBtn) mBtn.onclick=function(){ clear(); pinInput.value=''; lockClose.style.display='none'; showLock(); try{ if(window.ftApplyOwner) window.ftApplyOwner(); }catch(e){} };
   })();
 
   function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
@@ -4280,11 +4281,19 @@
      credential is the owner override. NOTE this hides it from the UI, not from
      anyone who reads the page source. */
   var ftFacility='bed';
-  (function(){
+  /* Reveal the dev-only Fatigue tab for the owner login. Called at load AND right after
+     sign-in, because signing in only hides the overlay - it does not reload the page. */
+  function ftApplyOwner(){
     var owner=false;
     try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); owner=!!(c&&c.owner); }catch(e){}
-    var t=document.getElementById('ftTab'); if(t&&owner) t.hidden=false;
-  })();
+    var t=document.getElementById('ftTab'); if(t) t.hidden=!owner;
+    if(!owner){                                    // signed out / crew login: leave the tab
+      var v=document.getElementById('view-fatigue');
+      if(v && !v.hidden){ var d=document.querySelector('.tab[data-view="decode"]'); if(d) d.click(); }
+    }
+  }
+  window.ftApplyOwner=ftApplyOwner;
+  ftApplyOwner();
   function ftNum(el){ var v=parseFloat((el&&el.value||'').replace(/[^0-9.\-]/g,'')); return isNaN(v)?null:v; }
   function ftOffH(icao){ var m=tzOffsetMin(icao); return m==null? null : m/60; }
   function ftSave(){
