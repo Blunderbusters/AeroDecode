@@ -629,7 +629,14 @@
     border-radius:50%;border:1px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;flex:0 0 auto}
   .rfbarwrap{flex:1;height:8px;border-radius:4px;background:rgba(6,14,28,.75);overflow:hidden}
   .rfbar{height:100%;border-radius:4px}
-  .rfval{flex:0 0 66px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+  .rfval{flex:0 0 76px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+  .legfl{font-size:8.5px;font-weight:800;letter-spacing:.5px;color:var(--faint);
+    border:1px solid rgba(120,160,220,.35);border-radius:4px;padding:1px 3px;margin-right:4px;vertical-align:2px}
+  .rfband{display:block;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;opacity:.85}
+  .rfhint{font-size:10.5px;color:var(--faint);line-height:1.45;margin-bottom:6px}
+  .rfhint b{color:var(--dim)}
+  .tipgood{font-size:13px;color:#bff5da;line-height:1.55;margin-bottom:10px;padding:8px 10px;
+    background:rgba(16,48,34,.5);border-left:3px solid #4ee39a;border-radius:0 8px 8px 0}
   .impspan{font-size:11px;color:var(--faint);margin-top:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .impspan b{color:var(--dim)}
   .impdup{flex:0 0 100%;width:100%;margin-top:6px;font-size:10.5px;line-height:1.5;color:#ffcf9d;
@@ -3440,8 +3447,8 @@
       else if(/All times in Local Station/i.test(line)) mode='LOCAL';
       var pm=line.match(/(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})/);
       if(pm && !period) period={from:pm[1], to:pm[2]};
-      var wm=line.match(/^"?(\d{5,7})\s+([^,]+?)\s+([A-Z]{3})-([A-Z]{2})-(\w+)/);
-      if(wm && !who) who={id:wm[1], name:wm[2].trim(), base:wm[3], seat:wm[4], fleet:wm[5]};
+      var wm=line.match(/(?:^|[",])\s*(\d{4,7})\s+(.+?)\s+([A-Z]{3})-([A-Z]{2})-([A-Z0-9]+)/);
+      if(wm && !who) who={id:wm[1], name:wm[2].replace(/^["\s]+|["\s]+$/g,''), base:wm[3], seat:wm[4], fleet:wm[5]};
     }
     if(!mode) throw new Error('Could not find "All times in UTC" or "All times in Local Station" in the header — is this an AIMS Personal Crew Schedule Report?');
 
@@ -3460,11 +3467,21 @@
         if(!duty && !detail) continue;
         var rec={ date:d, ymd:ymd(d), src:r, duty:duty, detail:detail, mode:mode, leg:L, legs:legs,
                   indicators:(c[7]||'').trim(), crewRaw:(c[8]||'') };
-        /* The asterisk on Details is the reliable marker. The Crew column fallback used to
-           be gated to single-leg days, which silently treated a marked deadhead on a
-           multi-leg day as operating - and operating legs count toward flight time. */
-        rec.deadhead = /^\*/.test(detail) || (legs===1 && /\bDH\b/.test(rec.crewRaw))
-                       || (legs>1 && /\bDH\b/.test(rec.crewRaw) && /^\*/.test(detail));
+        /* The asterisk on Details is the reliable per-leg marker. The DH tag in the Crew
+           column belongs to a PERSON, not to the flight: "CA - DH - 453514 - Zarrabian"
+           means that captain is riding along, and says nothing about whether YOU are.
+           Treating any DH in the cell as a deadhead marked three of this roster's own
+           operating legs as deadhead and dropped them out of flight time entirely — the
+           direction that hides a cumulative breach. So the Crew column only counts when the
+           DH sits on the report owner's own line. With no owner id, fall back to the
+           asterisk alone: over-counting flight time raises a false alarm, under-counting
+           conceals a real one. */
+        rec.deadhead = /^\*/.test(detail);
+        if(!rec.deadhead && who && who.id){
+          var mine=String(rec.crewRaw).split('\n').filter(function(ln){ return ln.indexOf(who.id)>=0; })[0];
+          if(mine && /\bDH\b/.test(mine)) rec.deadhead=true;
+        }
+        rec.crewLine = (who&&who.id)? (String(rec.crewRaw).split('\n').filter(function(ln){ return ln.indexOf(who.id)>=0; })[0]||null) : null;
         var ac=duty.match(/\[([A-Z0-9]+)\]/); rec.aircraft = ac? ac[1] : null;
         rec.flight = duty.replace(/\s*\[[^\]]*\]\s*/,'').trim();
         var st=detail.replace(/^\*/,'').match(/([A-Z]{3})\s*-\s*([A-Z]{3})/);
@@ -3721,22 +3738,58 @@
     var d=new Date(ms + (offH||0)*3600000);
     return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())/86400000);
   }
-  function markConsecutive(duties, offsetForFn){
-    var run=0, prevLast=null;
+  /* offDays: a set of day numbers the roster marks X (OFF) or GDO. Those are what end a
+     PATTERN. A two-day layover in Xiamen is duty-free but it is still the same trip, and
+     resetting on it made day 8 of an eleven-day pairing read as day 1. Days off at the end
+     of a pairing are the real boundary, so the roster's own OFF/GDO rows drive the reset
+     and the calendar-gap rule survives only as a fallback for a roster with no such rows. */
+  function markConsecutive(duties, offsetForFn, offDays, coverRanges){
+    var run=0, prevLast=null, pat=1;
+    var haveOff=!!(offDays && offDays.size);
+    var covers=function(a,b){
+      if(!coverRanges||!coverRanges.length) return false;
+      for(var i=a;i<=b;i++){
+        var hit=false;
+        for(var k=0;k<coverRanges.length;k++) if(i>=coverRanges[k][0] && i<=coverRanges[k][1]){ hit=true; break; }
+        if(!hit) return false;
+      }
+      return true;
+    };
     duties.forEach(function(d){
       var offRep=offsetForFn? offsetForFn(d.from, d.report) : 0;
       var offRel=offsetForFn? offsetForFn(d.to,   d.release): 0;
       if(offRep==null) offRep=0; if(offRel==null) offRel=0;
       var first=d.report!=null? dayNum(d.report, offRep) : null;
       var last =d.release!=null? dayNum(d.release, offRel) : first;
-      if(first==null){ d.consecN=(run||1); d.freeDaysBefore=0; d.consecUnknown=true; return; }
+      if(first==null){ d.consecN=(run||1); d.freeDaysBefore=0; d.consecUnknown=true; d.patternN=pat; return; }
       var free = prevLast==null? 0 : Math.max(0, first-prevLast-1);
       d.freeDaysBefore=free;
-      run = (prevLast==null || free>=1)? 1 : run+1;
-      d.consecN=run;
+      // count the roster's own days off sitting between the two duty periods
+      var offBetween=0;
+      if(haveOff && prevLast!=null){
+        for(var dn=prevLast+1; dn<first; dn++) if(offDays.has(dn)) offBetween++;
+      }
+      d.offDaysBefore=offBetween;
+      /* A gap with free calendar days but no OFF/GDO rows is only ambiguous when the
+         export did not cover those dates. Inside a covered month, no X row means it really
+         was a layover — telling the crew to import a file they already have is noise. */
+      d.gapCovered = (prevLast!=null) && covers(prevLast+1, first-1);
+      d.offDataGap = haveOff && free>=1 && offBetween===0 && !d.gapCovered;
+      var reset = (prevLast==null) || (haveOff? offBetween>=1 : free>=1);
+      if(reset && prevLast!=null) pat++;
+      run = reset? 1 : run+1;
+      d.consecN=run; d.patternN=pat; d.patternReset=reset && prevLast!=null;
       prevLast = last!=null? last : first;
     });
     return duties;
+  }
+  function offDaySet(list){
+    var set=new Set();
+    (list||[]).forEach(function(o){
+      var m=String(o.d||o).match(/(\d{4})-?(\d{2})-?(\d{2})/);
+      if(m) set.add(Math.floor(Date.UTC(+m[1], +m[2]-1, +m[3])/86400000));
+    });
+    return set;
   }
 
   /* Rest = release of one duty period to report of the next. */
@@ -3824,21 +3877,21 @@
 
   /* ---- Risk factors. Each carries a plain-language definition for the tooltip. ---- */
   var FACTORS={
-    wocl:{ label:'WOCL Intrusion',
+    wocl:{ label:'WOCL Intrusion', good:'Zero is optimal. Under about 1 hour is minor; 3 hours or more is a serious driver.',
       def:'Window of Circadian Low — the hours your body clock is at its physiological trough, roughly 0200–0559 <b>body time</b> (not station local time). This measures how many hours of the duty period overlap that window, tested as a true interval overlap rather than by sampling the start and end. Crossing the WOCL is the single strongest predictor of degraded alertness, and it moves with your body clock, so on an unacclimated layover it can land in the middle of the local afternoon.' },
-    duty:{ label:'Duty Length',
+    duty:{ label:'Duty Length', good:'Shorter is better. The bar fills as you approach the governing limit, so a full bar means you are at it.',
       def:'Report to release for this duty period. Scored against the governing maximum for your crew complement and operating regime. Under Part 121 Subpart R (flag all-cargo) <b>no maximum duty period exists in the regulation at all</b> — only flight-time caps — so there the CBA is the only limit protecting you. Under Subpart S the FAR does set one: 16, 18 or 20 hours of duty in any 24 consecutive hours by crew complement, and under the §121.513 election continuous duty is capped at 30 hours. Which of those applies is set by the operating regime selected above.' },
-    tzshift:{ label:'Time Zone Shift',
+    tzshift:{ label:'Time Zone Shift', good:'Zero is optimal — it means your body clock matches where you are. Anything over about 3 hours starts to matter; 6 or more is severe.',
       def:'How far your body clock is still out of step with local time. Your internal clock re-entrains slowly — about 1 hour per day travelling east and 1.5 hours per day travelling west — so after a long eastbound sector you can be many hours misaligned for days. Higher misalignment means worse sleep quality on the layover and a circadian trough at an awkward local hour.' },
-    rest:{ label:'Prior Rest',
+    rest:{ label:'Prior Rest', good:'More rest is better. The bar fills as the rest you got falls short of what is required, so an empty bar is good.',
       def:'The rest period immediately before this duty: release of the previous duty to report for this one. Compared against the regulatory minimum (2× the hours flown since the preceding rest, floor 8 hours, extended to 18 h flag / 16 h supplemental after more than 8 hours flown in 24). Rest that only just meets the minimum leaves no margin for commute, meals and sleep latency.' },
-    sleep:{ label:'Sleep Reservoir',
+    sleep:{ label:'Sleep Reservoir', good:'Higher is better — 100% is fully rested. The bar fills as the reservoir empties.',
       def:'Modelled sleep capacity remaining, 0–100%. It fills with sleep — discounted if that sleep fell outside your body night or was taken in a bunk or seat rather than a bed — and depletes steadily while awake. It is a <b>prediction</b> from your rest opportunities, not a measurement of sleep you actually got.' },
-    consec:{ label:'Consecutive Duty Days',
-      def:'Number of duty periods in a row without a full calendar day free of duty. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by a single short rest, so risk rises even when each individual duty period is legal.<br><br>The count <b>resets to 1</b> as soon as one whole calendar day passes with no duty on it, measured on the local calendar where you actually were. A long layover that swallows a full local day resets it just as days off at base do — and the rest period above the duty period says so when it happens.' },
-    eff:{ label:'Modelled Alertness',
+    consec:{ label:'Consecutive Duty Days', good:'Fewer is better. Day 1 is a fresh pattern; by day 5 or 6 the accumulated debt is doing real work.',
+      def:'How many duty periods deep into the current <b>pattern</b> you are. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by one long layover, so risk rises even when each individual duty period is legal.<br><br>The count <b>resets to 1</b> when your roster shows an actual day off — an <b>X</b> or a <b>GDO</b> — between two duty periods, because that is where one pattern ends and the next begins. A long layover part-way through a pairing does <i>not</i> reset it: you are still on the same trip, still away from home, and the debt is still accumulating.<br><br>If your imported roster contains no OFF or GDO rows, the app falls back to counting any whole calendar day free of duty instead, and says so.' },
+    eff:{ label:'Modelled Alertness', good:'Higher is better. 90% and above is optimal; below 65% is the model vendor\'s red threshold.',
       def:'Predicted cognitive effectiveness on a 0–100 scale, from a two-process model in the SAFTE/FAST tradition. It combines the <b>sleep reservoir</b> (how much sleep capacity you have left, filled by the sleep the model thinks you obtained in each rest and drained steadily while awake) with the <b>circadian rhythm</b> (a ±12-point swing peaking in your body afternoon and troughing around 0500 <b>body</b> time). The figure shown is the worst value reached anywhere in the duty period, and the leg it occurs on is named. Bands: <b>90 and above</b> Optimal, <b>77–89</b> Reduced, <b>65–76</b> Impaired, <b>below 65</b> Severely impaired. The 90% criterion line appears in FAA aeromedical validation work on this model family, though the underlying quantitative risk result is Federal Railroad Administration research, not an FAA finding. 77% and 65% are the defaults used by the commercial implementation of this model family. <b>None of the three is a regulatory limit</b> — no aviation regulator publishes an effectiveness threshold at all.<br><br>Sleep is <b>estimated from your rest opportunity</b>, not measured. The model wakes you at the <b>company wake-up call, 3 hours before scheduled departure</b> — that is when you can count on being up — and counts hours awake from there rather than from report. It caps any one sleep at 8.5 h, adds a second or third sleep on a long layover, subtracts transit and sleep latency, and charges the waking hours in between. Sleep taken outside your body night still restores you, but never all the way back to fully rested. It also assumes you actually go to bed. Like every fatigue model it describes an ideal case — your own sleep, health, commute and workload can make the real number worse. It is a planning aid, not a fitness-for-duty determination.' },
-    cum:{ label:'7-Day Block',
+    cum:{ label:'7-Day Block', good:'Lower is better. Compared against the cumulative caps that actually bind your operation.',
       def:'Flight time and duty time in the preceding 168 hours (a rolling 7 days), prorated so a duty period only partly inside the window contributes only the part that actually falls inside it. Deadhead legs count toward duty but not toward flight time, because deadheading is not flying as a crew member.<br><br>This is compared against the cumulative limits that genuinely bind your operation — for a flag two-pilot crew that is <b>32 flight hours in any 7 consecutive days</b> and <b>24 consecutive hours free of all duty in any 7 days</b> (14 CFR 121.481(d)) — and the comparison is only shown when your imported roster actually covers the whole window. If it does not, the app says so rather than reporting a pass it cannot support.' }
   };
   function bandColor(score){
@@ -4002,6 +4055,16 @@
       });
       d.effWorst = worst==null? null : Math.round(worst);
       d.effWorstLeg=worstAt? (worstAt.flight+' '+worstAt.from+'→'+worstAt.to) : null;
+      /* Said in plain words. "Worst on 750 ORD→ANC" means nothing on a single-leg duty —
+         of course it is the worst, it is the only one — and what the number actually
+         describes is the predicted state AT THE LANDING, which is the part worth naming. */
+      /* A bare number is one of your own flights; a lettered prefix is another carrier.
+         Saying "flight 750" rather than "750" stops the number reading as a quantity. */
+      var fname=function(l){ return (/^\d+$/.test(String(l.flight))? 'flight '+l.flight : l.flight); };
+      d.effWhere = worstAt? (d.legs.length>1
+        ? 'Lowest at the landing in '+worstAt.to+', on '+fname(worstAt)
+        : 'Predicted at the landing in '+worstAt.to) : null;
+      d.effWhereShort = worstAt? ('landing in '+worstAt.to+(d.legs.length>1? ' on '+fname(worstAt) : '')) : null;
       d.effBand = worst==null? null : F.band(worst);
       d.effUnknown = (worst==null);
 
@@ -4196,7 +4259,7 @@
       var since=(x.awakeContinuousH!=null && x.awakeContinuousH>aw+0.5)? x.awakeContinuousH : null;
       add(aw>=17?3:(aw>=15?2:(aw>=13?1:0)),
         'My wake-up call is <b>'+x.wakeLocal+'</b>. By the time this duty ends I will have been awake for <b>'+
-        aw.toFixed(1)+' hours</b> straight'+(x.worstLegName? ', and I am flying the '+x.worstLegName+' leg at the end of that':'')+'.'+
+        aw.toFixed(1)+' hours</b> straight'+(x.worstWhere? ', and the '+x.worstWhere+' is at the end of that':'')+'.'+
         (since? ' It is <b>'+since.toFixed(1)+' hours</b> since my last proper sleep — the rest before this duty was only long enough for about '+
                 (x.restSleepH||0).toFixed(1)+' hours, so the clock never really reset.':''));
       if(aw>=16) sum.push('awake '+aw.toFixed(1)+' h');
@@ -4299,13 +4362,13 @@
     if(x.eff!=null && x.eff<77){
       add(x.eff<65?3:2,'Putting all of that together, the fatigue model in this app predicts my effectiveness drops to about <b>'+
         x.eff+'%</b>'+(x.effLabel? ' — its "'+x.effLabel.toLowerCase()+'" band':'')+
-        (x.worstLegName? ', at its worst on the '+x.worstLegName+' leg':'')+'.');
+        (x.worstWhere? ', measured at the '+x.worstWhere:'')+'.');
     }
     out.sort(function(a,b){ return (b.sev-a.sev) || (a.ord-b.ord); });
     return { lines:out, summary:sum };
   }
 
-  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,markConsecutive:markConsecutive,explain:explain,
+  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,markConsecutive:markConsecutive,offDaySet:offDaySet,explain:explain,
            controllingRest:controllingRest,cumulative:cumulative,windowTotals:windowTotals,
            hardCaps:hardCaps,HARDCAPS:HARDCAPS,duty24:duty24,worstDuty24:worstDuty24,
            longestFreeSpan:longestFreeSpan,CUMREF:CUMREF,limitsFor:limitsFor,buildDuties:buildDuties,restPeriods:restPeriods,
@@ -4548,7 +4611,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v11.5 · 2026-08-31';
+  var BUILD='v11.7 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6416,6 +6479,40 @@
       return all.length;
     }catch(e){ return null; }
   }
+  /* X and GDO days. They carry no times, but they are what separates one pattern from the
+     next, so they are worth keeping even though nothing else in the roster uses them. */
+  function impSaveOffDays(rows){
+    try{
+      var all=JSON.parse(localStorage.getItem('ad_offdays')||'[]');
+      var seen={}; all.forEach(function(o){ seen[o.d]=1; });
+      (rows||[]).forEach(function(r){
+        if(r.type!=='OFF' && r.type!=='GDO') return;
+        var y=r.date; if(!y) return;
+        var key=y.y+'-'+('0'+y.m).slice(-2)+'-'+('0'+y.d).slice(-2);
+        if(!seen[key]){ seen[key]=1; all.push({d:key, t:r.type}); }
+      });
+      all.sort(function(a,b){ return a.d<b.d? -1:1; });
+      localStorage.setItem('ad_offdays', JSON.stringify(all));
+    }catch(e){}
+  }
+  function dpOffDays(){ try{ return JSON.parse(localStorage.getItem('ad_offdays')||'[]'); }catch(e){ return []; } }
+  /* Which date ranges the imported exports actually cover. Without this, a genuine layover
+     in the middle of a covered month looked identical to a month that was never imported —
+     and the app told you to go and import a file you already had. */
+  function impSaveCover(period){
+    if(!period||!period.from||!period.to) return;
+    try{
+      var all=JSON.parse(localStorage.getItem('ad_offcover')||'[]');
+      var mk=function(x){ var m=String(x).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        return m? Math.floor(Date.UTC(+m[3], +m[1]-1, +m[2])/86400000) : null; };
+      var a=mk(period.from), b=mk(period.to);
+      if(a==null||b==null) return;
+      for(var i=0;i<all.length;i++) if(all[i][0]===a && all[i][1]===b) return;
+      all.push([a,b]);
+      localStorage.setItem('ad_offcover', JSON.stringify(all));
+    }catch(e){}
+  }
+  function dpCoverRanges(){ try{ return JSON.parse(localStorage.getItem('ad_offcover')||'[]'); }catch(e){ return []; } }
   /* Hotels come from the XLS only; keyed by port + the date the room is held. */
   function impSaveHotels(list){
     if(!list||!list.length) return;
@@ -6437,6 +6534,8 @@
                          .map(function(r){ return r.tzError; });
     if(!legs.length){ return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'}; }
     impSaveHotels(parsed.hotels);
+    impSaveOffDays(parsed.rows);
+    impSaveCover(parsed.period);
     var store=legs.map(function(r){
       return { k:r.utc.blockOut+'|'+r.flight, src:parsed.mode, flight:r.flight, from:r.from, to:r.to,
                dh:!!r.deadhead, ac:r.aircraft||null, report:r.utc.report, out:r.utc.blockOut,
@@ -6488,7 +6587,7 @@
     var cb=$('#impClear');
     if(cb) cb.onclick=function(){
       if(!confirm('Remove every imported leg and hotel? Your gateway ticks are kept.')) return;
-      try{ localStorage.removeItem('ad_roster'); localStorage.removeItem('ad_hotels'); }catch(e){}
+      try{ ['ad_roster','ad_hotels','ad_offdays','ad_offcover'].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
       impSay('Roster cleared.',''); impSpan(); try{ dpRender(); }catch(e){}
     };
   }
@@ -6664,7 +6763,9 @@
          if(st&&st.home&&typeof AIRTZ!=='undefined'){ var o=AIRTZ.iataOffsetAt(st.home,Date.now()); if(o==null&&AIRTZ.icaoTz(st.home)) o=null; if(o!=null) homeOff=o; } }catch(e){}
     // Walk the whole trip once, carrying the sleep reservoir and the body clock forward.
     // This is what makes the numbers below a trip model rather than a per-duty snapshot.
-    try{ if(DUTY.markConsecutive) DUTY.markConsecutive(duties, dpOff); }catch(e){}
+    var offSet=null;
+    try{ offSet=DUTY.offDaySet? DUTY.offDaySet(dpOffDays()) : null; }catch(e){}
+    try{ if(DUTY.markConsecutive) DUTY.markConsecutive(duties, dpOff, offSet, dpCoverRanges()); }catch(e){}
     try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
 
     h+=dpOverview(duties);
@@ -6731,7 +6832,7 @@
          (isNow||isNext? ' id="dpAnchor"':'')+'><div class="dphead">'+
          (isNow? '<div class="nowrow"><span class="nowtag">In progress now</span></div>'
                : (isNext? '<div class="nowrow"><span class="nowtag next">Next duty period</span></div>':''))+'<div class="dpmain"><div class="dpn">Duty Period '+d.n+
-         '<span class="dpdate">'+dpDay(d.report)+(d.consecN>1? ' · day '+d.consecN+' of consecutive duty':'')+'</span></div>'+
+         '<span class="dpdate">'+dpDay(d.report)+(d.consecN>1? ' · day '+d.consecN+' of this pattern':' · pattern starts')+'</span></div>'+
          '<div class="dproute">'+dpAirport(d.from)+' → '+dpAirport(d.to)+'</div></div>'+
          (function(){
             if(d.allGateway) return '<div class="dpscore"><div class="dpscoreval" style="color:'+bc.c+'">—</div>'+
@@ -6747,7 +6848,9 @@
 
       d.legs.forEach(function(l){
         h+='<div class="leg"><input type="checkbox" data-gw="'+esc(l.k)+'"'+(l.gw?' checked':'')+' title="Gateway flight — exclude from duty time">'+
-           '<div class="leginfo"><div class="legtop">'+esc(l.flight)+' '+esc(l.from)+'→'+esc(l.to)+
+           '<div class="leginfo"><div class="legtop">'+
+           (/^\d+$/.test(String(l.flight))? '<span class="legfl">FLT</span>'+esc(l.flight) : esc(l.flight))+
+           ' '+esc(l.from)+'→'+esc(l.to)+
            (l.dh?'<span class="dhpill">DH</span>':'')+(l.ac?'<span style="color:var(--faint);font-weight:600;font-size:11px"> ['+esc(l.ac)+']</span>':'')+
            (l.gw?' <span class="leggw">· GATEWAY (excluded)</span>':'')+'</div>'+
            '<div class="legcity">'+dpAirport(l.from)+' → '+dpAirport(l.to)+'</div>'+
@@ -6768,14 +6871,16 @@
            'Every leg here is marked as a gateway flight, so this period is positioning to or from base rather than working. It is shown for context and its risk is not scored.</div>';
       }
       if(!d.allGateway) h+='<details class="dpsec"><summary>Why this number</summary><div class="dpsecb">';
-      h+='<div class="rf"'+(d.allGateway?' style="display:none"':'')+'>';
+      h+='<div class="rf"'+(d.allGateway?' style="display:none"':'')+'>'+
+         '<div class="rfhint">Every bar runs the same way — <b>shorter and greener is better</b>. Tap any row for what good looks like.</div>';
       facs.forEach(function(f){
         var known=(f.s!=null && isFinite(f.s));
         var col=known? DUTY.bandColor(f.s) : {c:'#7f95b5'};
         h+='<div class="rfrow" data-tip="'+f.k+'"><div class="rflab">'+esc(DUTY.FACTORS[f.k].label)+'<span class="qm">?</span></div>'+
            '<div class="rfbarwrap">'+(known? '<div class="rfbar" style="width:'+Math.round(f.s)+'%;background:'+col.c+'"></div>'
              : '<div class="rfbar rfunk" style="width:100%"></div>')+'</div>'+
-           '<div class="rfval" style="color:'+col.c+'">'+esc(f.v)+'</div></div>';
+           '<div class="rfval" style="color:'+col.c+'">'+esc(f.v)+
+             (known? '<span class="rfband">'+esc(col.l)+'</span>' : '<span class="rfband">no data</span>')+'</div></div>';
       });
       h+='</div>';
 
@@ -6783,7 +6888,7 @@
       if(F && !d.allGateway && d.effWorst!=null){
         var eb=F.band(d.effWorst);
         h+='<div class="effcard" data-tip="eff"><div class="effhead"><div class="efflab">How the number is built<span class="qm">?</span></div></div>'+
-           '<div class="effband" style="color:'+eb.color+'">'+(d.effWorstLeg? 'Worst on '+esc(d.effWorstLeg):esc(eb.label))+'</div>'+
+           '<div class="effband" style="color:'+eb.color+'">'+(d.effWhere? esc(d.effWhere):esc(eb.label))+'</div>'+
            '<div class="effgrid">'+
              '<div class="effi"><div class="k">Wake-up call</div><div class="v">'+
                (d.wakeMs!=null? dpBoth(d.wakeMs,d.from)+' <span style="color:var(--faint);font-weight:600">(3 h before departure)</span>' : '—')+'</div></div>'+
@@ -6854,7 +6959,7 @@
         dpWhy[d.n]={
           n:d.n, day:dpDay(d.report), route:d.from+' → '+d.to,
           wakeLocal:(d.wakeMs!=null? dpBoth(d.wakeMs,d.from):null),
-          awakeAtRelease:d.awakeAtRelease, worstLegName:d.effWorstLeg,
+          awakeAtRelease:d.awakeAtRelease, worstLegName:d.effWorstLeg, worstWhere:d.effWhereShort,
           woclH:wocl, tzMis:mis, bodyOffset:d.bodyOffset,
           restMin:(rp?rp.min:null), restStation:(rp?rp.station:null),
           restSleepH:d.restSleepH, restNightH:d.restInBodyNight,
@@ -6875,14 +6980,18 @@
         var r=rests[i], req=dpReqRest(d, duties[i+1], duties);
         var shortRest=r.min<req.min;
         var badRest=r.min<0;      // overlapping duty periods: report before the previous release
-        var freeD=duties[i+1]? (duties[i+1].freeDaysBefore||0) : 0;
-        var atBase=(r.station===dpHome());
-        var bigOff=freeD>=3 && atBase;                       // a real break, not just a long layover
+        var nx=duties[i+1]||{};
+        var freeD=nx.freeDaysBefore||0, offD=nx.offDaysBefore||0;
+        var bigOff=offD>=1;                                  // the roster says these are days off
         h+='<div class="restsep'+(shortRest?' short':(freeD>=1?' off':''))+'"><div class="ri">'+(shortRest?'⚠️':(bigOff?'🏖️':'🛏️'))+'</div><div class="rt">'+
            '<div class="rtop">'+(badRest? 'Overlapping duty periods at '
-              : (bigOff? freeD+' days off at ' : 'Rest '+dpHM(r.min)+' at '))+dpAirport(r.station)+
+              : (bigOff? offD+' day'+(offD>1?'s':'')+' off at ' : 'Rest '+dpHM(r.min)+' at '))+dpAirport(r.station)+
              (bigOff? ' <span style="font-weight:600;color:var(--faint);font-size:12px">· '+dpHM(r.min)+' total</span>':'')+
-             (freeD>=1? '<div class="freeday">'+freeD+' full calendar day'+(freeD>1?'s':'')+' free of duty — consecutive-duty-day count resets to 1</div>':'')+
+             (offD>=1? '<div class="freeday">'+offD+' day'+(offD>1?'s':'')+' off in the roster — this ends the pattern, and the day count restarts at 1</div>'
+              : (nx.offDataGap? '<div class="freeday" style="color:#ffd166">'+freeD+' calendar day'+(freeD>1?'s':'')+
+                  ' free of duty, but no X or GDO row was imported for '+(freeD>1?'them':'it')+
+                  ' — so this is treated as a long layover inside the same pattern. Import that month to confirm.</div>'
+               : (freeD>=1? '<div class="freeday" style="color:var(--faint)">'+freeD+' calendar day'+(freeD>1?'s':'')+' free of duty, but still inside the same pattern</div>':'')))+
            '</div>'+
            '<div class="rsub">'+dpBoth(r.from,r.station)+' → '+dpBoth(r.to,r.station)+'<br>'+
            'Required ≥ <b>'+dpHM(req.min)+'</b> <span class="reqwho">'+esc(req.who)+'</span> — '+esc(req.cite)+
@@ -6943,7 +7052,9 @@
     });
     Array.prototype.forEach.call(out.querySelectorAll('[data-tip]'),function(row){
       row.onclick=function(){ var f=DUTY.FACTORS[row.getAttribute('data-tip')]; if(!f) return;
-        $('#tipT').textContent=f.label; $('#tipD').innerHTML=f.def; $('#tipModal').classList.add('on'); };
+        $('#tipT').textContent=f.label;
+        $('#tipD').innerHTML=(f.good? '<div class="tipgood">'+f.good+'</div>' : '')+f.def;
+        $('#tipModal').classList.add('on'); };
     });
   }
   /* ---- Contract reference, rendered from cba.js so nothing here is retyped by hand ---- */
@@ -7163,8 +7274,9 @@
       var b=FATIGUE.band(worst.effWorst);
       h+='<div class="ovhero"><div><div class="ovheroN" style="color:'+b.color+'">'+worst.effWorst+'<span>%</span></div>'+
          '<div class="ovheroL" style="color:'+b.color+'">'+esc(b.label)+'</div></div>'+
-         '<div class="ovheroT">Lowest predicted alertness across this roster — <b>Duty Period '+worst.n+'</b>, '+
-         esc(dpDay(worst.report))+', '+esc(worst.from)+'→'+esc(worst.to)+'.</div></div>';
+         '<div class="ovheroT">Lowest predicted alertness anywhere in this roster — <b>Duty Period '+worst.n+'</b>, '+
+         esc(dpDay(worst.report))+', '+esc(worst.from)+'→'+esc(worst.to)+
+         (worst.effWhereShort? ', at the '+esc(worst.effWhereShort) : '')+'.</div></div>';
     }
     if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness, duty period by duty period</div>'+a+
       '<div class="ovcap">One bar per duty period, in order. Green above 90%, amber to 77%, orange to 65%, red below. '+
