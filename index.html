@@ -561,6 +561,93 @@
   .ftrec .t{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#7fe0a6}
   .ftrec p{font-size:13.5px;color:var(--dim);line-height:1.55;margin:8px 0 0}
   .ftrec p b{color:var(--ink)}
+  .impcard{margin-top:14px;padding:15px 14px;border-radius:16px;
+    background:linear-gradient(160deg,rgba(20,44,78,.85),rgba(10,24,46,.85));border:1px solid #5b93e8}
+  .impbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;
+    border-radius:13px;cursor:pointer;font-size:16px;font-weight:800;letter-spacing:.3px;color:#fff;
+    background:linear-gradient(180deg,#3f7bd6,#255fae);border:1px solid #5b93e8;
+    box-shadow:0 8px 24px rgba(30,90,180,.35)}
+  .impstat{font-size:13px;margin-top:10px;line-height:1.5;min-height:0}
+  .impstat:empty{display:none}
+  .imphow{margin-top:12px;border-top:1px solid var(--edge);padding-top:10px}
+  .imphow summary{cursor:pointer;color:var(--accent);font-size:13.5px;font-weight:700}
+  .imphow ol{margin:10px 0 0;padding-left:20px}
+  .imphow li{font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:6px}
+  .imphow li b{color:var(--ink)}
+  .imphow p{font-size:13px;color:var(--dim);line-height:1.55;margin:10px 0 0}
+  .imphow p b{color:var(--ink)}
+  .impok{color:#7fe0a6} .impbad{color:var(--bad)} .impwarn{color:var(--warn)}
+  /* duty timeline */
+  .dpcard{margin-top:12px;border:1px solid var(--edge);border-radius:15px;overflow:hidden;
+    background:linear-gradient(160deg,rgba(20,44,78,.7),rgba(10,24,46,.7))}
+  .dphead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px;
+    background:rgba(24,44,76,.75);border-bottom:1px solid var(--edge)}
+  .dpn{font-size:15px;font-weight:800;color:var(--ink)}
+  .dproute{font-size:12.5px;color:var(--dim);margin-top:2px;line-height:1.4}
+  .dpscore{text-align:right;flex:0 0 auto}
+  .dpscoreval{font-family:var(--mono);font-size:24px;font-weight:800;line-height:1}
+  .dpscorelab{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+  .dpbody{padding:11px 13px}
+  .leg{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid rgba(120,160,220,.1)}
+  .leg:last-child{border-bottom:none}
+  .leg input[type=checkbox]{width:19px;height:19px;flex:0 0 auto;margin-top:2px;accent-color:#ffd166}
+  .leginfo{flex:1;min-width:0}
+  .legtop{font-size:14px;font-weight:800;color:var(--ink)}
+  .legtop .dhpill{font-size:9.5px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:6px;
+    background:rgba(150,90,220,.28);color:#d5b6ff;border:1px solid rgba(180,130,240,.45);vertical-align:middle}
+  .legcity{font-size:11.5px;color:var(--faint);margin-top:1px}
+  .legtimes{font-family:var(--mono);font-size:11.5px;color:#bcd6ff;margin-top:3px;line-height:1.5}
+  .leggw{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.3px}
+  .dpstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:11px}
+  .dpstat{background:rgba(6,14,28,.55);border:1px solid rgba(120,160,220,.15);border-radius:9px;padding:7px 9px}
+  .dpstat .k{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
+  .dpstat .v{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--ink);margin-top:2px}
+  .dpcite{font-size:11px;color:var(--faint);line-height:1.45;margin-top:9px;padding:8px 10px;
+    background:rgba(6,14,28,.5);border-left:3px solid #5b93e8;border-radius:0 8px 8px 0}
+  .dpcite b{color:var(--dim)}
+  .rf{margin-top:11px}
+  .rfrow{display:flex;align-items:center;gap:9px;padding:5px 0;cursor:pointer}
+  .rflab{flex:0 0 118px;font-size:12px;font-weight:700;color:var(--dim);display:flex;align-items:center;gap:4px}
+  .rflab .qm{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
+    border-radius:50%;border:1px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;flex:0 0 auto}
+  .rfbarwrap{flex:1;height:8px;border-radius:4px;background:rgba(6,14,28,.75);overflow:hidden}
+  .rfbar{height:100%;border-radius:4px}
+  .rfval{flex:0 0 66px;text-align:right;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+  .effcard{margin-top:12px;padding:10px 12px;border-radius:12px;cursor:pointer;
+    border:1px solid rgba(120,160,220,.28);background:linear-gradient(180deg,rgba(10,24,46,.75),rgba(6,14,28,.6))}
+  .effhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .efflab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);
+    display:flex;align-items:center;gap:5px}
+  .efflab .qm{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
+    border-radius:50%;border:1px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;flex:0 0 auto}
+  .effval{font-family:var(--mono);font-size:26px;font-weight:800;line-height:1}
+  .effval .effpc{font-size:14px;font-weight:700;opacity:.75}
+  .effband{font-size:12px;font-weight:700;margin-top:3px}
+  .effgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:9px}
+  .effi{background:rgba(6,14,28,.55);border:1px solid rgba(120,160,220,.13);border-radius:9px;padding:6px 9px}
+  .effi .k{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
+  .effi .v{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--ink);margin-top:2px}
+  .efflegs{margin-top:9px;border-top:1px solid rgba(120,160,220,.15);padding-top:7px}
+  .effleg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 0;font-size:11.5px}
+  .effleg .ef{font-family:var(--mono);font-weight:700;color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .effleg .eq{font-family:var(--mono);font-weight:800;flex:0 0 auto}
+  .restsep{display:flex;align-items:center;gap:10px;margin:12px 2px;padding:10px 12px;border-radius:12px;
+    border:1px dashed rgba(120,160,220,.4);background:rgba(10,22,42,.5)}
+  .restsep .ri{font-size:19px;flex:0 0 auto}
+  .restsep .rt{flex:1;min-width:0}
+  .restsep .rtop{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .restsep .rsub{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.45}
+  .restsep.short{border-color:rgba(255,107,107,.6);background:rgba(50,16,16,.5)}
+  .tipModal{position:fixed;inset:0;z-index:72;background:rgba(4,10,22,.93);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:22px}
+  .tipModal.on{display:flex}
+  .tipBox{width:100%;max-width:390px;max-height:82vh;overflow:auto;background:var(--glass);
+    border:1px solid #5b93e8;border-radius:16px;padding:19px 17px;box-shadow:0 18px 50px rgba(2,8,20,.6)}
+  .tipT{font-size:17px;font-weight:800;color:var(--ink)}
+  .tipD{font-size:14px;color:var(--dim);line-height:1.6;margin-top:11px}
+  .tipD b{color:var(--ink)}
+  .tipC{display:block;width:100%;margin-top:16px;padding:11px;border-radius:11px;background:rgba(24,44,76,.8);
+    border:1px solid var(--edge);color:var(--ink);font-size:14px;font-weight:700;cursor:pointer}
   /* homepage announcement window */
   .annModal{position:fixed;inset:0;z-index:62;background:rgba(4,10,22,.92);backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:20px}
@@ -895,7 +982,7 @@
         <button class="segbtn" data-dcrew="2">2</button>
         <button class="segbtn" data-dcrew="3">3</button>
         <button class="segbtn on" data-dcrew="4">4</button></span></div>
-      <div class="cr-row"><div class="crk">Hostile / ULR (4-crew → 22:00)</div><button class="segbtn" id="duHost">Off</button></div>
+      <div class="cr-row"><div class="crk">Article 33 — Hostile / Infectious Disease / DOT Exemption 7573</div><button class="segbtn" id="duHost">Off</button></div>
       <div class="cr-grid" style="margin-top:12px">
         <div><div class="crk">Operational limit (HH:MM)</div><input id="duLimit" class="crin" placeholder="20:00" value="20:00"></div>
         <div><div class="crk">OFP flight time (HH:MM)</div><input id="duFlt" class="crin" placeholder="15:45"></div>
@@ -1061,12 +1148,77 @@
         <p>This predicts alertness from what you enter. It <b>cannot know the sleep you actually got</b>. Use it to plan rest and spot risk, never as proof you are fit — that judgement is always yours.</p>
         <p><b>Legal is not the same as safe.</b> Duty legality lives in the LABT/LATT and Schedule Checks tabs. Under Part 121 Subpart R (flag all-cargo) there is <b>no maximum duty period at all</b> — only flight-time caps — so your CBA is the only duty backstop. A schedule can be entirely legal and still unflyable.</p>
       </div>
-      <label class="fld" style="margin-top:14px">Your body clock</label>
+      <div class="impcard">
+        <button id="impBtn" class="impbtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Upload schedule (CSV)
+        </button>
+        <input type="file" id="impFile" accept=".csv,text/csv" hidden>
+        <div id="impStat" class="impstat"></div>
+        <details class="imphow">
+          <summary>Where do I get this file? (step by step)</summary>
+          <ol>
+            <li>On a computer or phone browser, go to <b>aims.atlasair.com/eCrew</b> and log in with your normal eCrew credentials.</li>
+            <li>Open <b>My Schedule</b>.</li>
+            <li>Set the <b>date range</b> you want. Past months work too — import several and the app keeps them all.</li>
+            <li>Choose <b>UTC</b> for the times. Local Station also works, but UTC is unambiguous — see the note below.</li>
+            <li>Click <b>PRINT</b>.</li>
+            <li>On the print/export screen, save the file as <b>CSV</b> (not PDF).</li>
+            <li>Come back here and tap <b>Upload schedule (CSV)</b> above, then pick that file.</li>
+          </ol>
+          <p><b>UTC or Local Station?</b> Both are supported — the export writes which one it used on line 2 of the file, so the app reads it and never has to guess. <b>UTC is recommended:</b> on duties that cross midnight or the date line, the Local export dates the row in a way that can be ambiguous, and UTC removes that entirely.</p>
+          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically.</p>
+          <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
+        </details>
+      </div>
+      <div class="ftgrid" style="margin-top:14px">
+        <div class="full"><div class="ftk">Operating regime — which Part 121 rules govern this flying</div>
+          <select id="dpRegime" class="ftin" style="font-family:inherit">
+            <option value="FLAG">Flag all-cargo (Subpart R)</option>
+            <option value="SUPP_DOM">Supplemental all-cargo, domestic (Subpart S)</option>
+            <option value="SUPP_INTL">Supplemental all-cargo, international (§121.513)</option>
+          </select>
+        </div>
+        <div class="full"><div class="cr-row" style="margin-top:2px"><div class="crk">Article 33 — Hostile / Infectious Disease / DOT Exemption 7573</div><button class="segbtn" id="dpArt33">No</button></div></div>
+        <div class="full"><div class="cr-row" style="margin-top:2px"><div class="crk">On R-2 / R-3 reserve assigned a flight (+4:00)</div><button class="segbtn" id="dpReserve">No</button></div></div>
+        <div class="full"><div class="ftk">Crew complement</div>
+          <span class="seg" style="display:flex;gap:6px">
+            <button class="segbtn" data-dpcrew="2" style="flex:1">2 pilots</button>
+            <button class="segbtn on" data-dpcrew="3" style="flex:1">3 (augmented)</button>
+            <button class="segbtn" data-dpcrew="4" style="flex:1">4 (heavy)</button>
+          </span>
+        </div>
+      </div>
+      <div id="dpOut"></div>
+      <details class="catsec" style="margin-top:16px">
+        <summary>Pre-flight fatigue self-assessment</summary>
+        <p style="color:var(--dim);font-size:13px;line-height:1.55;margin-top:8px">Adapted from the FedEx/ALPA fatigue programme. A model cannot feel how you feel — ask yourself these before every duty:</p>
+        <ol style="margin:10px 0 0;padding-left:20px">
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long have I been <b style="color:var(--ink)">awake</b>?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px"><b style="color:var(--ink)">Quality and recency</b> of my sleep?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long will my <b style="color:var(--ink)">duty</b> continue?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How much <b style="color:var(--ink)">longer will I be awake</b>?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b> — maintenance, weather, delays?</li>
+        </ol>
+        <div class="warnbox" style="margin-top:12px">
+          <div class="wtitle">The 4-hour rule of thumb</div>
+          <p>If you have had <b>fewer than 4 hours of sleep in the previous 24</b>, consider yourself susceptible to fatigue regardless of what any model says.</p>
+        </div>
+        <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:10px"><b style="color:var(--ink)">Reporting is not the same as calling out.</b> In a mature FRMS you can file a fatigue report to document a schedule that produced fatigue <b style="color:var(--ink)">without</b> removing yourself from the trip. Those reports are what drive scheduling changes. Check what your own contract and company programme provide.</p>
+        <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:8px"><b style="color:var(--ink)">Model honesty:</b> fatigue modelling assumes an ideal scenario. It cannot know about a 3-hour maintenance delay, a diversion, or a hotel with a fire alarm at 0300. The same pairing affects different pilots differently, and the same pilot differently on different days. Treat the score as one input, never the verdict.</p>
+      </details>
+      <label class="fld" style="margin-top:18px">Your body clock</label>
       <div class="ftgrid">
         <div><div class="ftk">Home base (ICAO)</div><input id="ftHome" class="ftin" maxlength="4" autocapitalize="characters" placeholder="KJFK"></div>
         <div><div class="ftk">Where you are now</div><input id="ftStn" class="ftin" maxlength="4" autocapitalize="characters" placeholder="ZHEC"></div>
         <div><div class="ftk">Days in this zone</div><input id="ftDays" class="ftin" inputmode="decimal" value="0"></div>
-        <div><div class="ftk">Woke up (Zulu)</div><input id="ftWake" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div class="full"><div class="ftk">Times I type below are…</div>
+          <span class="seg" style="display:flex;gap:6px">
+            <button class="segbtn on" data-fttm="Z" style="flex:1">Zulu (UTC)</button>
+            <button class="segbtn" data-fttm="L" style="flex:1">Local at station</button>
+          </span>
+        </div>
+        <div><div class="ftk">Woke up <span id="ftWakeU">(Zulu)</span></div><input id="ftWake" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
         <div><div class="ftk">Sleep obtained (h)</div><input id="ftSleep" class="ftin" inputmode="decimal" placeholder="7.5"></div>
         <div><div class="ftk">Slept in a…</div>
           <span class="seg" style="display:flex;gap:5px">
@@ -1075,7 +1227,7 @@
             <button class="segbtn" data-ftfac="seat" style="flex:1">Seat</button>
           </span>
         </div>
-        <div class="full"><div class="ftk">Top of descent (Zulu) — when alertness actually matters</div><input id="ftTod" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div class="full"><div class="ftk">Top of descent <span id="ftTodU">(Zulu)</span> — when alertness actually matters</div><input id="ftTod" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
       </div>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
       <div id="ftOut"></div>
@@ -1263,6 +1415,7 @@
   </div>
 </div>
 
+<div class="tipModal" id="tipModal"><div class="tipBox"><div class="tipT" id="tipT"></div><div class="tipD" id="tipD"></div><button class="tipC" id="tipC">Close</button></div></div>
 <div class="imgModal" id="imgModal"><button class="imgClose" id="imgClose">✕ Close</button><img id="imgBig" alt=""></div>
 
 <script>
@@ -2300,7 +2453,120 @@
     return '';
   }
 
-  var API={icaoTz:icaoTz, localHM:localHM, offsetLabel:offsetLabel};
+
+  /* ---- IATA (3-letter) -> IANA, for crew schedule exports which use IATA codes ----
+     Covers the Atlas network. Unknown codes return null and are flagged, never guessed. */
+  var IATA={
+    // US / Canada
+    ANC:'America/Anchorage',FAI:'America/Anchorage',ORD:'America/Chicago',RFD:'America/Chicago',
+    MSP:'America/Chicago',DFW:'America/Chicago',IAH:'America/Chicago',AFW:'America/Chicago',
+    MCI:'America/Chicago',STL:'America/Chicago',MEM:'America/Chicago',BNA:'America/Chicago',
+    HSV:'America/Chicago',MSY:'America/Chicago',AUS:'America/Chicago',SAT:'America/Chicago',
+    JFK:'America/New_York',EWR:'America/New_York',LGA:'America/New_York',BOS:'America/New_York',
+    PHL:'America/New_York',IAD:'America/New_York',DCA:'America/New_York',BWI:'America/New_York',
+    ATL:'America/New_York',MIA:'America/New_York',MCO:'America/New_York',TPA:'America/New_York',
+    FLL:'America/New_York',JAX:'America/New_York',CLT:'America/New_York',CVG:'America/New_York',
+    IND:'America/New_York',DTW:'America/New_York',PIT:'America/New_York',CLE:'America/New_York',
+    SDF:'America/New_York',GSO:'America/New_York',RDU:'America/New_York',PBI:'America/New_York',
+    DEN:'America/Denver',SLC:'America/Denver',ABQ:'America/Denver',BIL:'America/Denver',
+    PHX:'America/Phoenix',TUS:'America/Phoenix',
+    LAX:'America/Los_Angeles',SFO:'America/Los_Angeles',OAK:'America/Los_Angeles',
+    SEA:'America/Los_Angeles',PDX:'America/Los_Angeles',SAN:'America/Los_Angeles',
+    LAS:'America/Los_Angeles',SMF:'America/Los_Angeles',ONT:'America/Los_Angeles',
+    HNL:'Pacific/Honolulu',OGG:'Pacific/Honolulu',KOA:'Pacific/Honolulu',GUM:'Pacific/Guam',
+    YYZ:'America/Toronto',YUL:'America/Toronto',YOW:'America/Toronto',YWG:'America/Winnipeg',
+    YYC:'America/Edmonton',YEG:'America/Edmonton',YVR:'America/Vancouver',
+    SJU:'America/Puerto_Rico',
+    // Latin America
+    MEX:'America/Mexico_City',NLU:'America/Mexico_City',GDL:'America/Mexico_City',
+    MTY:'America/Monterrey',CUN:'America/Cancun',TIJ:'America/Tijuana',HMO:'America/Hermosillo',
+    GUA:'America/Guatemala',SAL:'America/El_Salvador',PTY:'America/Panama',SJO:'America/Costa_Rica',
+    BOG:'America/Bogota',UIO:'America/Guayaquil',LIM:'America/Lima',SCL:'America/Santiago',
+    EZE:'America/Argentina/Buenos_Aires',GRU:'America/Sao_Paulo',VCP:'America/Sao_Paulo',
+    GIG:'America/Sao_Paulo',MAO:'America/Manaus',SDQ:'America/Santo_Domingo',
+    // Europe / Africa / Middle East
+    LHR:'Europe/London',STN:'Europe/London',LGW:'Europe/London',MAN:'Europe/London',
+    PIK:'Europe/London',BFS:'Europe/London',DUB:'Europe/Dublin',SNN:'Europe/Dublin',
+    CDG:'Europe/Paris',AMS:'Europe/Amsterdam',BRU:'Europe/Brussels',LGG:'Europe/Brussels',
+    FRA:'Europe/Berlin',LEJ:'Europe/Berlin',CGN:'Europe/Berlin',MUC:'Europe/Berlin',
+    HHN:'Europe/Berlin',LUX:'Europe/Luxembourg',ZRH:'Europe/Zurich',VIE:'Europe/Vienna',
+    MXP:'Europe/Rome',FCO:'Europe/Rome',MAD:'Europe/Madrid',BCN:'Europe/Madrid',
+    LIS:'Europe/Lisbon',CPH:'Europe/Copenhagen',ARN:'Europe/Stockholm',OSL:'Europe/Oslo',
+    HEL:'Europe/Helsinki',PRG:'Europe/Prague',WAW:'Europe/Warsaw',BUD:'Europe/Budapest',
+    IST:'Europe/Istanbul',SVO:'Europe/Moscow',KEF:'Atlantic/Reykjavik',
+    TLV:'Asia/Jerusalem',CAI:'Africa/Cairo',JNB:'Africa/Johannesburg',NBO:'Africa/Nairobi',
+    LOS:'Africa/Lagos',ACC:'Africa/Accra',ADD:'Africa/Addis_Ababa',
+    DXB:'Asia/Dubai',DWC:'Asia/Dubai',AUH:'Asia/Dubai',SHJ:'Asia/Dubai',DOH:'Asia/Qatar',
+    RUH:'Asia/Riyadh',JED:'Asia/Riyadh',KWI:'Asia/Kuwait',BAH:'Asia/Bahrain',
+    // Asia / Pacific
+    NRT:'Asia/Tokyo',HND:'Asia/Tokyo',KIX:'Asia/Tokyo',NGO:'Asia/Tokyo',
+    ICN:'Asia/Seoul',GMP:'Asia/Seoul',PVG:'Asia/Shanghai',SHA:'Asia/Shanghai',
+    PEK:'Asia/Shanghai',PKX:'Asia/Shanghai',CAN:'Asia/Shanghai',SZX:'Asia/Shanghai',
+    XMN:'Asia/Shanghai',WUX:'Asia/Shanghai',TAO:'Asia/Shanghai',CTU:'Asia/Shanghai',
+    CGO:'Asia/Shanghai',HGH:'Asia/Shanghai',EHU:'Asia/Shanghai',NKG:'Asia/Shanghai',
+    HKG:'Asia/Hong_Kong',TPE:'Asia/Taipei',MFM:'Asia/Macau',
+    SIN:'Asia/Singapore',KUL:'Asia/Kuala_Lumpur',BKK:'Asia/Bangkok',HAN:'Asia/Ho_Chi_Minh',
+    SGN:'Asia/Ho_Chi_Minh',MNL:'Asia/Manila',CGK:'Asia/Jakarta',
+    DEL:'Asia/Kolkata',BOM:'Asia/Kolkata',BLR:'Asia/Kolkata',MAA:'Asia/Kolkata',
+    HYD:'Asia/Kolkata',CCU:'Asia/Kolkata',DAC:'Asia/Dhaka',KHI:'Asia/Karachi',
+    SYD:'Australia/Sydney',MEL:'Australia/Melbourne',BNE:'Australia/Brisbane',
+    PER:'Australia/Perth',AKL:'Pacific/Auckland',NAN:'Pacific/Fiji'
+  };
+
+  /* IATA -> plain city name, so a route reads "LAX (Los Angeles) -> XMN (Xiamen)". */
+  var NAMES={ANC:'Anchorage',FAI:'Fairbanks',ORD:'Chicago',RFD:'Rockford',MSP:'Minneapolis',
+   DFW:'Dallas/Fort Worth',IAH:'Houston',AFW:'Fort Worth Alliance',MCI:'Kansas City',STL:'St. Louis',
+   MEM:'Memphis',BNA:'Nashville',HSV:'Huntsville',MSY:'New Orleans',AUS:'Austin',SAT:'San Antonio',
+   JFK:'New York JFK',EWR:'Newark',LGA:'New York LaGuardia',BOS:'Boston',PHL:'Philadelphia',
+   IAD:'Washington Dulles',DCA:'Washington National',BWI:'Baltimore',ATL:'Atlanta',MIA:'Miami',
+   MCO:'Orlando',TPA:'Tampa',FLL:'Fort Lauderdale',JAX:'Jacksonville',CLT:'Charlotte',
+   CVG:'Cincinnati',IND:'Indianapolis',DTW:'Detroit',PIT:'Pittsburgh',CLE:'Cleveland',
+   SDF:'Louisville',GSO:'Greensboro',RDU:'Raleigh-Durham',PBI:'West Palm Beach',
+   DEN:'Denver',SLC:'Salt Lake City',ABQ:'Albuquerque',BIL:'Billings',PHX:'Phoenix',TUS:'Tucson',
+   LAX:'Los Angeles',SFO:'San Francisco',OAK:'Oakland',SEA:'Seattle',PDX:'Portland',SAN:'San Diego',
+   LAS:'Las Vegas',SMF:'Sacramento',ONT:'Ontario CA',HNL:'Honolulu',OGG:'Maui',KOA:'Kona',GUM:'Guam',
+   YYZ:'Toronto',YUL:'Montreal',YOW:'Ottawa',YWG:'Winnipeg',YYC:'Calgary',YEG:'Edmonton',
+   YVR:'Vancouver',SJU:'San Juan',
+   MEX:'Mexico City',NLU:'Mexico City Felipe Angeles',GDL:'Guadalajara',MTY:'Monterrey',
+   CUN:'Cancun',TIJ:'Tijuana',HMO:'Hermosillo',GUA:'Guatemala City',SAL:'San Salvador',
+   PTY:'Panama City',SJO:'San Jose CR',BOG:'Bogota',UIO:'Quito',LIM:'Lima',SCL:'Santiago',
+   EZE:'Buenos Aires',GRU:'Sao Paulo',VCP:'Campinas',GIG:'Rio de Janeiro',MAO:'Manaus',
+   SDQ:'Santo Domingo',
+   LHR:'London Heathrow',STN:'London Stansted',LGW:'London Gatwick',MAN:'Manchester',
+   PIK:'Prestwick',BFS:'Belfast',DUB:'Dublin',SNN:'Shannon',CDG:'Paris',AMS:'Amsterdam',
+   BRU:'Brussels',LGG:'Liege',FRA:'Frankfurt',LEJ:'Leipzig',CGN:'Cologne',MUC:'Munich',
+   HHN:'Frankfurt Hahn',LUX:'Luxembourg',ZRH:'Zurich',VIE:'Vienna',MXP:'Milan',FCO:'Rome',
+   MAD:'Madrid',BCN:'Barcelona',LIS:'Lisbon',CPH:'Copenhagen',ARN:'Stockholm',OSL:'Oslo',
+   HEL:'Helsinki',PRG:'Prague',WAW:'Warsaw',BUD:'Budapest',IST:'Istanbul',SVO:'Moscow',
+   KEF:'Reykjavik',TLV:'Tel Aviv',CAI:'Cairo',JNB:'Johannesburg',NBO:'Nairobi',LOS:'Lagos',
+   ACC:'Accra',ADD:'Addis Ababa',DXB:'Dubai',DWC:'Dubai World Central',AUH:'Abu Dhabi',
+   SHJ:'Sharjah',DOH:'Doha',RUH:'Riyadh',JED:'Jeddah',KWI:'Kuwait City',BAH:'Bahrain',
+   NRT:'Tokyo Narita',HND:'Tokyo Haneda',KIX:'Osaka',NGO:'Nagoya',ICN:'Seoul Incheon',
+   GMP:'Seoul Gimpo',PVG:'Shanghai Pudong',SHA:'Shanghai Hongqiao',PEK:'Beijing Capital',
+   PKX:'Beijing Daxing',CAN:'Guangzhou',SZX:'Shenzhen',XMN:'Xiamen',WUX:'Wuxi',TAO:'Qingdao',
+   CTU:'Chengdu',CGO:'Zhengzhou',HGH:'Hangzhou',EHU:'Ezhou',NKG:'Nanjing',HKG:'Hong Kong',
+   TPE:'Taipei',MFM:'Macau',SIN:'Singapore',KUL:'Kuala Lumpur',BKK:'Bangkok',HAN:'Hanoi',
+   SGN:'Ho Chi Minh City',MNL:'Manila',CGK:'Jakarta',DEL:'Delhi',BOM:'Mumbai',BLR:'Bengaluru',
+   MAA:'Chennai',HYD:'Hyderabad',CCU:'Kolkata',DAC:'Dhaka',KHI:'Karachi',SYD:'Sydney',
+   MEL:'Melbourne',BNE:'Brisbane',PER:'Perth',AKL:'Auckland',NAN:'Nadi'};
+  function iataName(code){ var c=(code||'').toUpperCase().replace(/[^A-Z]/g,''); return NAMES[c]||null; }
+  function iataTz(code){
+    var c=(code||'').toUpperCase().replace(/[^A-Z]/g,'');
+    return (c.length===3 && IATA[c]) ? IATA[c] : null;
+  }
+  /* Current UTC offset in HOURS for an IATA code at a given instant (DST-correct). */
+  function iataOffsetAt(code, whenMs){
+    var tz=iataTz(code); if(!tz) return null;
+    try{
+      var d=new Date(whenMs);
+      var s=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
+      var off=((+s.slice(0,2))+(+s.slice(3,5))/60)-(d.getUTCHours()+d.getUTCMinutes()/60);
+      while(off<-12) off+=24; while(off>14) off-=24;
+      return Math.round(off*4)/4;
+    }catch(e){ return null; }
+  }
+
+  var API={icaoTz:icaoTz, localHM:localHM, offsetLabel:offsetLabel, iataTz:iataTz, iataOffsetAt:iataOffsetAt, iataName:iataName};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.AIRTZ=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -2579,6 +2845,463 @@
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
+/* CargoDecode — AIMS eCrew "Personal Crew Schedule Report" CSV parser (deterministic).
+   Handles BOTH export modes; the file declares its own on line 2, so nothing is guessed:
+       "08/01/2026 - 08/31/2026 (All times in Local Station)"
+       "08/01/2026 - 08/31/2026 (All times in UTC)"
+   Format notes learned from real exports:
+     * prefix on Details  -> deadhead leg
+     [77F]                -> aircraft type on an operating leg
+     A prefix on a time   -> Actual (vs scheduled)
+     superscript 1 (0xB9) -> that time falls on the NEXT day
+     /HH:MM after a time  -> delay, not part of the clock time
+   IMPORTANT: in LOCAL mode, report and block-OUT are in the DEPARTURE station's local
+   time, while block-IN and debrief are in the ARRIVAL station's. Getting that wrong
+   silently corrupts every duration. */
+(function(root){
+  'use strict';
+
+  function splitCsv(text){                       // RFC4180-ish, handles quoted multi-line cells
+    var rows=[], row=[], cur='', q=false, i=0, c;
+    text=String(text).replace(/\r\n/g,'\n');
+    for(;i<text.length;i++){
+      c=text[i];
+      if(q){
+        if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; }
+        else cur+=c;
+      } else if(c==='"') q=true;
+      else if(c===','){ row.push(cur); cur=''; }
+      else if(c==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else cur+=c;
+    }
+    if(cur.length||row.length){ row.push(cur); rows.push(row); }
+    return rows;
+  }
+
+  var NEXTDAY=/[¹⁰-⁹]|\?¹|\+1/;      // superscript 1 (or +1) = next day
+  /* "A12:05", "18:25", "A14:53/00:13", "01:00?¹" -> {h, actual, plusDay, delay} */
+  function parseTime(sRaw){
+    if(sRaw==null) return null;
+    var s=String(sRaw).trim(); if(!s) return null;
+    var plus = NEXTDAY.test(s) ? 1 : 0;
+    var actual = /^A/.test(s);
+    var delay=null;
+    var dm=s.match(/\/(\d{1,2}):(\d{2})/); if(dm){ delay=(+dm[1])*60+(+dm[2]); s=s.replace(dm[0],''); }
+    var m=s.match(/(\d{1,2}):(\d{2})/); if(!m) return null;
+    var h=+m[1], mi=+m[2]; if(h>23||mi>59) return null;
+    return { h:h+mi/60, hh:h, mm:mi, actual:actual, plusDay:plus, delay:delay };
+  }
+  function parseDate(s){                                  // "08/04/2026 Tue" -> {y,m,d}
+    var m=String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); if(!m) return null;
+    return { y:+m[3], m:+m[1], d:+m[2] };
+  }
+  function ymd(o){ return o.y*10000+o.m*100+o.d; }
+  function addDays(o,n){
+    var dt=new Date(Date.UTC(o.y,o.m-1,o.d)); dt.setUTCDate(dt.getUTCDate()+n);
+    return { y:dt.getUTCFullYear(), m:dt.getUTCMonth()+1, d:dt.getUTCDate() };
+  }
+  function utcMs(o,hours){ return Date.UTC(o.y,o.m-1,o.d) + Math.round(hours*3600000); }
+
+  function parse(text){
+    var rows=splitCsv(text);
+    var mode=null, period=null, who=null;
+    for(var i=0;i<Math.min(rows.length,6);i++){
+      var line=rows[i].join(',');
+      if(/All times in UTC/i.test(line)) mode='UTC';
+      else if(/All times in Local Station/i.test(line)) mode='LOCAL';
+      var pm=line.match(/(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})/);
+      if(pm && !period) period={from:pm[1], to:pm[2]};
+      var wm=line.match(/^"?(\d{5,7})\s+([^,]+?)\s+([A-Z]{3})-([A-Z]{2})-(\w+)/);
+      if(wm && !who) who={id:wm[1], name:wm[2].trim(), base:wm[3], seat:wm[4], fleet:wm[5]};
+    }
+    if(!mode) throw new Error('Could not find "All times in UTC" or "All times in Local Station" in the header — is this an AIMS Personal Crew Schedule Report?');
+
+    var out=[];
+    for(var r=0;r<rows.length;r++){
+      var c=rows[r]; if(!c||c.length<5) continue;
+      var d=parseDate(c[0]); if(!d) continue;
+      // A duty day may hold SEVERAL legs, newline-separated inside the quoted cells.
+      // Report belongs to the first leg, debrief to the last.
+      var duties=(c[1]||'').split('\n'), details=(c[2]||'').split('\n'), blocks=(c[4]||'').split('\n');
+      var legs=Math.max(duties.length, details.length, blocks.length);
+      for(var L=0;L<legs;L++){
+        var duty=(duties[L]!=null?duties[L]:'').trim();
+        var detail=(details[L]!=null?details[L]:'').trim();
+        var blk=(blocks[L]!=null?blocks[L]:'').trim();
+        if(!duty && !detail) continue;
+        var rec={ date:d, ymd:ymd(d), duty:duty, detail:detail, mode:mode, leg:L, legs:legs,
+                  indicators:(c[7]||'').trim(), crewRaw:(c[8]||'') };
+        rec.deadhead = /^\*/.test(detail) || (legs===1 && /\bDH\b/.test(rec.crewRaw));
+        var ac=duty.match(/\[([A-Z0-9]+)\]/); rec.aircraft = ac? ac[1] : null;
+        rec.flight = duty.replace(/\s*\[[^\]]*\]\s*/,'').trim();
+        var st=detail.replace(/^\*/,'').match(/([A-Z]{3})\s*-\s*([A-Z]{3})/);
+        if(st){ rec.from=st[1]; rec.to=st[2]; }
+        if(/^X$/i.test(duty) || /OFF Day/i.test(detail)) rec.type='OFF';
+        else if(/^GDO$/i.test(duty)) rec.type='GDO';
+        else if(!st) rec.type='OTHER';
+        else rec.type = rec.deadhead? 'DEADHEAD' : 'FLIGHT';
+        if(st && blk){ var bm=blk.split('-'); rec.blockOut=parseTime(bm[0]); rec.blockIn=parseTime(bm[1]); }
+        rec.report  = (L===0)?       parseTime(c[3]) : null;
+        rec.debrief = (L===legs-1)?  parseTime(c[6]) : null;
+        out.push(rec);
+      }
+    }
+    return { mode:mode, period:period, crew:who, rows:out };
+  }
+
+  /* Resolve each row to absolute UTC milliseconds.
+     offsetFor(iataOrIcao, utcMsApprox) must return the station's UTC offset in HOURS,
+     or null if unknown -- in which case the row is flagged, never guessed. */
+  function toUtc(parsed, offsetFor){
+    var isLocal = parsed.mode==='LOCAL';
+    parsed.rows.forEach(function(rec){
+      rec.utc={}; rec.tzError=null;
+      if(!rec.from||!rec.to) return;
+      var offDep=0, offArr=0;
+      if(isLocal){
+        offDep=offsetFor(rec.from, utcMs(rec.date,12));
+        offArr=offsetFor(rec.to,   utcMs(rec.date,12));
+        if(offDep==null||offArr==null){ rec.tzError=(offDep==null?rec.from:rec.to); return; }
+      }
+      function abs(t, off, base){
+        if(!t) return null;
+        var day = t.plusDay? addDays(base,1) : base;
+        return utcMs(day, t.h-off);                    // local -> UTC (off=0 when file is UTC)
+      }
+      rec.utc.report   = abs(rec.report,   offDep, rec.date);
+      rec.utc.blockOut = abs(rec.blockOut, offDep, rec.date);
+      rec.utc.blockIn  = abs(rec.blockIn,  offArr, rec.date);
+      rec.utc.debrief  = abs(rec.debrief,  offArr, rec.date);
+      if(rec.utc.blockOut!=null && rec.utc.blockIn!=null && rec.utc.blockIn<rec.utc.blockOut)
+        rec.utc.blockIn += 86400000;                   // safety net if the +1 marker was missing
+      if(rec.utc.blockOut!=null && rec.utc.blockIn!=null)
+        rec.blockMin=Math.round((rec.utc.blockIn-rec.utc.blockOut)/60000);
+      if(rec.utc.report!=null && rec.utc.debrief!=null){
+        var dmin=Math.round((rec.utc.debrief-rec.utc.report)/60000);
+        rec.dutyMin = dmin<0? dmin+1440 : dmin;
+      }
+    });
+    /* Enforce chronological order within each duty day. AIMS' +1 markers are reliable on
+       single-leg rows but ambiguous on multi-leg / date-line duties, so rather than trust
+       them blindly we roll each event forward to the first instant >= the previous one.
+       Self-correcting, and it cannot invent a backwards duty period. */
+    var byDay={};
+    parsed.rows.forEach(function(r){ if(r.from){ (byDay[r.ymd]=byDay[r.ymd]||[]).push(r); } });
+    Object.keys(byDay).forEach(function(k){
+      var seq=byDay[k].sort(function(a,b){ return a.leg-b.leg; }), prev=null;
+      seq.forEach(function(r){
+        ['report','blockOut','blockIn','debrief'].forEach(function(f){
+          if(r.utc[f]==null) return;
+          if(prev!=null){ while(r.utc[f] < prev) r.utc[f]+=86400000; }
+          prev=r.utc[f];
+        });
+        if(r.utc.blockOut!=null && r.utc.blockIn!=null) r.blockMin=Math.round((r.utc.blockIn-r.utc.blockOut)/60000);
+      });
+      var first=seq[0], last=seq[seq.length-1];
+      var rep=first.utc.report, deb=last.utc.debrief;
+      if(rep!=null&&deb!=null){ var dm=Math.round((deb-rep)/60000); seq.forEach(function(r){ r.dutyMin=dm; }); }
+    });
+    return parsed;
+  }
+
+  var API={parse:parse,toUtc:toUtc,splitCsv:splitCsv,parseTime:parseTime,parseDate:parseDate,addDays:addDays,utcMs:utcMs};
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.AIMSCSV=API;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
+/* CargoDecode — duty periods, rest periods, regulatory limits and fatigue risk factors.
+   Builds on FATIGUE (circadian + reservoir) and the imported AIMS roster.
+
+   CITATION POLICY: every limit shown carries the authority it comes from. Where the
+   governing rule is the CBA and the contract text has not been loaded, the app says
+   "CBA — not loaded" rather than inventing a section number. An alert citing a rule
+   that does not exist is worse than no alert. */
+(function(root){
+  'use strict';
+
+  /* ---- Regulatory limits, 14 CFR Part 121 all-cargo. Verified against eCFR. ----
+     Part 117 governs PASSENGER operations (§117.1(a)); all-cargo defaults to
+     Subparts Q/R/S, with §121.480(b)/§121.500(b) allowing a carrier to OPT IN to 117. */
+  var REGIMES={
+    FLAG:{ name:'Flag all-cargo — Subpart R',
+      maxDuty:null, maxDutyCite:'No maximum duty period exists anywhere in Subpart R — every ceiling is a FLIGHT TIME figure. The CBA is the only duty backstop.',
+      flight:{2:{h:8,cite:'14 CFR 121.481(a)'},3:{h:12,cite:'14 CFR 121.483(a)'},4:{h:null,cite:'14 CFR 121.485 — no 24-hour flight-time cap stated; bunk required when scheduled >12 h'}},
+      restCite:'14 CFR 121.481(b) — rest ≥ 2× hours flown since the preceding rest, floor 8 h; §121.481(c) — 18 h rest after >8 h flown in 24' },
+    SUPP_DOM:{ name:'Supplemental all-cargo, domestic — Subpart S',
+      maxDuty:{2:16,3:18,4:20}, maxDutyCite:{2:'14 CFR 121.505(b)',3:'14 CFR 121.507(a)(3)',4:'14 CFR 121.509(a)(3)'},
+      flight:{2:{h:8,cite:'14 CFR 121.503(a)'},3:{h:12,cite:'14 CFR 121.507(a)(2)'},4:{h:16,cite:'14 CFR 121.509(a)(2)'}},
+      deckDuty:{3:{h:8,cite:'14 CFR 121.507(a)(1)'},4:{h:8,cite:'14 CFR 121.509(a)(1)'}},
+      restCite:'14 CFR 121.505(a) — rest ≥ 2× hours flown, floor 8 h; §121.503(b) — 16 h after >8 h flown in 24' },
+    SUPP_INTL:{ name:'Supplemental all-cargo, international — §121.513 election',
+      maxDuty:{2:null,3:30,4:30}, maxDutyCite:{3:'14 CFR 121.523(c) — continuous duty ≤ 30 h',4:'14 CFR 121.523(c) — continuous duty ≤ 30 h'},
+      flight:{2:{h:null,cite:'—'},3:{h:12,cite:'14 CFR 121.521(a)'},4:{h:12,cite:'14 CFR 121.521(a)'}},
+      restCite:'14 CFR 121.523(c) — 10 h ground rest breaks continuous duty; 16 h rest if continuous duty exceeded 24 h' }
+  };
+  function limitsFor(regimeKey, crew){
+    var R=REGIMES[regimeKey]||REGIMES.FLAG, c=Math.max(2,Math.min(4,crew||2));
+    var md = R.maxDuty? R.maxDuty[c] : null;
+    var mdc = R.maxDuty? (typeof R.maxDutyCite==='string'? R.maxDutyCite : R.maxDutyCite[c]) : R.maxDutyCite;
+    var fl = R.flight[c]||{h:null,cite:'—'};
+    return { regime:R.name, crew:c, maxDutyH:md, maxDutyCite:mdc||'—',
+             maxFlightH:fl.h, maxFlightCite:fl.cite,
+             deckDuty:(R.deckDuty&&R.deckDuty[c])||null, restCite:R.restCite };
+  }
+
+  /* ---- Group imported legs into duty periods ----
+     AIMS marks the first leg of a duty day with a report time and the last with a debrief,
+     so we use the airline's own framing rather than guessing from gaps. */
+  function buildDuties(legs){
+    var out=[], cur=null;
+    legs.slice().sort(function(a,b){return (a.out||0)-(b.out||0);}).forEach(function(l){
+      if(!cur || l.report!=null){ if(cur) out.push(cur);
+        cur={ legs:[], report:l.report!=null? l.report : l.out, release:null }; }
+      cur.legs.push(l);
+      if(l.deb!=null) cur.release=l.deb;
+      if(cur.release==null) cur.release=l.in;
+    });
+    if(cur) out.push(cur);
+    out.forEach(function(d,i){
+      d.n=i+1;
+      d.from=d.legs[0].from; d.to=d.legs[d.legs.length-1].to;
+      d.blockMin=d.legs.reduce(function(t,l){return t+(l.blk||0);},0);
+      d.dutyMin=(d.release!=null&&d.report!=null)? Math.round((d.release-d.report)/60000) : null;
+      d.allGateway=d.legs.every(function(l){return l.gw;});
+      var eff=d.legs.filter(function(l){return !l.gw;});
+      d.effReport = eff.length? (eff[0].report!=null?eff[0].report:eff[0].out) : null;
+      d.effRelease= eff.length? (eff[eff.length-1].deb!=null?eff[eff.length-1].deb:eff[eff.length-1].in) : null;
+      d.effDutyMin=(d.effReport!=null&&d.effRelease!=null)? Math.round((d.effRelease-d.effReport)/60000) : null;
+      d.effBlockMin=eff.reduce(function(t,l){return t+(l.blk||0);},0);
+    });
+    return out;
+  }
+  /* Rest = release of one duty period to report of the next. */
+  function restPeriods(duties){
+    var r=[];
+    for(var i=0;i<duties.length-1;i++){
+      var a=duties[i], b=duties[i+1];
+      if(a.release==null||b.report==null){ r.push(null); continue; }
+      r.push({ from:a.release, to:b.report, min:Math.round((b.report-a.release)/60000),
+               station:a.to });
+    }
+    return r;
+  }
+  /* Required rest under the selected regime: 2x hours flown since preceding rest,
+     floor 8 h; 18 h (flag) / 16 h (supplemental) if more than 8 h were flown in 24. */
+  function requiredRestMin(regimeKey, blockMinPrev){
+    var R=REGIMES[regimeKey]||REGIMES.FLAG;
+    var twice=2*blockMinPrev, floor=8*60;
+    var req=Math.max(twice, floor);
+    var long = blockMinPrev>8*60;
+    if(long) req=Math.max(req, (regimeKey==='FLAG'?18:16)*60);
+    return { min:req, cite:R.restCite, longHaulTrigger:long };
+  }
+
+  /* ---- Risk factors. Each carries a plain-language definition for the tooltip. ---- */
+  var FACTORS={
+    wocl:{ label:'WOCL Intrusion',
+      def:'Window of Circadian Low — the hours your body clock is at its physiological trough, roughly 0200–0559 <b>body time</b> (not station local time). This measures how many hours of the duty period overlap that window, tested as a true interval overlap rather than by sampling the start and end. Crossing the WOCL is the single strongest predictor of degraded alertness, and it moves with your body clock, so on an unacclimated layover it can land in the middle of the local afternoon.' },
+    duty:{ label:'Duty Length',
+      def:'Report to release for this duty period. Scored against the governing maximum for your crew complement and operating regime. Note that under Part 121 Subpart R (flag all-cargo) <b>no maximum duty period exists in the regulation at all</b> — only flight-time caps — so in that case the CBA is the only limit protecting you.' },
+    tzshift:{ label:'Time Zone Shift',
+      def:'How far your body clock is still out of step with local time. Your internal clock re-entrains slowly — about 1 hour per day travelling east and 1.5 hours per day travelling west — so after a long eastbound sector you can be many hours misaligned for days. Higher misalignment means worse sleep quality on the layover and a circadian trough at an awkward local hour.' },
+    rest:{ label:'Prior Rest',
+      def:'The rest period immediately before this duty: release of the previous duty to report for this one. Compared against the regulatory minimum (2× the hours flown since the preceding rest, floor 8 hours, extended to 18 h flag / 16 h supplemental after more than 8 hours flown in 24). Rest that only just meets the minimum leaves no margin for commute, meals and sleep latency.' },
+    sleep:{ label:'Sleep Reservoir',
+      def:'Modelled sleep capacity remaining, 0–100%. It fills with sleep — discounted if that sleep fell outside your body night or was taken in a bunk or seat rather than a bed — and depletes steadily while awake. It is a <b>prediction</b> from your rest opportunities, not a measurement of sleep you actually got.' },
+    consec:{ label:'Consecutive Duty Days',
+      def:'Number of duty periods in a row without a full calendar day free of duty. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by a single short rest, so risk rises even when each individual duty period is legal.' },
+    eff:{ label:'Modelled Alertness',
+      def:'Predicted cognitive effectiveness on a 0–100 scale, from a two-process model in the SAFTE/FAST tradition. It combines the <b>sleep reservoir</b> (how much sleep capacity you have left, filled by the sleep the model thinks you obtained in each rest and drained steadily while awake) with the <b>circadian rhythm</b> (a ±12-point swing peaking in your body afternoon and troughing around 0500 <b>body</b> time). The figure shown is the worst value reached anywhere in the duty period, and the leg it occurs on is named. Bands: 90+ Optimal, 80–89 Good, 70–79 Reduced, 55–69 Impaired, below 55 Severely impaired.<br><br>Sleep is <b>estimated from your rest opportunity</b>, not measured. The model assumes you sleep so as to wake about an hour before report, caps any one sleep at 8.5 h, adds a second or third sleep on a long layover, subtracts transit and sleep latency, and charges the waking hours in between. Sleep taken outside your body night still restores you, but never all the way back to fully rested. It also assumes you actually go to bed. Like every fatigue model it describes an ideal case — your own sleep, health, commute and workload can make the real number worse. It is a planning aid, not a fitness-for-duty determination.' },
+    cum:{ label:'7-Day Block',
+      def:'Total block time flown in the preceding 168 hours (a rolling 7 days), prorated so a duty period only partly inside the window contributes only the part that falls inside. Compared against the applicable cumulative flight-time limit for the regime.' }
+  };
+  function bandColor(score){
+    if(score<25) return {c:'#4ee39a',l:'Low'};
+    if(score<50) return {c:'#ffd166',l:'Moderate'};
+    if(score<75) return {c:'#ff9d4d',l:'High'};
+    return {c:'#ff6b6b',l:'Severe'};
+  }
+  function pct(v,lo,hi){ return Math.max(0,Math.min(100, (v-lo)/(hi-lo)*100)); }
+
+
+  /* ---- Trip-level simulation ----------------------------------------------------
+     Walks the whole roster in order, carrying the sleep reservoir and the body clock
+     forward. This is what makes it a trip model rather than a per-duty snapshot: sleep
+     debt accumulates, and the body clock chases each new station instead of resetting.
+
+     offsetForFn(iata, whenMs) -> UTC offset in hours, or null if the station is unknown.
+     Sleep is ESTIMATED from the rest opportunity, discounted for turnaround overhead and
+     for rest that falls outside the body night. It is not measured. */
+  /* Hours of a sleep window that fall inside the body night (2200-0700 body time). */
+  function bodyNightHours(startUtcH, sleepH, bOff){
+    var t=0, step=0.25;
+    for(var x=0; x<sleepH; x+=step){
+      var b=(startUtcH+x+bOff)%24; if(b<0) b+=24;
+      if(b>=22 || b<7) t+=Math.min(step, sleepH-x);
+    }
+    return Math.round(t*10)/10;
+  }
+  function simulateTrip(duties, rests, homeOffH, offsetForFn, F){
+    if(!F) return duties;
+    var OVERHEAD=1.5;              // hotel transit, meals, winding down, sleep latency
+    var MAXSLEEP=8.5;              // most anyone banks in one layover rest
+    var res=100;                   // sleep reservoir, carried across the whole trip
+    var bodyOff=homeOffH;          // body clock's effective UTC offset
+    duties.forEach(function(d,i){
+      // --- rest BEFORE this duty period ---
+      if(i>0 && rests[i-1]){
+        var r=rests[i-1], restH=r.min/60;
+        var stnOff=offsetForFn(r.station, r.from); if(stnOff==null) stnOff=bodyOff;
+        // Sleep placement. Crews sleep so as to WAKE shortly before report, so the main
+        // sleep is anchored to the end of the rest and any earlier sleeps are stepped back
+        // one wake-cycle at a time. A short layover therefore yields one sleep; a long one
+        // yields two or three, with the intervening wake time still depleting the reservoir.
+        var GAP=1.0;          // wake to report
+        var WAKECYCLE=16;     // hours awake between sleeps on the ground
+        var restStartH=(new Date(r.from)).getUTCHours()+(new Date(r.from)).getUTCMinutes()/60;
+        var earliest=OVERHEAD/2;                 // cannot be asleep before reaching the hotel
+        var plan=[], wakeAt=restH-GAP;
+        while(plan.length<3 && wakeAt>earliest+1){
+          var st=Math.max(earliest, wakeAt-MAXSLEEP);
+          var sH=wakeAt-st;
+          if(sH<1) break;
+          plan.unshift({st:st, h:sH});
+          wakeAt=st-WAKECYCLE;
+        }
+        var sleepH=0, nightH=0, q=1, prevEnd=0;
+        plan.forEach(function(sp,k){
+          res=F.reservoirAt(res, Math.max(0, sp.st-prevEnd));          // awake since last sleep
+          var sStart=F.norm24(restStartH+sp.st);
+          var qk=F.sleepQuality(F.sleepInBodyNight(sStart, sp.h, bodyOff),'bed');
+          // Recovery is proportional to the deficit and saturating, so a long layover cannot
+          // leave you worse off than a short one. Sleep taken out of phase asymptotes lower:
+          // it restores most of the deficit but never returns you to fully rested.
+          var ceil=Math.min(100, 55+45*qk);
+          if(res<ceil) res += (ceil-res)*(1-Math.exp(-(sp.h*qk)/5));
+          nightH+=bodyNightHours(sStart, sp.h, bodyOff);
+          sleepH+=sp.h; prevEnd=sp.st+sp.h;
+          if(k===plan.length-1) q=qk;                                  // quality of the sleep before report
+        });
+        var nOpp=plan.length, night=nightH>0;
+        // body clock drifts toward the layover station across the rest
+        var need=F.shortestShift(bodyOff, stnOff);
+        var rate=(need>=0? F.CFG.eastRatePerDay : F.CFG.westRatePerDay)*(restH/24);
+        var move=Math.min(Math.abs(need), rate)*(need>=0?1:-1);
+        bodyOff+=move;
+        d.restSleepH=Math.round(sleepH*10)/10; d.restQuality=q;
+        d.restSleeps=nOpp; d.restInBodyNight=Math.round(nightH*10)/10;
+        d.resAfterRest=Math.round(res);
+      } else { d.resAfterRest=Math.round(res); }
+      d.bodyOffset=Math.round(bodyOff*10)/10;
+
+      // --- effectiveness through the duty period, sampled at every block-in (~TOD) ---
+      var wakeUtcH=F.norm24(((new Date(d.report)).getUTCHours()+(new Date(d.report)).getUTCMinutes()/60)-1);
+      var worst=100, worstAt=null;
+      d.legs.forEach(function(l){
+        if(l['in']==null) return;
+        var tH=(new Date(l['in'])).getUTCHours()+(new Date(l['in'])).getUTCMinutes()/60;
+        var awake=(l['in']-d.report)/3600000+1;
+        var e=F.effectiveness(res, awake, F.norm24(tH), bodyOff);
+        l.effAtIn=Math.round(e);
+        if(e<worst){ worst=e; worstAt=l; }
+      });
+      d.effWorst=Math.round(worst);
+      d.effWorstLeg=worstAt? (worstAt.flight+' '+worstAt.from+'→'+worstAt.to) : null;
+      d.effBand=F.band(worst);
+
+      // reservoir depletes across the duty period itself
+      var dutyH=(d.dutyMin||0)/60;
+      res=F.reservoirAt(res, dutyH+1);
+      d.resAfterDuty=Math.round(res);
+    });
+    return duties;
+  }
+
+  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,limitsFor:limitsFor,buildDuties:buildDuties,restPeriods:restPeriods,
+           requiredRestMin:requiredRestMin,FACTORS:FACTORS,bandColor:bandColor,pct:pct};
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.DUTY=API;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
+/* CargoDecode — Atlas Air / IBT 2750 CBA duty-limit layer.
+   Source: Collective Bargaining Agreement between Atlas Air, Inc. and the International
+   Brotherhood of Teamsters, effective 10 Sep 2021 (amendable 10 Sep 2026), Article 12.D.1
+   "Duty Time Limitations", read from the contract PDF. Article 33 covers Hostile Area,
+   Infectious Disease Area and DOT Exemption 7573 operations.
+
+   Article 12.D opening text: "Except when an applicable FAR requires a shorter duty period,
+   the domestic and international flight and duty time limitations shall be as follows."
+   -> the CBA and the FAR both apply; whichever is SHORTER controls.
+
+   Report-time basis (12.D.1.a note): Domestic = Local Base Time;
+   International = Acclimated Report Time (as defined by Part 117). */
+(function(root){
+  'use strict';
+
+  var SRC='Atlas/IBT CBA (2021) Art. 12.D.1';
+
+  /* Two-person limits vary by the report-time band. Hours are decimal. */
+  var TWO=[
+    { band:'Day',      from:5,    to:16,   sched:13.0, oper:15.0, opDH:16.0, resFlt:16.0, label:'0500–1559' },
+    { band:'Night',    from:16,   to:1,    sched:11.5, oper:13.5, opDH:16.0, resFlt:15.5, label:'1600–0059' },
+    { band:'Critical', from:1,    to:5,    sched:9.5,  oper:11.5, opDH:16.0, resFlt:13.5, label:'0100–0459' }
+  ];
+  function bandFor(reportHour){
+    var h=((reportHour%24)+24)%24;
+    if(h>=5 && h<16) return TWO[0];
+    if(h>=16 || h<1)  return TWO[1];
+    return TWO[2];
+  }
+
+  /* opts: {operateThenDH, article33, reserveR2R3, reserveFollowedByFlight} */
+  function dutyLimits(crew, reportHour, opts){
+    opts=opts||{}; crew=Math.max(2,Math.min(4,crew||2));
+    var r={source:SRC, crew:crew, cite:'', note:'', band:null};
+    if(crew===2){
+      var b=bandFor(reportHour); r.band=b.band+' ('+b.label+')';
+      r.scheduled = opts.operateThenDH? b.opDH : (opts.reserveFollowedByFlight? b.resFlt : b.sched);
+      r.operational = opts.operateThenDH? b.opDH : (opts.reserveFollowedByFlight? b.resFlt : b.oper);
+      r.cite='CBA Art. 12.D.1.a — two-person crew, '+b.band+' report band '+b.label;
+      if(opts.operateThenDH) r.note='Operate followed by deadhead: 16:00 in every band. A Crew Member shall not be required to deadhead by commercial air following flight duty in the critical period, except when deadheading to Base.';
+    } else if(crew===3){
+      r.scheduled = opts.operateThenDH? 18.0 : 14.0;
+      r.operational= opts.operateThenDH? 18.0 : 17.0;
+      r.cite='CBA Art. 12.D.1.b — three-person (augmented) crew';
+      if(opts.operateThenDH) r.note='Operating flight followed by a deadhead: 18:00 total, of which no more than 14:00 (scheduled) / 17:00 (operational) may relate to operating the flight.';
+      if(opts.article33){ r.scheduled=14.0; r.operational=17.0; r.cite='CBA Art. 12.D.1.b — Article 33 (Hostile / Infectious Disease / DOT Exemption 7573) limits'; }
+    } else {
+      r.scheduled=18.0; r.operational=20.0;
+      r.cite='CBA Art. 12.D.1.c — four-person (heavy) crew';
+      r.note='The limit applies whether operating, or any combination of operating and deadheading within the duty period.';
+      if(opts.article33){ r.scheduled=20.0; r.operational=22.0;
+        r.cite='CBA Art. 12.D.1.c — Article 33 (Hostile / Infectious Disease / DOT Exemption 7573)';
+        r.note='Hostile or Infectious Disease Area: 20:00 scheduled with a maximum of two landings (three if two are scheduled to occur in the area).'; }
+    }
+    if(opts.reserveR2R3){
+      r.scheduled+=4; r.operational+=4;
+      r.cite+=' + 4:00 (Crew Member on R-2 or R-3 assigned a flight assignment)';
+    }
+    return r;
+  }
+
+  /* Which limit actually binds: the CBA or the FAR? Art. 12.D says the shorter applies. */
+  function controlling(cbaHours, farHours){
+    if(cbaHours==null && farHours==null) return {h:null, who:'none', text:'No duty ceiling from either source.'};
+    if(farHours==null) return {h:cbaHours, who:'CBA', text:'The FAR sets no duty ceiling here, so the CBA is the only duty limit protecting you.'};
+    if(cbaHours==null) return {h:farHours, who:'FAR', text:'No CBA duty limit identified for this configuration.'};
+    return (cbaHours<=farHours)
+      ? {h:cbaHours, who:'CBA', text:'The CBA is more restrictive and therefore controls (Art. 12.D: "Except when an applicable FAR requires a shorter duty period…").'}
+      : {h:farHours, who:'FAR', text:'The FAR is more restrictive here and therefore controls.'};
+  }
+
+  var API={SRC:SRC, TWO:TWO, bandFor:bandFor, dutyLimits:dutyLimits, controlling:controlling};
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.CBA=API;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
 /* AeroDecode access gate — employee-number allowlist (offline).
    Authorized pilots are stored as SALTED HASHES (not the raw numbers), so the
    public source never shows the actual roster. Login = employee number.
@@ -2652,7 +3375,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v9.9 · 2026-08-30';
+  var BUILD='v10.5 · 2026-08-30';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -3242,16 +3965,27 @@
   function duZ(m){ var d=Math.floor(m/1440), t=((m%1440)+1440)%1440;
     return String(Math.floor(t/60)).padStart(2,'0')+String(t%60).padStart(2,'0')+'Z'+(d>0?' +'+d+'d':(d<0?' '+d+'d':'')); }
   function duHMlabel(m){ var s=m<0?'-':''; m=Math.abs(m); return s+Math.floor(m/60)+':'+String(m%60).padStart(2,'0'); }
+  function duFmtH(h){ var H=Math.floor(h), M=Math.round((h-H)*60); return H+':'+String(M).padStart(2,'0'); }
+  /* Limits come from the loaded CBA (Art. 12.D.1), not hardcoded numbers.
+     Two-person limits depend on the REPORT-TIME BAND, so they update as you type the report time. */
   function duSetLimit(){
-    if(duCrew===4){ duLimit.value=duHostile?'22:00':'20:00'; duNote.textContent='4-crew: 20:00 std, 22:00 Hostile/ULR (CBA 12.D.1).'; }
-    else if(duCrew===3){ duLimit.value='17:00'; duNote.textContent='3-crew: 17:00 operational limit (CBA 12.D.1).'; }
-    else { duNote.textContent='2-crew limit varies 11:30–15:00 by report time (CBA 12.D.1) — enter your applicable limit.'; }
+    if(typeof CBA==='undefined'){ duCompute(); return; }
+    var repMin=duHM(duReport.value);
+    var repH=(repMin!=null)? Math.floor(repMin/60) : 10;      // assume a day report until one is entered
+    var c=CBA.dutyLimits(duCrew, repH, {article33:duHostile});
+    duLimit.value=duFmtH(c.operational);
+    var band=c.band? ' · report band <b>'+esc(c.band)+'</b>' : '';
+    var basis=(duCrew===2 && repMin==null)? ' <span style="color:var(--warn)">— enter your report time; the two-person limit changes with it.</span>' : '';
+    duNote.innerHTML=duCrew+'-crew: scheduled <b>'+duFmtH(c.scheduled)+'</b>, operational <b>'+duFmtH(c.operational)+'</b>'+band+
+      '<br><span style="color:var(--faint)">'+esc(c.cite)+'</span>'+
+      (c.note? '<br><span style="color:var(--faint)">'+esc(c.note)+'</span>':'')+basis+
+      '<br><span style="color:var(--faint)">Report basis — domestic: Local Base Time; international: Acclimated Report Time (Part 117). Under Part 121 Subpart R the FAR sets no duty ceiling, so this CBA limit is the controlling one.</span>';
     duCompute();
   }
   Array.prototype.forEach.call(document.querySelectorAll('[data-dcrew]'),function(b){
     b.onclick=function(){ document.querySelectorAll('[data-dcrew]').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); duCrew=+b.getAttribute('data-dcrew'); duSetLimit(); };
   });
-  $('#duHost').onclick=function(){ duHostile=!duHostile; this.textContent=duHostile?'On':'Off'; this.classList.toggle('on',duHostile); if(duCrew===4) duSetLimit(); else duCompute(); };
+  $('#duHost').onclick=function(){ duHostile=!duHostile; this.textContent=duHostile?'On':'Off'; this.classList.toggle('on',duHostile); duSetLimit(); };
   function duLoadFromOfp(){
     if(typeof flTrip!=='undefined' && flTrip && flTrip.str){
       duFlt.value=flTrip.str.replace('.',':');
@@ -3263,7 +3997,8 @@
       duNote.textContent='Pulled trip time '+flTrip.str+(flTaxi?' and OFP taxi-out '+flTaxi.str:'')+' from the OFP'+rep+'.';
     }
   }
-  [duReport,duLimit,duFlt,duTaxiOut,duPost,duTaxiIn].forEach(function(el){ el.addEventListener('input',duCompute); });
+  [duLimit,duFlt,duTaxiOut,duPost,duTaxiIn].forEach(function(el){ el.addEventListener('input',duCompute); });
+  duReport.addEventListener('input',function(){ if(duCrew===2) duSetLimit(); else duCompute(); });
   function duCompute(){
     var report=duHM(duReport.value), limit=duHM(duLimit.value), flt=duHM(duFlt.value);
     var taxiOut=duHM(duTaxiOut.value), post=parseInt(duPost.value,10), taxiIn=parseInt(duTaxiIn.value,10);
@@ -3290,7 +4025,7 @@
     duRenderTimeline({report:report,limit:limit,taxiOut:taxiOut,flt:flt,taxiIn:taxiIn,post:post,maxOff:maxOff,maxIn:maxIn,maxTd:maxTd,latt:latt,labt:labt});
     duCountdownRender();
     $('#duCopy').onclick=function(){
-      var L=['DUTY LIMIT — LATT/LABT','Report '+duZ(report)+' + '+duHMlabel(limit)+' limit ('+duCrew+'-crew'+(duHostile?' Hostile/ULR':'')+')',
+      var L=['DUTY LIMIT — LATT/LABT','Report '+duZ(report)+' + '+duHMlabel(limit)+' limit ('+duCrew+'-crew'+(duHostile?' Art.33':'')+')',
         'Max duty-off '+duZ(maxOff)+'  block-in '+duZ(maxIn)+'  touchdown '+duZ(maxTd),
         'LATT (wheels-up by): '+duZ(latt)]; if(labt!=null) L.push('LABT (block-out by): '+duZ(labt));
       if(navigator.clipboard)navigator.clipboard.writeText(L.join('\n')); this.textContent='Copied ✓'; var b=this; setTimeout(function(){b.textContent='Copy';},1300);
@@ -4313,6 +5048,13 @@
     var el=$('#ftNote'); if(el) el.textContent = n.length? ('Loaded from OFP — '+n.join(' · ')+'.') : '';
     ftCompute();
   }
+  var ftTimeMode='Z';
+  /* Render one instant in all three frames that matter to a crewmember:
+     Zulu (canonical), station local (where you are), and BODY time (what you feel). */
+  function ftClocks(utcH,sOff,bOff){
+    var F=FATIGUE;
+    return F.hToHHMM(utcH)+'Z · '+F.hToHHMM(utcH+sOff)+' LCL · '+F.hToHHMM(utcH+bOff)+' body';
+  }
   function ftBar(pct,color){ return '<div class="ftmeter"><i style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+'"></i></div>'; }
   function ftCompute(){
     var out=$('#ftOut'); if(!out||typeof FATIGUE==='undefined') return;
@@ -4331,6 +5073,8 @@
       return;
     }
     var ad=F.adaptation(hOff,sOff,days), bOff=F.bodyOffset(hOff,sOff,days);
+    // Typed times may be Zulu or station-local. Everything downstream is UTC.
+    if(ftTimeMode==='L'){ wake=F.norm24(wake-sOff); if(tod!=null) tod=F.norm24(tod-sOff); }
     var sleepStart=F.norm24(wake-sleep);
     var night=F.sleepInBodyNight(sleepStart,sleep,bOff), q=F.sleepQuality(night,ftFacility);
     var r0=F.reservoirAtWake(sleep,q,0);
@@ -4373,7 +5117,9 @@
        '<div class="ftline"><span class="k">Reservoir now</span><span class="v">'+Math.round(F.reservoirAt(r0,awakeNow))+'%</span></div>'+
        '<div class="ftline"><span class="k">Hours awake</span><span class="v">'+awakeNow.toFixed(1)+'h</span></div>'+
        '<div class="ftline"><span class="k">Your circadian low (body 0200–0600)</span><span class="v">'+F.hToHHMM(w.startUtc)+'Z–'+F.hToHHMM(w.endUtc)+'Z</span></div>'+
-       '<div class="ftline"><span class="k">Same window in '+esc(stn)+' local</span><span class="v">'+F.hToHHMM(w.startUtc+sOff)+'–'+F.hToHHMM(w.endUtc+sOff)+' LCL</span></div>';
+       '<div class="ftline"><span class="k">Same window in '+esc(stn)+' local</span><span class="v">'+F.hToHHMM(w.startUtc+sOff)+'–'+F.hToHHMM(w.endUtc+sOff)+' LCL</span></div>'+
+       '<div class="ftline"><span class="k">Woke</span><span class="v" style="font-size:12.5px">'+ftClocks(wake,sOff,bOff)+'</span></div>'+
+       (tod!=null? '<div class="ftline"><span class="k">Top of descent</span><span class="v" style="font-size:12.5px">'+ftClocks(tod,sOff,bOff)+'</span></div>':'');
     if(tod!=null){
       var ov=F.woclOverlapHours(wake,tod,bOff);
       h+='<div class="ftline"><span class="k">Circadian low crossed before TOD</span><span class="v">'+(ov>0? ov.toFixed(2)+'h' : 'none')+'</span></div>';
@@ -4419,6 +5165,14 @@
     ['ftHome','ftStn','ftDays','ftWake','ftSleep','ftTod'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.addEventListener('input',ftCompute);
     });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fttm]'),function(b){
+      b.onclick=function(){ document.querySelectorAll('[data-fttm]').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on'); ftTimeMode=b.getAttribute('data-fttm');
+        var lab=(ftTimeMode==='Z')?'(Zulu)':'(local at '+(($('#ftStn').value||'station').toUpperCase())+')';
+        var a=document.getElementById('ftWakeU'), c=document.getElementById('ftTodU');
+        if(a)a.textContent=lab; if(c)c.textContent=lab;
+        ftCompute(); };
+    });
     Array.prototype.forEach.call(document.querySelectorAll('[data-ftfac]'),function(b){
       b.onclick=function(){ document.querySelectorAll('[data-ftfac]').forEach(function(x){x.classList.remove('on');});
         b.classList.add('on'); ftFacility=b.getAttribute('data-ftfac'); ftCompute(); };
@@ -4431,6 +5185,288 @@
       if(st.fac){ ftFacility=st.fac; document.querySelectorAll('[data-ftfac]').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-ftfac')===ftFacility); }); }
     }
     ftCompute();
+  })();
+
+
+  /* ---------- schedule import (AIMS eCrew CSV) ---------- */
+  function impSay(html,cls){ var e=$('#impStat'); if(e){ e.innerHTML=html||''; e.className='impstat '+(cls||''); } }
+  function impOffsetFor(code, whenMs){
+    return (typeof AIRTZ!=='undefined' && AIRTZ.iataOffsetAt)? AIRTZ.iataOffsetAt(code, whenMs) : null;
+  }
+  /* Merge into the stored roster. Two entries are the SAME leg if the flight number and
+     route match and their block-out times are within 36h — that tolerance matters because
+     a Local-Station export can date a date-line duty differently from the UTC export of the
+     same trip. UTC-sourced entries win, since they need no timezone inference. */
+  function impSaveRoster(rows){
+    try{
+      var all=JSON.parse(localStorage.getItem('ad_roster')||'[]');
+      rows.forEach(function(n){
+        var hit=-1;
+        for(var i=0;i<all.length;i++){
+          var o=all[i];
+          // A UTC export is unambiguous, so identical legs must line up tightly.
+          // A Local-Station export can date a date-line duty up to ~2 days differently,
+          // so allow a wider window whenever either side came from a Local export.
+          var tol=(o.src==='UTC' && n.src==='UTC')? 6*3600000 : 72*3600000;
+          if(o.flight===n.flight && o.from===n.from && o.to===n.to &&
+             Math.abs((o.out||0)-(n.out||0)) <= tol){ hit=i; break; }
+        }
+        if(hit<0) all.push(n);
+        else if(n.src==='UTC' || all[hit].src!=='UTC') all[hit]=n;   // prefer the UTC rendering
+      });
+      all.sort(function(a,b){ return (a.out||0)-(b.out||0); });
+      localStorage.setItem('ad_roster', JSON.stringify(all));
+      return all.length;
+    }catch(e){ return null; }
+  }
+  function impHandle(text, name){
+    if(typeof AIMSCSV==='undefined'){ impSay('Parser unavailable.','impbad'); return; }
+    var parsed;
+    try{ parsed=AIMSCSV.toUtc(AIMSCSV.parse(text), impOffsetFor); }
+    catch(err){ impSay('Could not read that file — '+esc(err.message),'impbad'); return; }
+    var legs=parsed.rows.filter(function(r){ return r.from && r.utc && r.utc.blockOut!=null; });
+    var tzBad=parsed.rows.filter(function(r){ return r.tzError; })
+                         .map(function(r){ return r.tzError; });
+    if(!legs.length){ impSay('No flight legs found in that CSV. Make sure it is the <b>Personal Crew Schedule Report</b> exported as CSV.','impbad'); return; }
+    var store=legs.map(function(r){
+      return { k:r.utc.blockOut+'|'+r.flight, src:parsed.mode, flight:r.flight, from:r.from, to:r.to,
+               dh:!!r.deadhead, ac:r.aircraft||null, report:r.utc.report, out:r.utc.blockOut,
+               in:r.utc.blockIn, deb:r.utc.debrief, blk:r.blockMin||null, duty:r.dutyMin||null };
+    });
+    var total=impSaveRoster(store);
+    var a=new Date(Math.min.apply(null,legs.map(function(r){return r.utc.blockOut;})));
+    var b=new Date(Math.max.apply(null,legs.map(function(r){return r.utc.blockOut;})));
+    var f=function(d){ return d.toISOString().slice(0,10); };
+    var ops=legs.filter(function(r){return !r.deadhead;});
+    var blk=ops.reduce(function(t,r){return t+(r.blockMin||0);},0);
+    var msg='<b class="impok">✓ Imported '+legs.length+' legs</b> ('+ops.length+' operating, '+
+      (legs.length-ops.length)+' deadhead) from <b>'+esc(f(a))+'</b> to <b>'+esc(f(b))+'</b>.<br>'+
+      'Times in file: <b>'+esc(parsed.mode==='UTC'?'UTC':'Local Station')+'</b> · operating block <b>'+(blk/60).toFixed(1)+'h</b>'+
+      (total!=null? '<br><span style="color:var(--faint)">Roster now holds <b>'+total+'</b> legs across all imports.</span>':'');
+    if(tzBad.length){
+      var uniq=tzBad.filter(function(v,i,s2){return s2.indexOf(v)===i;});
+      msg+='<br><span class="impwarn">⚠ Unknown station'+(uniq.length>1?'s':'')+': <b>'+esc(uniq.join(', '))+
+           '</b> — those legs were skipped rather than guessed. Re-export in <b>UTC</b> and they will import fine.</span>';
+    }
+    impSay(msg,''); try{ dpRender(); }catch(e){}
+  }
+  (function(){
+    var b=$('#impBtn'), f=$('#impFile');
+    if(b&&f) b.onclick=function(){ f.click(); };
+    if(f) f.onchange=function(e){
+      var file=e.target.files&&e.target.files[0]; e.target.value=''; if(!file) return;
+      impSay('Reading '+esc(file.name)+' …','');
+      var rd=new FileReader();
+      rd.onload=function(){ impHandle(String(rd.result), file.name); };
+      rd.onerror=function(){ impSay('Could not open that file.','impbad'); };
+      try{ rd.readAsText(file,'ISO-8859-1'); }catch(_){ rd.readAsText(file); }
+    };
+    try{ var n=JSON.parse(localStorage.getItem('ad_roster')||'[]').length;
+      if(n) impSay('<span style="color:var(--faint)">Roster holds <b>'+n+'</b> legs from previous imports. Upload another month to add to it.</span>',''); }catch(e){}
+  })();
+
+
+  /* ---------- duty-period timeline, limits, rest and risk ---------- */
+  var dpRegime='FLAG', dpCrew=3, dpArt33=false, dpReserve=false;
+  function dpGw(){ try{ return JSON.parse(localStorage.getItem('ad_gateway')||'{}'); }catch(e){ return {}; } }
+  function dpSetGw(k,on){ var g=dpGw(); if(on) g[k]=1; else delete g[k]; try{ localStorage.setItem('ad_gateway',JSON.stringify(g)); }catch(e){} }
+  function dpRoster(){
+    var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
+    var g=dpGw(); r.forEach(function(l){ l.gw=!!g[l.k]; });
+    return r;
+  }
+  function dpAirport(code){
+    var nm=(typeof AIRTZ!=='undefined'&&AIRTZ.iataName)? AIRTZ.iataName(code):null;
+    return esc(code)+(nm? ' <span style="color:var(--faint);font-weight:600">('+esc(nm)+')</span>':'');
+  }
+  function dpOff(code,ms){ return (typeof AIRTZ!=='undefined'&&AIRTZ.iataOffsetAt)? AIRTZ.iataOffsetAt(code,ms):null; }
+  /* One instant shown as station local AND Zulu — never one without the other. */
+  function dpBoth(ms,code){
+    if(ms==null) return '—';
+    var d=new Date(ms), z=String(d.getUTCHours()).padStart(2,'0')+String(d.getUTCMinutes()).padStart(2,'0');
+    var off=dpOff(code,ms);
+    if(off==null) return z+'Z';
+    var l=new Date(ms+off*3600000);
+    return String(l.getUTCHours()).padStart(2,'0')+String(l.getUTCMinutes()).padStart(2,'0')+'L / '+z+'Z';
+  }
+  function dpDay(ms){ return ms==null?'':new Date(ms).toISOString().slice(0,10); }
+  function dpHM(min){ if(min==null) return '—'; var s=min<0?'-':''; min=Math.abs(min);
+    return s+Math.floor(min/60)+':'+String(min%60).padStart(2,'0'); }
+
+  function dpRender(){
+    var out=$('#dpOut'); if(!out||typeof DUTY==='undefined') return;
+    var legs=dpRoster();
+    if(!legs.length){ out.innerHTML='<div class="hint" style="padding:0 4px;margin-top:12px">Upload a schedule above and your duty periods, rest periods and risk scores appear here.</div>'; return; }
+    var duties=DUTY.buildDuties(legs), rests=DUTY.restPeriods(duties);
+    var L=DUTY.limitsFor(dpRegime,dpCrew);
+    var F=(typeof FATIGUE!=='undefined')?FATIGUE:null;
+    var homeOff=-4, h=''; // home base offset for the body clock; refined by the body-clock card below
+    try{ var st=JSON.parse(localStorage.getItem('ad_fatigue')||'null');
+         if(st&&st.home&&typeof AIRTZ!=='undefined'){ var o=AIRTZ.iataOffsetAt(st.home,Date.now()); if(o==null&&AIRTZ.icaoTz(st.home)) o=null; if(o!=null) homeOff=o; } }catch(e){}
+    // Walk the whole trip once, carrying the sleep reservoir and the body clock forward.
+    // This is what makes the numbers below a trip model rather than a per-duty snapshot.
+    try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
+
+    h+='<div class="dpcite" style="margin-top:14px"><b>Regime:</b> '+esc(L.regime)+' · '+L.crew+'-crew.<br>'+
+       '<b>FAR max duty:</b> '+(L.maxDutyH? L.maxDutyH+':00 — '+esc(L.maxDutyCite) : esc(L.maxDutyCite))+'<br>'+
+       '<b>FAR max flight time / 24h:</b> '+(L.maxFlightH? L.maxFlightH+':00 — '+esc(L.maxFlightCite) : esc(L.maxFlightCite))+'<br>'+
+       '<b>CBA:</b> Atlas/IBT 2021, Article 12.D.1 — loaded. Art. 12.D: <i>"Except when an applicable FAR requires a shorter duty period…"</i> so whichever is shorter controls.</div>';
+    duties.forEach(function(d,i){
+      var stnOff=dpOff(d.from,d.report)||0;
+      var bOff = (d.bodyOffset!=null)? d.bodyOffset : (F? F.bodyOffset(homeOff, dpOff(d.to,d.release)!=null?dpOff(d.to,d.release):homeOff, i) : homeOff);
+      // --- factors ---
+      var facs=[];
+      var repH=(new Date(d.report)).getUTCHours()+(new Date(d.report)).getUTCMinutes()/60;
+      var relH=(new Date(d.release)).getUTCHours()+(new Date(d.release)).getUTCMinutes()/60;
+      var wocl=F? F.woclOverlapHours(repH,relH,bOff):0;
+      facs.push({k:'wocl',v:wocl.toFixed(2)+'h',s:DUTY.pct(wocl,0,4)});
+      var dutyH=(d.effDutyMin!=null?d.effDutyMin:d.dutyMin)/60;
+      facs.push({k:'duty',v:dpHM(d.effDutyMin!=null?d.effDutyMin:d.dutyMin),
+                 s:L.maxDutyH? DUTY.pct(dutyH,L.maxDutyH*0.5,L.maxDutyH) : DUTY.pct(dutyH,8,16)});
+      var relOffX=dpOff(d.to,d.release); if(relOffX==null) relOffX=bOff;
+      var mis=F? Math.abs(F.shortestShift(bOff, relOffX)) : 0;
+      facs.push({k:'tzshift',v:mis.toFixed(1)+'h',s:DUTY.pct(mis,0,10)});
+      var rp=i>0? rests[i-1]:null;
+      if(rp){ var req=DUTY.requiredRestMin(dpRegime, duties[i-1].blockMin);
+              facs.push({k:'rest',v:dpHM(rp.min),s:DUTY.pct(req.min-rp.min,-240,360)}); }
+      if(F && d.resAfterRest!=null) facs.push({k:'sleep',v:d.resAfterRest+'%',s:DUTY.pct(100-d.resAfterRest,0,60)});
+      facs.push({k:'consec',v:String(i+1),s:DUTY.pct(i+1,1,6)});
+      var score=Math.round(facs.reduce(function(t,f){return t+f.s;},0)/facs.length);
+      var bc=DUTY.bandColor(score);
+
+      if(d.allGateway){ score=0; bc={c:'#8ba0bf',l:'Gateway'}; }
+      h+='<div class="dpcard"'+(d.allGateway?' style="opacity:.62"':'')+'><div class="dphead"><div><div class="dpn">Duty Period '+d.n+
+         '<span style="font-weight:600;color:var(--faint);font-size:12px"> · '+dpDay(d.report)+'</span></div>'+
+         '<div class="dproute">'+dpAirport(d.from)+' → '+dpAirport(d.to)+'</div></div>'+
+         '<div class="dpscore"><div class="dpscoreval" style="color:'+bc.c+'">'+score+'</div>'+
+         '<div class="dpscorelab" style="color:'+bc.c+'">'+bc.l+'</div></div></div><div class="dpbody">';
+
+      d.legs.forEach(function(l){
+        h+='<div class="leg"><input type="checkbox" data-gw="'+esc(l.k)+'"'+(l.gw?' checked':'')+' title="Gateway flight — exclude from duty time">'+
+           '<div class="leginfo"><div class="legtop">'+esc(l.flight)+' '+esc(l.from)+'→'+esc(l.to)+
+           (l.dh?'<span class="dhpill">DH</span>':'')+(l.ac?'<span style="color:var(--faint);font-weight:600;font-size:11px"> ['+esc(l.ac)+']</span>':'')+
+           (l.gw?' <span class="leggw">· GATEWAY (excluded)</span>':'')+'</div>'+
+           '<div class="legcity">'+dpAirport(l.from)+' → '+dpAirport(l.to)+'</div>'+
+           '<div class="legtimes">OUT '+dpBoth(l.out,l.from)+'  ·  IN '+dpBoth(l['in'],l.to)+'  ·  blk '+dpHM(l.blk)+'</div>'+
+           '</div></div>';
+      });
+
+      h+='<div class="dpstats">'+
+         '<div class="dpstat"><div class="k">Report</div><div class="v">'+dpBoth(d.report,d.from)+'</div></div>'+
+         '<div class="dpstat"><div class="k">Release</div><div class="v">'+dpBoth(d.release,d.to)+'</div></div>'+
+         '<div class="dpstat"><div class="k">Duty</div><div class="v">'+dpHM(d.dutyMin)+'</div></div>'+
+         '<div class="dpstat"><div class="k">Block</div><div class="v">'+dpHM(d.blockMin)+'</div></div>'+
+         (d.effDutyMin!=null&&d.effDutyMin!==d.dutyMin? '<div class="dpstat"><div class="k">Duty excl. gateway</div><div class="v" style="color:var(--gold)">'+dpHM(d.effDutyMin)+'</div></div>':'')+
+         '</div>';
+
+      if(d.allGateway){
+        h+='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">Gateway duty period — excluded from duty time.</b><br>'+
+           'Every leg here is marked as a gateway flight, so this period is positioning to or from base rather than working. It is shown for context and its risk is not scored.</div>';
+      }
+      h+='<div class="rf"'+(d.allGateway?' style="display:none"':'')+'>';
+      facs.forEach(function(f){
+        var col=DUTY.bandColor(f.s);
+        h+='<div class="rfrow" data-tip="'+f.k+'"><div class="rflab">'+esc(DUTY.FACTORS[f.k].label)+'<span class="qm">?</span></div>'+
+           '<div class="rfbarwrap"><div class="rfbar" style="width:'+Math.round(f.s)+'%;background:'+col.c+'"></div></div>'+
+           '<div class="rfval" style="color:'+col.c+'">'+esc(f.v)+'</div></div>';
+      });
+      h+='</div>';
+
+      // --- modelled alertness across this duty period ---
+      if(F && !d.allGateway && d.effWorst!=null){
+        var eb=F.band(d.effWorst);
+        h+='<div class="effcard" data-tip="eff"><div class="effhead"><div class="efflab">Modelled alertness<span class="qm">?</span></div>'+
+           '<div class="effval" style="color:'+eb.color+'">'+d.effWorst+'<span class="effpc">%</span></div></div>'+
+           '<div class="effband" style="color:'+eb.color+'">'+esc(eb.label)+(d.effWorstLeg? ' · worst at '+esc(d.effWorstLeg):'')+'</div>'+
+           '<div class="effgrid">'+
+             '<div class="effi"><div class="k">Sleep modelled in prior rest</div><div class="v">'+
+               (d.restSleepH!=null? d.restSleepH.toFixed(1)+' h'+(d.restSleeps>1? ' × '+d.restSleeps+' sleeps':'')+
+                 (d.restInBodyNight!=null? ' <span style="color:var(--faint);font-weight:600">('+d.restInBodyNight.toFixed(1)+' h in body night)</span>':'') : '<span style="color:var(--faint)">first duty of trip</span>')+'</div></div>'+
+             '<div class="effi"><div class="k">Reservoir at report</div><div class="v">'+d.resAfterRest+'%</div></div>'+
+             '<div class="effi"><div class="k">Reservoir at release</div><div class="v">'+d.resAfterDuty+'%</div></div>'+
+             '<div class="effi"><div class="k">Body clock</div><div class="v">UTC'+(d.bodyOffset>=0?'+':'')+d.bodyOffset.toFixed(1)+
+               ' <span style="color:var(--faint);font-weight:600">('+(mis<0.5?'acclimated':mis.toFixed(1)+' h out of step')+')</span></div></div>'+
+           '</div>';
+        var legEff=d.legs.filter(function(l){return l.effAtIn!=null;});
+        if(legEff.length){
+          h+='<div class="efflegs">';
+          legEff.forEach(function(l){ var lb=F.band(l.effAtIn);
+            h+='<div class="effleg"><span class="ef">'+esc(l.flight)+' '+esc(l.from)+'→'+esc(l.to)+'</span>'+
+               '<span class="eq" style="color:'+lb.color+'">'+l.effAtIn+'% <span style="font-weight:600">'+esc(lb.label)+'</span></span></div>';
+          });
+          h+='</div>';
+        }
+        h+='</div>';
+      }
+
+      // --- CBA limits for this duty period ---
+      var cbaBlock='';
+      if(typeof CBA!=='undefined'){
+        var repOff=dpOff(d.from,d.report); var repLocalH=(new Date(d.report+((repOff==null?0:repOff)*3600000))).getUTCHours();
+        var opThenDH=false;
+        for(var q=1;q<d.legs.length;q++){ if(!d.legs[q-1].dh && d.legs[q].dh) opThenDH=true; }
+        if(d.legs.length===1 && d.legs[0].dh) opThenDH=false;
+        var cb=CBA.dutyLimits(dpCrew, repLocalH, {operateThenDH:opThenDH, article33:dpArt33, reserveR2R3:dpReserve});
+        var ctl=CBA.controlling(cb.operational, L.maxDutyH);
+        var actualH=(d.effDutyMin!=null?d.effDutyMin:d.dutyMin)/60;
+        var overCba=actualH>cb.operational, overSch=actualH>cb.scheduled;
+        cbaBlock='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">CBA limits</b> — '+esc(cb.cite)+
+          (cb.band? ' <span style="color:var(--faint)">· report '+esc(cb.band)+' band</span>':'')+'<br>'+
+          '<b>Scheduled:</b> '+cb.scheduled.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30')+
+          '  ·  <b>Operational:</b> '+cb.operational.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30')+
+          (overCba? ' <span style="color:var(--bad)">— EXCEEDS the operational limit</span>' : (overSch? ' <span style="color:var(--warn)">— beyond the scheduled limit (within operational)</span>':''))+
+          (cb.note? '<br><span style="color:var(--faint)">'+esc(cb.note)+'</span>':'')+
+          '<br><b>Controlling limit:</b> <b style="color:'+(ctl.who==='CBA'?'#ffd166':'#5b93e8')+'">'+esc(ctl.who)+' '+(ctl.h!=null?ctl.h.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30'):'—')+'</b> — '+esc(ctl.text)+
+          '</div>';
+      }
+      var over = !d.allGateway && L.maxDutyH && (d.effDutyMin!=null?d.effDutyMin:d.dutyMin) > L.maxDutyH*60;
+      if(!d.allGateway) h+=cbaBlock+'<div class="dpcite"><b>Max duty for this duty period:</b> '+
+         (L.maxDutyH? L.maxDutyH+':00 — <b>'+esc(L.maxDutyCite)+'</b>'+(over?' <span style="color:var(--bad)">EXCEEDED</span>':'')
+                    : '<span style="color:var(--warn)">none in regulation</span> — '+esc(L.maxDutyCite))+
+         '</div>';
+      h+='</div></div>';
+
+      if(i<duties.length-1 && rests[i]){
+        var r=rests[i], req=DUTY.requiredRestMin(dpRegime, d.blockMin);
+        var shortRest=r.min<req.min;
+        h+='<div class="restsep'+(shortRest?' short':'')+'"><div class="ri">'+(shortRest?'⚠️':'🛏️')+'</div><div class="rt">'+
+           '<div class="rtop">Rest '+dpHM(r.min)+' at '+dpAirport(r.station)+'</div>'+
+           '<div class="rsub">'+dpBoth(r.from,r.station)+' → '+dpBoth(r.to,r.station)+'<br>'+
+           'Required ≥ <b>'+dpHM(req.min)+'</b> — '+esc(req.cite)+
+           (shortRest? '<br><b style="color:var(--bad)">Below the regulatory minimum.</b>':'')+
+           (duties[i+1]&&duties[i+1].restSleepH!=null? '<br>Modelled sleep obtained: <b>'+duties[i+1].restSleepH.toFixed(1)+' h</b>'+
+              (duties[i+1].restSleeps>1? ' across <b>'+duties[i+1].restSleeps+'</b> sleep opportunities':'')+
+              (duties[i+1].restInBodyNight!=null? ' ('+duties[i+1].restInBodyNight.toFixed(1)+' h of it in your body night)':'')+
+              ' → reservoir <b>'+duties[i+1].resAfterRest+'%</b> at next report' : '')+
+           '<br><span style="color:var(--faint)">Hotel: not in the CSV export — add it manually if you want it here.</span>'+
+           '</div></div></div>';
+      }
+    });
+    out.innerHTML=h;
+
+    Array.prototype.forEach.call(out.querySelectorAll('[data-gw]'),function(cb){
+      cb.onchange=function(){ dpSetGw(cb.getAttribute('data-gw'), cb.checked); dpRender(); };
+    });
+    Array.prototype.forEach.call(out.querySelectorAll('[data-tip]'),function(row){
+      row.onclick=function(){ var f=DUTY.FACTORS[row.getAttribute('data-tip')]; if(!f) return;
+        $('#tipT').textContent=f.label; $('#tipD').innerHTML=f.def; $('#tipModal').classList.add('on'); };
+    });
+  }
+  (function(){
+    var sel=$('#dpRegime'); if(sel) sel.onchange=function(){ dpRegime=sel.value; try{localStorage.setItem('ad_regime',dpRegime);}catch(e){} dpRender(); };
+    try{ var rg=localStorage.getItem('ad_regime'); if(rg&&sel){ dpRegime=rg; sel.value=rg; } }catch(e){}
+    Array.prototype.forEach.call(document.querySelectorAll('[data-dpcrew]'),function(b){
+      b.onclick=function(){ document.querySelectorAll('[data-dpcrew]').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on'); dpCrew=+b.getAttribute('data-dpcrew'); try{localStorage.setItem('ad_dpcrew',dpCrew);}catch(e){} dpRender(); };
+    });
+    try{ var cw=+localStorage.getItem('ad_dpcrew'); if(cw){ dpCrew=cw;
+      document.querySelectorAll('[data-dpcrew]').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-dpcrew')===cw); }); } }catch(e){}
+    var tc=$('#tipC'), tm=$('#tipModal');
+    if(tc) tc.onclick=function(){ tm.classList.remove('on'); };
+    if(tm) tm.addEventListener('click',function(e){ if(e.target===tm) tm.classList.remove('on'); });
+    var a33=$('#dpArt33'); if(a33) a33.onclick=function(){ dpArt33=!dpArt33; this.textContent=dpArt33?'Yes':'No'; this.classList.toggle('on',dpArt33); dpRender(); };
+    var rsv=$('#dpReserve'); if(rsv) rsv.onclick=function(){ dpReserve=!dpReserve; this.textContent=dpReserve?'Yes':'No'; this.classList.toggle('on',dpReserve); dpRender(); };
+    dpRender();
   })();
 
   /* ---------- Share app with crew ---------- */
