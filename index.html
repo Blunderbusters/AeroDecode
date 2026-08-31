@@ -5441,7 +5441,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v12.9 · 2026-08-31';
+  var BUILD='v13.0 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -7688,7 +7688,34 @@
      The Fatigue tab scores a schedule. This one plans against it. The planning model lives
      in SLEEP; everything on screen that calls itself alertness still comes from FATIGUE, so
      the two tabs can never quote different numbers at each other. */
-  var slpSel=null, slpManualPlan=null;
+  var slpSel=null, slpManualPlan=null, slpNowGeom=null;
+  /* The "Now" marker moves itself. Repositioning one line every half minute costs nothing;
+     rebuilding the whole plan on a timer would throw away the scroll position and make the
+     page twitch, and the plan itself does not change from one minute to the next. */
+  function slpNowTick(){
+    var g=slpNowGeom, el=document.getElementById('slpNow');
+    if(!g||!el) return;
+    var v=document.getElementById('view-sleep'); if(!v||v.hidden) return;
+    var now=Date.now();
+    if(now<g.t0 || now>g.t1){
+      el.style.display='none';
+      var c0=document.getElementById('slpNowCap');
+      if(c0) c0.innerHTML=slpNowCaption(g.t0,g.t1,g.loc,g.bod);
+      return;
+    }
+    el.style.display='';
+    var nx=g.L + (now-g.t0)/(g.t1-g.t0)*(g.W-g.L-g.R);
+    var ln=el.querySelector('line'), tri=el.querySelector('path'), tx=el.querySelector('text');
+    if(ln){ ln.setAttribute('x1',nx.toFixed(1)); ln.setAttribute('x2',nx.toFixed(1)); }
+    if(tri) tri.setAttribute('d','M'+(nx-4).toFixed(1)+' '+(g.bandT-8)+' L'+(nx+4).toFixed(1)+' '+(g.bandT-8)+' L'+nx.toFixed(1)+' '+(g.bandT-2)+' Z');
+    if(tx){ tx.setAttribute('x',nx.toFixed(1));
+            tx.setAttribute('text-anchor', nx>g.W-58?'end':(nx<58?'start':'middle'));
+            tx.textContent='Now '+slpL(now,g.loc)+'L'; }
+    var cap=document.getElementById('slpNowCap');
+    if(cap) cap.innerHTML=slpNowCaption(g.t0,g.t1,g.loc,g.bod);
+  }
+  setInterval(slpNowTick, 30000);
+  window.slpNowTick=slpNowTick;          // exposed so the test harness can drive the clock
 
   function slpZ(ms){ var d=new Date(ms); return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2)+'Z'; }
   function slpL(ms, off){
@@ -7774,6 +7801,12 @@
   /* The picture. One strip: the clock along the top, the body's own night shaded behind,
      the window of circadian low picked out inside it, the sleep blocks laid on top, and the
      two things that are easy to get wrong - the last coffee and the van - marked. */
+  function slpNowCaption(t0,t1,loc,bod){
+    var n=Date.now();
+    if(n<t0) return 'This break has not started yet — the <b style="color:#5ee6ff">Now</b> line appears on the chart once you are released.';
+    if(n>t1) return 'This break is in the past, so there is no <b style="color:#5ee6ff">Now</b> line on it.';
+    return '<b style="color:#5ee6ff">Now</b> is '+slpL(n,loc)+' local · '+slpZ(n)+' · '+slpL(n,bod)+' on your body clock.';
+  }
   function slpChart(res, inp){
     /* Drawn in units that are close to CSS pixels on a phone, so the labels stay legible
        instead of being scaled down to nothing. The card caps the width, so on a laptop the
@@ -7828,13 +7861,27 @@
     g+='<line x1="'+(W-R).toFixed(1)+'" y1="'+(barY-8)+'" x2="'+(W-R).toFixed(1)+'" y2="'+(barY+barH+8)+'" stroke="#ff6b6b" stroke-width="2"/>'+
        '<text x="'+(W-R).toFixed(1)+'" y="'+footY+'" fill="#ff6b6b" font-size="9" text-anchor="end" font-family="ui-monospace,monospace" font-weight="700">Report</text>'+
        '<text x="'+L+'" y="'+footY+'" fill="#7f95b5" font-size="9" font-family="ui-monospace,monospace">Release</text>';
+    /* Where you are on the plan right now. Drawn last so it sits over the sleep blocks, and
+       given its own colour so it cannot be mistaken for a grid line or the coffee cut-off.
+       Kept in the markup even when the break has not started, hidden rather than absent, so
+       it can simply appear when the clock reaches the release. */
+    var nowIn=(Date.now()>=t0 && Date.now()<=t1), nx=x(Math.min(Math.max(Date.now(),t0),t1));
+    g+='<g id="slpNow"'+(nowIn?'':' style="display:none"')+'>'+
+       '<line x1="'+nx.toFixed(1)+'" y1="'+(bandT-2)+'" x2="'+nx.toFixed(1)+'" y2="'+(bandT+bandH+4)+'" stroke="#5ee6ff" stroke-width="1.6"/>'+
+       '<path d="M'+(nx-4).toFixed(1)+' '+(bandT-8)+' L'+(nx+4).toFixed(1)+' '+(bandT-8)+' L'+nx.toFixed(1)+' '+(bandT-2)+' Z" fill="#5ee6ff"/>'+
+       '<text x="'+nx.toFixed(1)+'" y="'+(bandT+bandH+15)+'" fill="#5ee6ff" font-size="9" font-weight="700" '+
+       'text-anchor="'+(nx>W-58?'end':(nx<58?'start':'middle'))+'" font-family="ui-monospace,monospace">Now '+
+       slpL(Date.now(),loc)+'L</text></g>';
+    slpNowGeom={ t0:t0, t1:t1, L:L, R:R, W:W, bandT:bandT, bandH:bandH, loc:loc, bod:bod };
     g+='</svg>';
     g+='<div class="slpkey">'+
        '<span><i style="background:#4d76d8"></i>Asleep</span>'+
        '<span><i style="background:rgba(110,150,220,.4)"></i>Your body’s night</span>'+
        '<span><i style="background:rgba(255,157,77,.6)"></i>Circadian low (0200–0600 body time)</span>'+
        '<span><i style="background:#e0b53a"></i>Caffeine cut-off</span>'+
-       '<div class="slpkeyfoot">Hours along the top are <b>local hotel time</b>. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div></div>';
+       ((Date.now()>=t0 && Date.now()<=t1)? '<span><i style="background:#5ee6ff"></i>Now</span>':'')+
+       '<div class="slpkeyfoot">Hours along the top are <b>local hotel time</b>. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div>'+
+       '<div class="slpkeyfoot" id="slpNowCap">'+slpNowCaption(t0,t1,loc,bod)+'</div></div>';
     return g;
   }
 
