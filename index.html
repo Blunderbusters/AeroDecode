@@ -135,6 +135,10 @@
     border:1px solid var(--edge);border-radius:16px;padding:12px 16px;display:flex;flex-wrap:wrap;
     align-items:center;justify-content:space-between;box-shadow:0 8px 28px rgba(2,8,20,.4)}
   .zlocal{width:100%;display:block;margin-top:11px;padding-top:9px;border-top:1px solid var(--edge)}
+  .secthead{margin-top:16px;padding-top:12px;border-top:1px solid rgba(120,160,220,.22)}
+  .secthead-t{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--faint)}
+  .secthead-s{font-size:11.5px;color:var(--faint);line-height:1.55;margin-top:4px}
+  .secthead-s b{color:var(--dim)}
   .privbox{margin-top:12px;padding:13px 14px;border-radius:14px;
     border:1px solid rgba(255,107,107,.55);background:linear-gradient(180deg,rgba(58,20,20,.75),rgba(28,10,12,.6))}
   .privtitle{font-size:17px;font-weight:800;letter-spacing:.3px;color:#ffd9d9;line-height:1.25}
@@ -1350,7 +1354,7 @@
         <div class="privtitle">This is yours. Keep it that way.</div>
         <p class="privlead">Do not share it, quote it, screenshot it, cite it in a report, or acknowledge that it exists — not to the Company, not to the AOA, not to a Chief Pilot, not to anyone in management.</p>
         <p>Nothing this app produces is a company record, and it should never be allowed to become one. It is a private planning aid that helps <i>you</i> decide what <i>you</i> think about a schedule. It is not evidence, it is not a legality finding, and it has no business in anybody's file.</p>
-        <p>If you are fatigued, use the channels the contract already gives you: the <b>fatigue call under Paragraph F</b> and the <b>Fatigue Event Report</b>. Those exist for exactly this, they carry protections, and they are what actually changes a pairing. This app is for making up your own mind beforehand — nothing more.</p>
+        <p>If you are fatigued, use the channel the contract already gives you: the <b>fatigue call</b> and the <b>Fatigue Event Report</b> in the <b>Fatigue Risk Management Letter of Agreement</b> — Article 35, CBA <b>p. 318</b>, with the call process at <b>Paragraph F</b>, p. 324. That is a contractual route with protections attached, and it is what actually changes a pairing. This app is for making up your own mind beforehand — nothing more. <span class="ovwhy" data-ov="para">What is Paragraph F?</span></p>
         <p class="privrule">The first rule of the CargoDecode fatigue tool is: we do not talk about the CargoDecode fatigue tool.</p>
       </div>
       <div class="impcard">
@@ -1379,7 +1383,11 @@
           <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
         </details>
       </div>
-      <div class="ftgrid" style="margin-top:14px">
+      <div class="secthead">
+        <div class="secthead-t">Which rules apply to you</div>
+        <div class="secthead-s">These four settings drive the <b>limits</b> — the FAR regime, the CBA duty ceiling, the required rest and the cumulative caps. They do <b>not</b> feed the alertness percentage, which is built only from your report and block times, the sleep the model thinks each rest allowed, and where your body clock is. <span class="ovwhy" data-ov="split">Why is crew complement here at all?</span></div>
+      </div>
+      <div class="ftgrid" style="margin-top:10px">
         <div class="full"><div class="ftk">Operating regime — which Part 121 rules govern this flying</div>
           <select id="dpRegime" class="ftin" style="font-family:inherit">
             <option value="FLAG">Flag all-cargo (Subpart R)</option>
@@ -4580,7 +4588,8 @@
      What the contract actually entitles you to when you call fatigued. Quoted close to
      the source because this is the part people get talked out of. */
   var FATIGUE_CALL={
-    cite:'Fatigue Risk Management Letter of Agreement, Paragraph F (Article 35, Letters of Agreement)',
+    cite:'Fatigue Risk Management Letter of Agreement — Article 35 (Letters of Agreement), CBA p. 318; the fatigue-call process is Paragraph F, "Fatigue Process", p. 324.',
+    where:'It is not in Article 12. It is one of the Letters of Agreement collected at the back of the contract under Article 35, listed in the table of contents as "Fatigue Risk Management Letter of Agreement" at page 318.',
     rest:10,
     steps:[
       {k:'Call it', t:'If you are fatigued before report, or become fatigued after reporting, notify Crew Scheduling <b>immediately</b>. It applies both before and during a trip pairing.'},
@@ -4588,8 +4597,8 @@
       {k:'They choose, within 1 hour', t:'Crew Scheduling has <b>one hour</b> from your call to pick one of two options: delay the flight until after the rest period, or drop your trip pairing (you are then eligible for reassignment under Article 25.N).'},
       {k:'Transport and a bed', t:'If you call fatigue <b>during</b> a trip pairing, the Company provides local transportation and lodging.'},
       {k:'Talk to a Chief Pilot', t:'If you called before report, you promptly contact a Chief Pilot on the FRMC after your rest period ends, and an FRMC member will contact you <b>within 36 hours</b> after that rest period.'},
-      {k:'File within 48 hours', t:'Submit a <b>Fatigue Event Report within 48 hours</b> after the rest period associated with the call. Filing it is not paid and is not "data collection" — it is just the report.'},
-      {k:'It does not cost you your guarantee', t:'A fatigue call under Paragraph F still counts as <b>"available"</b> for Bid Line Guarantee purposes (Art. 3.A.2.c.iii) — unless the FRMC later decides it should have been a sick call, in which case Article 14 applies.'}
+      {k:'File within 48 hours', t:'Submit a <b>Fatigue Event Report within 48 hours</b> after the rest period associated with the call, by whatever means the Company designates (LOA ¶F.6). The FER is the contract\'s own fatigue-reporting form — separate from the FRMS data-collection study in ¶C, which is voluntary and paid $500 a bid month. ¶C.7 says plainly that completing an FER is <b>not</b> data collection and carries no pay.'},
+      {k:'It does not cost you your guarantee', t:'A fatigue call under Paragraph F still counts as <b>"available"</b> for Bid Line Guarantee purposes — Art. 3.A.2.c.iii says so in terms — unless the FRMC later decides it should have been a sick call, in which case Article 14 applies.'}
     ],
     caveats:[
       'The FRMC reviews fatigue calls. If it determines a call should have been a sick call, it is handled under Article 14.',
@@ -4692,7 +4701,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v12.2 · 2026-08-31';
+  var BUILD='v12.4 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6892,6 +6901,32 @@
   function dpHM(min){ if(min==null) return '—'; var s=min<0?'-':''; min=Math.abs(min);
     return s+Math.floor(min/60)+':'+String(min%60).padStart(2,'0'); }
 
+  function dpOvExplain(k){
+    var t='', d='';
+        if(k==='para'){ t='Paragraph F and the Fatigue Event Report';
+          d='Both live in the <b>Fatigue Risk Management Letter of Agreement</b>, which is not part of Article 12. It is one of the Letters of Agreement collected at the back of the contract under <b>Article 35</b>, listed in the table of contents at <b>page 318</b>.<br><br>'+
+            '<b>Paragraph F — "Fatigue Process"</b> (p. 324) is the fatigue-call procedure itself: notify Crew Scheduling immediately, you are given a 10-hour rest period, Crew Scheduling has one hour to choose between delaying the flight and dropping your pairing, you get transport and lodging if you call during a pairing, and an FRMC member contacts you within 36 hours after the rest period.<br><br>'+
+            '<b>The Fatigue Event Report</b> is required by <b>¶F.6</b> — submitted within 48 hours after the rest period associated with the call, by whatever means the Company designates. Note ¶C.7: completing an FER is expressly <b>not</b> the paid FRMS data collection described in ¶C, and carries no pay.<br><br>'+
+            'Worth knowing alongside it: <b>Art. 3.A.2.c.iii</b> states that a Crew Member who calls out fatigued under Paragraph F is still considered <b>"available"</b> for Bid Line Guarantee purposes, unless the FRMC decides the call should have been a sick call.<br><br>'+
+            'The full breakdown is in the <b>LABT/LATT</b> tab under Contract reference.';
+        } else if(k==='split'){ t='Limits versus alertness';
+          d='The Fatigue tab does two different jobs, and these settings only affect one of them.<br><br>'+
+            '<b>The limits half</b> — the duty ceiling on each card, the required rest between duty periods, and the cumulative caps in the overview — depends on which rules govern your flying. Whether you are two pilots or four changes the FAR section that applies (§121.481 for one or two pilots, §121.483 with a third crew member, §121.485 with three or more pilots plus an additional crew member), changes the CBA duty band, and changes which cumulative caps bind. Article 33 and R-2/R-3 reserve shift the CBA numbers again.<br><br>'+
+            '<b>The alertness half</b> — the percentage on each card — uses none of that. It is built from your wake-up call, the sleep the model thinks each rest allowed, how long you have been awake, how far your body clock is from local time, and how much of the duty falls in your circadian low. Those come from the roster, not from these switches.<br><br>'+
+            '<b>Why in-flight bunk rest is deliberately NOT credited:</b> a bunk only helps if you actually get one. An augmented crew can be carrying deadheading crew members as well, and with every seat and both bunks occupied there is no guarantee that any particular person gets bunk rest — or gets it at a useful point in the flight. Crediting it would quietly assume a rest opportunity that is not reliably available, and would lower the score for the very crew member who did not get the bunk. So no one is credited with it. The model is pessimistic here on purpose.';
+        } else if(k==='bands'){ t='Where the bands come from';
+          d='The colour bands are not chosen for looks — they are the thresholds published for this family of model.<br><br>'+
+            '<b>90%</b> is the criterion line: FAA aeromedical validation work on this model family reports risk rising below 90% of baseline. The underlying quantitative result — risk falling sharply above 90% — is Federal Railroad Administration research by Hursh and colleagues, <b>not</b> an FAA finding, and this app should not pass a rail result off as an aviation one.<br><br>'+
+            '<b>77%</b> and <b>65%</b> are the amber and red defaults used by SAFTE-FAST, the commercial implementation of this model family. The vendor equates 77% to roughly 18.5 hours awake and a blood alcohol concentration of 0.05%.<br><br>'+
+            '<b>Important:</b> no regulator — not the FAA, ICAO or EASA — publishes an effectiveness threshold at all. The 77% and 65% lines are vendor defaults, not rules you are breaking. Treat them as a well-informed yardstick.';
+        } else { t='Why show a limit that does not apply?';
+          d='The dashed line is <b>60 flight duty period hours in any 168 consecutive hours</b>, from 14 CFR 117.23(c)(1).<br><br>'+
+            'It is drawn against <i>duty</i> hours, which run report to release, while a flight duty period ends at the last block-in — so the comparison runs slightly against you.<br><br>'+
+            'Part 117 governs <b>passenger</b> operations (§117.1(a)). All-cargo flying is not bound by it, and there is no equivalent cumulative duty ceiling anywhere in Subpart R.<br><br>'+
+            'It is drawn here because it is the nearest published number for the same kind of flying, and because a cumulative total is much easier to judge against a reference than in the abstract. Crossing it is not a violation — it is a signal that your week has been heavier than the passenger side of the industry considers acceptable.';
+        }
+    $('#tipT').textContent=t; $('#tipD').innerHTML=d; $('#tipModal').classList.add('on');
+  }
   function dpRender(){
     var out=$('#dpOut'); if(!out||typeof DUTY==='undefined') return;
     var legs=dpRoster();
@@ -7191,22 +7226,10 @@
         var a=$('#dpAnchor'); if(a) a.scrollIntoView({block:'start'});
       };
     });
+    /* Bound by delegation below so links OUTSIDE #dpOut work too — the section header
+       above the rule settings is static markup and never passes through this loop. */
     Array.prototype.forEach.call(out.querySelectorAll('[data-ov]'),function(el){
-      el.onclick=function(){
-        var k=el.getAttribute('data-ov'), t='', d='';
-        if(k==='bands'){ t='Where the bands come from';
-          d='The colour bands are not chosen for looks — they are the thresholds published for this family of model.<br><br>'+
-            '<b>90%</b> is the criterion line: FAA aeromedical validation work on this model family reports risk rising below 90% of baseline. The underlying quantitative result — risk falling sharply above 90% — is Federal Railroad Administration research by Hursh and colleagues, <b>not</b> an FAA finding, and this app should not pass a rail result off as an aviation one.<br><br>'+
-            '<b>77%</b> and <b>65%</b> are the amber and red defaults used by SAFTE-FAST, the commercial implementation of this model family. The vendor equates 77% to roughly 18.5 hours awake and a blood alcohol concentration of 0.05%.<br><br>'+
-            '<b>Important:</b> no regulator — not the FAA, ICAO or EASA — publishes an effectiveness threshold at all. The 77% and 65% lines are vendor defaults, not rules you are breaking. Treat them as a well-informed yardstick.';
-        } else { t='Why show a limit that does not apply?';
-          d='The dashed line is <b>60 flight duty period hours in any 168 consecutive hours</b>, from 14 CFR 117.23(c)(1).<br><br>'+
-            'It is drawn against <i>duty</i> hours, which run report to release, while a flight duty period ends at the last block-in — so the comparison runs slightly against you.<br><br>'+
-            'Part 117 governs <b>passenger</b> operations (§117.1(a)). All-cargo flying is not bound by it, and there is no equivalent cumulative duty ceiling anywhere in Subpart R.<br><br>'+
-            'It is drawn here because it is the nearest published number for the same kind of flying, and because a cumulative total is much easier to judge against a reference than in the abstract. Crossing it is not a violation — it is a signal that your week has been heavier than the passenger side of the industry considers acceptable.';
-        }
-        $('#tipT').textContent=t; $('#tipD').innerHTML=d; $('#tipModal').classList.add('on');
-      };
+      el.onclick=function(){ dpOvExplain(el.getAttribute('data-ov')); };
     });
     Array.prototype.forEach.call(out.querySelectorAll('[data-why]'),function(btn){
       btn.onclick=function(e){ e.stopPropagation(); dpWhyShow(+btn.getAttribute('data-why')); };
@@ -7265,7 +7288,8 @@
          '<p class="dtybody" style="color:var(--faint)">In this app, deadhead counts toward <b>duty time</b>, hours awake and the fatigue model, but not toward <b>flight time</b> — the cumulative FAR caps are flight-time caps, and riding is not flying.</p></details>';
     }
     var C=CBA.FATIGUE_CALL;
-    h+='<details class="dtydets"><summary>Calling fatigued — what the contract gives you</summary>';
+    h+='<details class="dtydets"><summary>Calling fatigued — what the contract gives you</summary>'+
+       (C.where? '<p class="dtybody"><b style="color:var(--gold)">Where to find it.</b> '+esc(C.where)+'</p>':'');
     C.steps.forEach(function(st){ h+='<p class="dtybody"><b style="color:var(--ink)">'+esc(st.k)+'.</b> '+st.t+'</p>'; });
     C.caveats.forEach(function(cv){ h+='<p class="dtybody" style="color:var(--faint)">'+esc(cv)+'</p>'; });
     h+='<p class="dtybody" style="color:var(--faint)">'+esc(C.cite)+'</p></details>';
@@ -7680,6 +7704,10 @@
         .then(function(){ setTimeout(function(){ pfRender(false); }, 400); });
     };
   }
+  document.addEventListener('click', function(e){
+    var el=e.target && e.target.closest? e.target.closest('[data-ov]') : null;
+    if(el && !el.closest('#dpOut')){ try{ dpOvExplain(el.getAttribute('data-ov')); }catch(_){} }
+  });
   window.addEventListener('online', function(){ pfRender(false); });
   window.addEventListener('offline', function(){ pfRender(false); });
   setTimeout(function(){ pfRender(false); }, 400);
