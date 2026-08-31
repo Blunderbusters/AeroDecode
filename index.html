@@ -138,6 +138,11 @@
   .zlocal:empty{display:none}
   .zloc{flex:1;min-width:0}
   .zloclab{font-size:13.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .zlocrole{font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--faint);text-transform:uppercase}
+  .zlocnow{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint);margin:1px 0 1px}
+  .zlocplan{font-size:10.5px;font-weight:700;color:var(--gold);margin-top:4px;padding-top:4px;
+    border-top:1px solid rgba(120,160,220,.18);font-family:var(--mono);white-space:nowrap}
+  .zlocplank{font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
   .zloctime{font-family:var(--mono);font-size:19px;font-weight:800;color:#eaf2ff;font-variant-numeric:tabular-nums;margin-top:1px}
   .zloctime .zloclcl{font-size:11px;font-weight:800;color:#ffd36b;letter-spacing:.6px;padding:1px 5px;border:1px solid rgba(255,211,107,.45);border-radius:5px}
   .zloctime .zlocoff{font-size:11px;font-weight:600;color:var(--dim);letter-spacing:.3px}
@@ -2798,7 +2803,15 @@
     return z? !!USZONES[z] : false;
   }
 
-  var API={isUS:isUS,icaoTz:icaoTz, localHM:localHM, offsetLabel:offsetLabel, iataTz:iataTz, iataOffsetAt:iataOffsetAt, iataName:iataName};
+  /* Numeric UTC offset in hours for an IANA zone at a given instant. */
+  function offsetAt(tz, when){
+    var lab=offsetLabel(tz, when); if(!lab) return null;
+    var m=String(lab).match(/^([+-])(\d{1,2})(?::(\d{2}))?$/); if(!m) return null;
+    var v=(+m[2])+((+(m[3]||0))/60);
+    return m[1]==='-'? -v : v;
+  }
+  var API={isUS:isUS,icaoTz:icaoTz, localHM:localHM, offsetLabel:offsetLabel, offsetAt:offsetAt,
+           iataTz:iataTz, iataOffsetAt:iataOffsetAt, iataName:iataName};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.AIRTZ=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -4656,7 +4669,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v12.0 · 2026-08-31';
+  var BUILD='v12.1 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5129,6 +5142,7 @@
   var flDep=$('#flDep'), flStatusEl=$('#flStatus'), flSpin=$('#flSpin'),
       flCards=$('#flCards'), flQC=$('#flQC'), flSum=$('#flSum'), flTable=$('#flTable');
   var flWpts=[], flTrip=null, flTaxi=null, flTextRaw='', flEta=[], flSt=null, flId=null, flOrig=null;
+  var flDepFromOfp=false;      // did the Departure field come from the OFP, or is it a leftover?
   function renderFpInfo(){
     var el=document.getElementById('fpInfo'); if(!el) return;
     if(!flId){ el.innerHTML=''; return; }
@@ -5162,8 +5176,25 @@
     var curMin=now.getUTCHours()*60+now.getUTCMinutes();
     if(!force && curMin===_zlocMin && el.innerHTML){ return; }   // only rebuild when the minute rolls over
     _zlocMin=curMin;
-    function cell(role,cls,icao){
-      var ov=tzOverrideGet(icao), body;
+    /* This panel is a CLOCK — the time it is right now at each end of the flight. Labelling
+       it "Departure · KORD" over a time made it read as the scheduled departure time, which
+       is a different number living on the Flight Log tab. Both are now shown, and which is
+       which is stated rather than implied. */
+    function offOf(icao){
+      var ov=tzOverrideGet(icao);
+      if(ov!==null) return ov;
+      var tz=(typeof AIRTZ!=='undefined')? AIRTZ.icaoTz(icao) : null;
+      return tz? (AIRTZ.offsetAt? AIRTZ.offsetAt(tz,now) : null) : null;
+    }
+    function hhmmPlus(hhmm, addMin, offH){
+      if(!hhmm) return null;
+      var m=(+hhmm.slice(0,2))*60+(+hhmm.slice(2));
+      m+= (addMin||0) + Math.round((offH||0)*60);
+      m=((m%1440)+1440)%1440;
+      return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);
+    }
+    function cell(role,cls,icao,planZ,planLabel){
+      var ov=tzOverrideGet(icao), body, offH=offOf(icao);
       if(ov!==null){
         body='<div class="zloctime">'+esc(localFromOffset(ov,now))+' <span class="zloclcl">LCL</span> <span class="zlocoff">UTC'+esc(fmtOffset(ov))+'</span> <span class="zlocedit">✎ set</span></div>';
       } else {
@@ -5174,9 +5205,25 @@
           body='<div class="zloctime zlocna">Tap to set offset ✎</div>';
         }
       }
-      return '<div class="zloc '+cls+'" data-icao="'+esc(icao)+'" role="button" tabindex="0"><div class="zloclab">'+role+' · '+esc(icao)+'</div>'+body+'</div>';
+      var plan='';
+      if(planZ){
+        var pl=hhmmPlus(planZ, 0, offH);
+        plan='<div class="zlocplan"><span class="zlocplank">'+esc(planLabel)+'</span> '+esc(planZ)+'Z'+
+             (pl? ' · '+esc(pl)+' LCL':'')+'</div>';
+      }
+      return '<div class="zloc '+cls+'" data-icao="'+esc(icao)+'" role="button" tabindex="0">'+
+             '<div class="zloclab">'+esc(icao)+' <span class="zlocrole">'+role+'</span></div>'+
+             '<div class="zlocnow">Time there now</div>'+body+plan+'</div>';
     }
-    el.innerHTML=cell('Departure','dep',flId.orig)+cell('Arrival','arr',flId.dest);
+    var offZ=(typeof flOrig!=='undefined')? flOrig : null;
+    var onZ=null;
+    if(offZ && typeof flTrip!=='undefined' && flTrip && flTrip.min!=null){
+      var mm=(+offZ.slice(0,2))*60+(+offZ.slice(2))+flTrip.min;
+      mm=((mm%1440)+1440)%1440;
+      onZ=('0'+Math.floor(mm/60)).slice(-2)+('0'+(mm%60)).slice(-2);
+    }
+    el.innerHTML=cell('departure','dep',flId.orig,offZ,'OFP off')+
+                 cell('arrival','arr',flId.dest,onZ,'OFP on');
   }
   /* ----- offset editor modal ----- */
   var _tzEditIcao=null;
@@ -5847,10 +5894,15 @@
   }
   function ingest(text){
     flTextRaw=text; flWpts=NAVLOG.parseNavlog(text); flTrip=NAVLOG.parseTripTime(text); flTaxi=NAVLOG.parseTaxiOut(text);
+    /* Parse the OFP times BEFORE drawing the header strip — it shows the planned off/on
+       times, and rendering first left them blank until the next minute ticked over. */
+    var ot=NAVLOG.parseOrigTime(text); flOrig=ot||null;
+    if(ot){ flDep.value=ot; flDepFromOfp=true; } else { flDepFromOfp=false; }
     flId=NAVLOG.parseFlightId(text); renderFpInfo();
-    var ot=NAVLOG.parseOrigTime(text); flOrig=ot||null; if(ot) flDep.value=ot;   // default departure to ORIG line Zulu time
     if(!flWpts.length){ flStatus('No waypoints found — try PDF upload, or make sure the nav-log pages are included.',false); flQC.innerHTML='';flSum.innerHTML='';flTable.innerHTML=''; return; }
-    flStatus('Found '+flWpts.length+' waypoints'+(flTrip?' · trip time '+flTrip.str:'')+'.',false);
+    flStatus('Found '+flWpts.length+' waypoints'+(flTrip?' · trip time '+flTrip.str:'')+
+      (flDepFromOfp? ' · departure '+flOrig+'Z read from the OFP'
+                   : ' · <b style="color:var(--warn)">no departure time found in the OFP — check the Departure box</b>')+'.',false);
     flRender();
   }
   function renderJepp(){
