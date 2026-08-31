@@ -1571,22 +1571,11 @@
         <div class="secthead-s">These four settings drive the <b>limits</b> — the FAR regime, the CBA duty ceiling, the required rest and the cumulative caps. They do <b>not</b> feed the alertness percentage, which is built only from your report and block times, the sleep the model thinks each rest allowed, and where your body clock is. <span class="ovwhy" data-ov="split">Why is crew complement here at all?</span></div>
       </div>
       <div class="ftgrid" style="margin-top:10px">
-        <div class="full"><div class="ftk">Operating regime — which Part 121 rules govern this flying</div>
-          <select id="dpRegime" class="ftin" style="font-family:inherit">
-            <option value="FLAG">Flag all-cargo (Subpart R)</option>
-            <option value="SUPP_DOM">Supplemental all-cargo, domestic (Subpart S)</option>
-            <option value="SUPP_INTL">Supplemental all-cargo, international (§121.513)</option>
-          </select>
-        </div>
-        <div class="full"><div class="cr-row" style="margin-top:2px"><div class="crk">Article 33 — Hostile / Infectious Disease / DOT Exemption 7573</div><button class="segbtn" id="dpArt33">No</button></div></div>
-        <div class="full"><div class="cr-row" style="margin-top:2px"><div class="crk">On R-2 / R-3 reserve assigned a flight (+4:00)</div><button class="segbtn" id="dpReserve">No</button></div></div>
-        <div class="full"><div class="ftk">Crew complement</div>
-          <span class="seg" style="display:flex;gap:6px">
-            <button class="segbtn" data-dpcrew="2" style="flex:1">2 pilots</button>
-            <button class="segbtn on" data-dpcrew="3" style="flex:1">3 (augmented)</button>
-            <button class="segbtn" data-dpcrew="4" style="flex:1">4 (heavy)</button>
-          </span>
-        </div>
+        <!-- Regime, Article 33, reserve and crew complement used to be selected here. They
+             existed only to choose duty limits, and duty limits have gone from this tab: every
+             one of them turns on a crew complement that changes flight by flight, which no
+             single setting can represent. Nothing on this tab reads them any more, so asking
+             for them was asking the crew member to answer a question that changed nothing. -->
       </div>
       <div id="dpOut"></div>
       <div class="sccard">
@@ -4974,20 +4963,16 @@
     var fmtH=function(v){ return v==null? '—' : (Math.floor(v)+':'+('0'+Math.round((v-Math.floor(v))*60)).slice(-2)); };
     if(x.dutyMin!=null){
       var dh=x.dutyMin/60;
-      /* An imported roster is a PLAN, so the scheduled limit is the one that should have
-         been respected when it was built. The operational limit is in-flight relief, not
-         a planning allowance - judging a schedule against it hides real over-scheduling. */
-      if(x.schedLimitH!=null && dh>x.schedLimitH){
-        add(dh>(x.operLimitH!=null?x.operLimitH:x.schedLimitH)?3:2,
-          'This duty period is <b>scheduled</b> at '+hm(x.dutyMin)+', over the <b>'+fmtH(x.schedLimitH)+
-          '</b> scheduled limit for this crew and report band'+
-          (x.operLimitH!=null? (dh>x.operLimitH
-            ? '. It is over the <b>'+fmtH(x.operLimitH)+'</b> operational limit as well.'
-            : '. The operational limit of '+fmtH(x.operLimitH)+' is in-flight relief for things going wrong on the day, not room to build a roster into.') : '.'));
-        sum.push('scheduled over the limit');
-      } else if(x.limitH && dh>x.limitH-1){
-        add(2,'Scheduled duty is <b>'+hm(x.dutyMin)+'</b>, within about an hour of the <b>'+fmtH(x.limitH)+
-          '</b> limit that applies here ('+(x.limitWho||'limit')+'). Any delay puts us over.');
+      /* No limit comparison here any more. Every duty limit worth quoting depends on the crew
+         complement, which changes flight by flight and which this app has no way to know, so
+         the comparison was being made against an assumption. Length on its own is a fatigue
+         fact and stands without a limit beside it: a 14-hour duty is a long day whatever the
+         augmentation, and how long is long enough to matter is a judgement, not a citation. */
+      if(dh>=13){
+        add(dh>=15?3:2,'This duty period is <b>'+hm(x.dutyMin)+'</b> long. Whatever the crew '+
+          'complement, a duty of that length is where errors of omission start showing up — '+
+          'missed calls, missed items, slower to notice a change.');
+        sum.push(hm(x.dutyMin)+' duty');
       }
     }
     // 6b. The week behind this duty
@@ -5864,7 +5849,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.4 · 2026-08-31';
+  var BUILD='v14.5 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5886,7 +5871,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.4',
+    version:'v14.5',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -9138,24 +9123,12 @@
   /* Resolved at the instant being judged, not at "now" — the base offset moves across a
      daylight-saving boundary and the 0100-0459 critical window moves with it. */
   function dpBaseOff(atMs){ var o=dpOff(dpHome(), atMs==null? Date.now() : atMs); return o==null? -4 : o; }
-  /* Subpart S states its ceilings as duty "in any 24 consecutive hours", not per duty
-     period, so two legal duty periods close together can still breach one. Rendered only
-     when it says something the per-duty figure does not. */
-  function dp24Block(duties, d, L){
-    if(!DUTY.worstDuty24 || (!L.maxDutyH && !L.deckDuty)) return '';
-    var w=DUTY.worstDuty24(duties, d); if(!w) return '';
-    var over24 = L.maxDutyH && w.dutyMin > L.maxDutyH*60;
-    var deckOver = L.deckDuty && w.flightMin > L.deckDuty.h*60;
-    if(!over24 && !deckOver && !(L.maxDutyH && w.dutyMin > (d.dutyMin||0)+1)) return '';
-    return '<div class="dpcite" style="border-left-color:'+((over24||deckOver)?'#ff6b6b':'#5b93e8')+'">'+
-      '<b>Rolling 24-hour window.</b> Subpart S states its ceilings as duty <i>"in any 24 consecutive hours"</i>, not per duty period. '+
-      'The fullest 24 hours around this duty holds <b>'+dpHM(w.dutyMin)+' of duty</b>'+
-      (L.maxDutyH? ' against the '+L.maxDutyH+':00 limit'+(over24? ' <span style="color:var(--bad)">— EXCEEDED</span>':''):'')+'.'+
-      (L.deckDuty? '<br><b>Flight-deck duty:</b> '+dpHM(w.flightMin)+' of operating block in the same window against the '+
-         L.deckDuty.h+':00 limit — '+esc(L.deckDuty.cite)+(deckOver? ' <span style="color:var(--bad)">— EXCEEDED</span>':'')+
-         '<br><span style="color:var(--faint)">Operating block stands in for time at the controls; the roster does not record who was in the seat.</span>':'')+
-      '</div>';
-  }
+  /* dp24Block lived here: the rolling 24-hour duty ceiling from Subpart S. It has gone with
+     the rest of the legality panel, for the same reason — the ceiling it compared against
+     depends on crew complement, and this tab does not know it. The rolling window itself is
+     still worth knowing about; it belongs on Schedule Checks, where the crew complement for a
+     specific trip can actually be stated. */
+
   /* Rest required before a duty period: Art. 12.G.2 takes the LONGER of CBA and FAR. */
   function dpReqRest(prevDuty, nextDuty, allDuties){
     var ctx={};
@@ -9281,9 +9254,6 @@
     sec('Rest and limits');
     if(x.reqRestMin!=null) row('Rest required', hm(x.reqRestMin)+' ('+esc(x.reqRestWho||'')+')'+
        (x.restMin!=null && x.restMin<x.reqRestMin? '  — SHORT':''));
-    if(x.schedLimitH!=null) row('CBA scheduled limit', x.schedLimitH.toFixed(2).replace('.00',':00').replace('.50',':30')+
-       (x.dutyMin!=null && x.dutyMin/60>x.schedLimitH? '  — EXCEEDED':''));
-    if(x.operLimitH!=null) row('CBA operational limit', x.operLimitH.toFixed(2).replace('.00',':00').replace('.50',':30'));
     if(x.cum){ row('Duty, previous 7 days', (x.cum.d168.dutyMin/60).toFixed(1)+' h');
                row('Flight time, previous 7 days', (x.cum.d168.flightMin/60).toFixed(1)+' h');
                if(x.cum.free168) row('Longest break, previous 7 days', x.cum.free168.hours.toFixed(1)+' h');
@@ -9341,9 +9311,6 @@
     P.push('REST AND LIMITS');
     if(x.reqRestMin!=null) P.push('  '+pad('Rest required')+hm(x.reqRestMin)+
       (x.restMin!=null && x.restMin<x.reqRestMin? '   -- SHORT':''));
-    if(x.schedLimitH!=null) P.push('  '+pad('Scheduled duty limit')+
-      x.schedLimitH.toFixed(2).replace('.00',':00').replace('.50',':30')+
-      (x.dutyMin!=null && x.dutyMin/60>x.schedLimitH? '   -- EXCEEDED':''));
     if(x.cum){
       P.push('  '+pad('Duty, previous 7 days')+(x.cum.d168.dutyMin/60).toFixed(1)+' h');
       P.push('  '+pad('Flight, previous 7 days')+(x.cum.d168.flightMin/60).toFixed(1)+' h');
@@ -9399,10 +9366,6 @@
     try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
 
     h+='__OVERVIEW__';        // filled once the display window below is known
-    h+='<div class="dpcite" style="margin-top:14px"><b>Regime:</b> '+esc(L.regime)+' · '+L.crew+'-crew.<br>'+
-       '<b>FAR max duty:</b> '+(L.maxDutyH? L.maxDutyH+':00 — '+esc(L.maxDutyCite) : esc(L.maxDutyCite))+'<br>'+
-       '<b>FAR max flight time / 24h:</b> '+(L.maxFlightH? L.maxFlightH+':00 — '+esc(L.maxFlightCite) : esc(L.maxFlightCite))+'<br>'+
-       '<b>CBA:</b> Atlas/IBT 2021, Article 12.D.1 — loaded. Art. 12.D: <i>"Except when an applicable FAR requires a shorter duty period…"</i> so whichever is shorter controls.</div>';
     var nowMs=Date.now();
     /* A duty with no debrief still has to be findable. Falling back to the report time
        stopped an in-progress duty being skipped and the one after it being called "next". */
@@ -9621,60 +9584,25 @@
         h+='</div>';
       }
 
-      // --- CBA limits for this duty period ---
-      var cbaBlock='', ctlH=null, ctlWho=null, schedH=null, operH=null;
-      if(typeof CBA!=='undefined'){
-        /* Art. 12.D.1.a bands are stated in Local BASE Time. Using the departure station's
-           clock put a 2300-local LAX report in the Night band when at a MIA base it is
-           0200 - the Critical band - a two-hour difference in the scheduled limit. */
-        var baseOff=dpBaseOff(d.report);
-        var repLocalH=(new Date(d.report+baseOff*3600000)).getUTCHours();
-        var opThenDH=false;
-        for(var q=1;q<d.legs.length;q++){ if(!d.legs[q-1].dh && d.legs[q].dh) opThenDH=true; }
-        if(d.legs.length===1 && d.legs[0].dh) opThenDH=false;
-        var allDH=d.legs.length>0 && d.legs.every(function(l){ return l.dh; });
-        var cb=CBA.dutyLimits(dpCrew, repLocalH, {operateThenDH:opThenDH, article33:dpArt33,
-                 reserveR2R3:dpReserve, allDeadhead:allDH});
-        var ctl=CBA.controlling(cb.operational, L.maxDutyH);
-        ctlH=ctl.h; ctlWho=(ctl.who==='CBA'? 'the CBA operational limit' : 'the FAR limit');
-        schedH=cb.scheduled; operH=cb.operational;
-        schedH=cb.scheduled; operH=cb.operational;
-        var actualH=(d.effDutyMin!=null?d.effDutyMin:d.dutyMin)/60;
-        var overCba=actualH>cb.operational, overSch=actualH>cb.scheduled;
-        cbaBlock='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">CBA limits</b> — '+esc(cb.cite)+
-          (cb.band? ' <span style="color:var(--faint)">· report '+esc(cb.band)+' band, '+esc(dpHome())+' base local</span>':'')+'<br>'+
-          '<b>Scheduled:</b> '+cb.scheduled.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30')+
-          '  ·  <b>Operational:</b> '+cb.operational.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30')+
-          (overCba? ' <span style="color:var(--bad)">— EXCEEDS the operational limit</span>' : (overSch? ' <span style="color:var(--warn)">— beyond the scheduled limit (within operational)</span>':''))+
-          (cb.note? '<br><span style="color:var(--faint)">'+esc(cb.note)+'</span>':'')+
-          (function(){
-            /* 12.D.3.f — the sit between an operating block-in and the deadhead departure. */
-            if(!CBA.DEADHEAD) return '';
-            var worst=null;
-            for(var z=1;z<d.legs.length;z++){
-              var prev=d.legs[z-1], cur=d.legs[z];
-              if(prev.dh || !cur.dh || prev['in']==null || cur.out==null) continue;
-              var gap=(cur.out-prev['in'])/3600000;
-              if(worst==null || gap>worst) worst=gap;
-            }
-            if(worst==null) return '';
-            var over=worst>CBA.DEADHEAD.connectH;
-            return '<br><b>Deadhead connection:</b> '+dpHM(Math.round(worst*60))+' between the operating block-in and the deadhead departure'+
-              (over? ' <span style="color:var(--bad)">— over the 5:00 maximum</span>' : ' (5:00 maximum)')+
-              '<br><span style="color:var(--faint)">'+esc(CBA.DEADHEAD.connectCite)+'</span>';
-          })()+
-          '<br><b>Controlling limit:</b> <b style="color:'+(ctl.who==='CBA'?'#ffd166':'#5b93e8')+'">'+esc(ctl.who)+' '+(ctl.h!=null?ctl.h.toFixed(2).replace('.',':').replace(':00',':00').replace(':50',':30'):'—')+'</b> — '+esc(ctl.text)+
-          '</div>';
-      }
-      var over = !d.allGateway && L.maxDutyH && (d.effDutyMin!=null?d.effDutyMin:d.dutyMin) > L.maxDutyH*60;
+      /* The CBA duty-limit block used to be computed here. It needed a crew complement the
+         app cannot know per flight, and its only output was legality. Removed with the panel
+         it fed rather than left computing quietly in the background. */
+
+      /* Duty limits used to be rendered here, from a single crew-complement setting that
+         applied to the whole roster. Crew complement changes flight by flight, so that value
+         was wrong for most duty periods, and it drove FAR caps, CBA caps, required rest and
+         the cumulative hard caps — producing confident "EXCEEDED" and "within limits" verdicts
+         built on an assumption the app had no way to know.
+
+         It also bought nothing here. Once bunk rest came out of the fatigue model, crew
+         complement stopped affecting any fatigue number at all; it only ever produced legality
+         findings. And this tab's own warning box says legality lives on LABT/LATT and Schedule
+         Checks. A wrong limit on a fatigue report is the same class of mistake as a wrong sleep
+         figure: one number a scheduler can disprove discredits every true one beside it.
+
+         So the rule for this tab is now: report what was flown, not whether it was legal. */
       if(!d.allGateway){
         h+='</div></details>';                       // close "Why this number"
-        var flag = over || /EXCEEDS/.test(cbaBlock);
-        h+='<details class="dpsec'+(flag?' warn':'')+'"><summary>Duty limits'+(flag?' <span class="dpflag">over a limit</span>':'')+'</summary><div class="dpsecb">'+
-           cbaBlock+'<div class="dpcite"><b>Max duty for this duty period:</b> '+
-           (L.maxDutyH? L.maxDutyH+':00 — <b>'+esc(L.maxDutyCite)+'</b>'+(over?' <span style="color:var(--bad)">EXCEEDED</span>':'')
-                      : '<span style="color:var(--warn)">none in regulation</span> — '+esc(L.maxDutyCite))+
-           '</div>'+dp24Block(duties,d,L)+'</div></details>';
       }
       if(!d.allGateway){
         var rqp = reqC;
@@ -9691,8 +9619,7 @@
           bac:(F&&F.bacEquivalent? F.bacEquivalent(d.awakeAtRelease||0):null),
           thirtyTwo:(cum? {ok:cum.thirtyTwoOk, hours:cum.free168.hours, covered:cum.thirtyTwoCovered}:null), cum:cum,
           dutyMin:(d.effDutyMin!=null?d.effDutyMin:d.dutyMin),
-          limitH:ctlH, limitWho:ctlWho, consecN:(d.consecN||i+1),
-          schedLimitH:schedH, operLimitH:operH, awakeContinuousH:d.awakeContinuousH,
+          consecN:(d.consecN||i+1), awakeContinuousH:d.awakeContinuousH,
           allDeadhead:(d.legs.length>0 && d.legs.every(function(l){ return l.dh; })),
           eff:d.effWorst, effLabel:(d.effBand&&d.effBand.label), score:score, band:bc.l,
           reportBoth:dpBoth(d.report,d.from), releaseBoth:dpBoth(d.release,d.to),
@@ -10036,40 +9963,29 @@
       'Only the 90% line comes from published research — the other two are model-vendor defaults, not rules. '+
       '<span class="ovwhy" data-ov="bands">Where the bands come from</span></div></div>';
     if(c) h+='<div class="ovsec"><div class="ovh">Duty hours in the previous 7 days</div>'+c+
-      '<div class="ovcap">Rolling 168 hours, measured back from each report time. The dashed line is the Part 117 figure for passenger flying, shown for scale — '+
-      'all-cargo is not bound by <i>that</i> number, but it does have its own binding caps, listed below. '+
-      '<span class="ovwhy" data-ov="cum">Why show a limit that does not apply?</span></div></div>';
+      '<div class="ovcap">Rolling 168 hours, measured back from each report time. The dashed line is the Part 117 figure for passenger flying, drawn purely as a familiar yardstick — '+
+      'all-cargo is not bound by it, and this tab does not check you against any limit. What binds your operation depends on the crew complement of each individual flight, '+
+      'which is why that lives on <b>Schedule Checks</b> and not here.</div></div>';
     if(cum){
-      var ok=cum.thirtyTwoOk, okr=cum.thirtyTwoReducedOk;
       h+='<div class="ovstats">'+
-        '<div class="ovs"><div class="k">Longest break, last 7 days</div><div class="v" style="color:'+
-          (!cum.thirtyTwoCovered&&!ok? '#7f95b5' : (ok?'#4ee39a':(okr?'#ffd166':'#ff6b6b')))+'">'+
+        /* The longest unbroken break is the best single indicator of whether there has been
+           any real recovery in the week, so the NUMBER stays. The pass/fail against the
+           32-hour rule has gone with the rest of the legality — and its traffic-light colour
+           with it, since a green number is a verdict whether or not it is labelled one. */
+        '<div class="ovs"><div class="k">Longest break, last 7 days</div><div class="v">'+
           cum.free168.hours.toFixed(1)+' h</div><div class="s">'+
-          (ok?'meets the 32-hour rule':(okr?'meets the reduced 30 hours':
-             (cum.thirtyTwoCovered? 'below the 30-hour floor'
-              : 'not enough imported history to check')))+'</div></div>'+
+          (cum.thirtyTwoCovered? 'Unbroken time free of all duty'
+                               : 'Not enough imported history to be sure')+'</div></div>'+
         '<div class="ovs"><div class="k">Flight time, last 7 days</div><div class="v">'+(cum.d168.flightMin/60).toFixed(1)+' h</div>'+
           '<div class="s">'+(cum.d168.blockMin/60).toFixed(1)+' h block incl. deadhead</div></div>'+
         '<div class="ovs"><div class="k">Duty, last 28 days</div><div class="v">'+(cum.d672.dutyMin/60).toFixed(1)+' h</div><div class="s">Block '+(cum.d672.blockMin/60).toFixed(1)+' h</div></div>'+
         '<div class="ovs"><div class="k">Landings 0100–0459</div><div class="v">'+cum.criticalLandings168+'</div><div class="s">Last 7 days, base local</div></div>'+
       '</div>';
-      // The caps that actually bind this operation, as opposed to the Part 117 yardstick.
-      if(cum.caps && cum.caps.length){
-        h+='<div class="ovsec"><div class="ovh">Cumulative limits that bind all-cargo flying</div><div class="caps">';
-        cum.caps.forEach(function(c){
-          var col = c.status==='breach'? '#ff6b6b' : (c.status==='ok'? '#4ee39a' : '#7f95b5');
-          var w = Math.max(2, Math.min(100, c.pct));
-          h+='<div class="cap"><div class="capt"><span>'+esc(c.label)+'</span>'+
-             '<span class="capv" style="color:'+col+'">'+c.used.toFixed(1)+' <span class="capl">/ '+c.limit+' h</span></span></div>'+
-             '<div class="capbar"><div class="capfill'+(c.status==='unknown'?' capunk':'')+'" style="width:'+w.toFixed(0)+'%;background:'+col+'"></div></div>'+
-             (c.free? '<div class="capc" style="color:var(--faint)">This one is a <b>minimum you are owed</b>, not a ceiling — a full bar here is good.</div>':'')+
-             '<div class="capc">'+esc(c.cite)+
-             (c.status==='breach'? ' <b style="color:#ff6b6b">— '+(c.free?'NOT MET':'EXCEEDED')+'</b>'
-              : c.status==='unknown'? ' <span style="color:var(--faint)">— your imported roster does not reach back far enough to check this. Import the earlier month to complete it.</span>'
-              : '')+'</div></div>';
-        });
-        h+='</div><div class="ovcap">Unlike the Part 117 figure above, these are the limits for <b>your</b> operation, chosen from the crew complement selected below. A bar shown in grey means the check could not be made from the data you have imported — not that it passed.</div></div>';
-      }
+      /* The cap bars used to sit here. Every one of them — 32 flight hours in 7 days, the
+         24 hours free, the 30/90/365-day ceilings — is selected by crew complement, and this
+         tab was choosing it from one global setting that is wrong for most flights. The HOURS
+         above are facts and stay; the verdicts were assumptions wearing a citation. Cumulative
+         legality belongs on Schedule Checks, where the crew for a given trip can be stated. */
     }
     h+='</div>';
     return h;
@@ -10134,19 +10050,13 @@
     };
   })();
   (function(){
-    var sel=$('#dpRegime'); if(sel) sel.onchange=function(){ dpRegime=sel.value; try{localStorage.setItem('ad_regime',dpRegime);}catch(e){} dpRender(); };
     try{ var rg=localStorage.getItem('ad_regime'); if(rg&&sel){ dpRegime=rg; sel.value=rg; } }catch(e){}
-    Array.prototype.forEach.call(document.querySelectorAll('[data-dpcrew]'),function(b){
-      b.onclick=function(){ document.querySelectorAll('[data-dpcrew]').forEach(function(x){x.classList.remove('on');});
-        b.classList.add('on'); dpCrew=+b.getAttribute('data-dpcrew'); try{localStorage.setItem('ad_dpcrew',dpCrew);}catch(e){} dpRender(); };
-    });
-    try{ var cw=+localStorage.getItem('ad_dpcrew'); if(cw){ dpCrew=cw;
-      document.querySelectorAll('[data-dpcrew]').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-dpcrew')===cw); }); } }catch(e){}
+    /* The regime, crew-complement, Article 33 and reserve controls were wired here. They
+       chose duty limits and nothing else, and duty limits have left this tab because they all
+       turn on a crew complement that changes flight by flight. */
     var tc=$('#tipC'), tm=$('#tipModal');
     if(tc) tc.onclick=function(){ tm.classList.remove('on'); };
     if(tm) tm.addEventListener('click',function(e){ if(e.target===tm) tm.classList.remove('on'); });
-    var a33=$('#dpArt33'); if(a33) a33.onclick=function(){ dpArt33=!dpArt33; this.textContent=dpArt33?'Yes':'No'; this.classList.toggle('on',dpArt33); dpRender(); };
-    var rsv=$('#dpReserve'); if(rsv) rsv.onclick=function(){ dpReserve=!dpReserve; this.textContent=dpReserve?'Yes':'No'; this.classList.toggle('on',dpReserve); dpRender(); };
     dpRender();
     try{ scBuild(); }catch(e){}
   })();
