@@ -5849,7 +5849,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.5 · 2026-08-31';
+  var BUILD='v14.6 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5871,7 +5871,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.5',
+    version:'v14.6',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -9400,7 +9400,16 @@
          anywhere near today, fall back to showing what is coming rather than a blank tab. */
       if(!nShown){ show=null; dpScope='future'; }
     }
-    if(dpScope==='future' && futureIdx>0){ startAt=Math.max(0,futureIdx-1); hidden=startAt; }
+    /* futureIdx is -1 when NOTHING in the roster ends at or after now — the whole thing is
+       behind you. The old guard was `futureIdx>0`, false in exactly that case, so startAt
+       stayed at zero and "From now on" quietly rendered every duty period ever imported.
+       With a linked calendar that is two years of them. A roster with no future left in it
+       should show its tail, not the lot. */
+    if(dpScope==='future'){
+      if(futureIdx>0) startAt=futureIdx-1;
+      else if(futureIdx<0) startAt=Math.max(0, duties.length-8);
+      hidden=startAt;
+    }
     /* The overview describes what you are looking at, so it is built from the same window as
        the cards below it. A "lowest alertness anywhere in this roster" drawn from two years
        of history is not about the trip in front of you, and a bar chart with 160 bars on a
