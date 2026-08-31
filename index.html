@@ -621,6 +621,8 @@
     color:var(--dim);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .scopebtn.on{background:rgba(91,147,232,.28);border-color:#5b93e8;color:#cfe0fb}
   .scopeh{font-size:10.5px;color:var(--faint)}
+  .scopenote{font-size:11px;color:var(--faint);line-height:1.55;margin:6px 2px 0}
+  .scopenote b{color:#c9dcf7}
   .dpcard.dpnow{border-color:rgba(78,227,154,.6);box-shadow:0 0 0 1px rgba(78,227,154,.25)}
   .dpcard.dpnext{border-color:rgba(91,147,232,.55)}
   .ftbac{font-size:12px;color:#ffcf9d;line-height:1.5;margin-top:7px;padding:8px 10px;
@@ -5839,7 +5841,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.1 · 2026-08-31';
+  var BUILD='v14.2 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5861,7 +5863,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.1',
+    version:'v14.2',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -9036,8 +9038,11 @@
 
   /* ---------- duty-period timeline, limits, rest and risk ---------- */
   var dpRegime='FLAG', dpCrew=3, dpArt33=false, dpReserve=false;
-  var dpScope='upcoming';       // 'upcoming' | 'all' — a roster of 17 duty periods is a lot to scroll
+  /* 'near' | 'future' | 'all'. Defaults to the window around today, because a linked
+     calendar routinely carries two years and nobody scrolls two years. */
+  var dpScope='near';
   try{ var sc=localStorage.getItem('ad_dpscope'); if(sc) dpScope=sc; }catch(e){}
+  if(dpScope==='upcoming') dpScope='future';    // the old two-way setting, renamed
   var dpWhy={};
   function dpGw(){ try{ return JSON.parse(localStorage.getItem('ad_gateway')||'{}'); }catch(e){ return {}; } }
   function dpSetGw(k,on){ var g=dpGw(); if(on) g[k]=1; else delete g[k]; try{ localStorage.setItem('ad_gateway',JSON.stringify(g)); }catch(e){} }
@@ -9371,12 +9376,39 @@
       var end=(d.release!=null? d.release : (d.report!=null? d.report+18*3600000 : null));
       if(end!=null && end>=nowMs) futureIdx=i;
     });
-    var startAt=0, hidden=0;
-    if(dpScope==='upcoming' && futureIdx>0){ startAt=Math.max(0,futureIdx-1); hidden=startAt; }
+    /* A linked calendar hands over everything it has, which for a line pilot is years. All
+       of it is worth KEEPING — the 30, 90 and 365-day flight-time checks and the rolling
+       168-hour rest checks are only as good as the history behind them — but almost none of
+       it is worth LOOKING at. So the window here is a display filter and nothing more.
+
+       Ten days back is the span that still matters to how you feel now: it covers the
+       pattern you are in and the 168-hour window the cumulative checks use. Thirty days
+       forward is the published roster, which is the horizon you can actually plan against.
+       Everything outside that is still counted, just not drawn. */
+    var BACK_D=10, FWD_D=30;
+    var loMs=nowMs-BACK_D*86400000, hiMs=nowMs+FWD_D*86400000;
+    var inWindow=function(d){
+      var a=(d.report!=null? d.report : d.release), b=(d.release!=null? d.release : d.report);
+      if(a==null) return true;
+      return b>=loMs && a<=hiMs;
+    };
+    var startAt=0, hidden=0, show=null;
+    if(dpScope==='near'){
+      show={}; var nShown=0;
+      duties.forEach(function(d,i){ if(inWindow(d)){ show[i]=1; nShown++; } });
+      hidden=duties.length-nShown;
+      /* A window with nothing in it is worse than a long list. If the roster has no duty
+         anywhere near today, fall back to showing what is coming rather than a blank tab. */
+      if(!nShown){ show=null; dpScope='future'; }
+    }
+    if(dpScope==='future' && futureIdx>0){ startAt=Math.max(0,futureIdx-1); hidden=startAt; }
     h+='<div class="scoperow"><span class="scopelab">Showing</span>'+
-       '<button class="scopebtn'+(dpScope==='upcoming'?' on':'')+'" data-scope="upcoming">From now on</button>'+
+       '<button class="scopebtn'+(dpScope==='near'?' on':'')+'" data-scope="near">Around now</button>'+
+       '<button class="scopebtn'+(dpScope==='future'?' on':'')+'" data-scope="future">From now on</button>'+
        '<button class="scopebtn'+(dpScope==='all'?' on':'')+'" data-scope="all">Whole roster</button>'+
-       (hidden? '<span class="scopeh">'+hidden+' earlier duty period'+(hidden>1?'s':'')+' hidden</span>':'')+'</div>';
+       (hidden? '<span class="scopeh">'+hidden+' duty period'+(hidden>1?'s':'')+' hidden</span>':'')+'</div>'+
+       (dpScope==='near'? '<div class="scopenote">Last '+BACK_D+' days and next '+FWD_D+
+          '. <b>Every cumulative total still counts your whole imported history</b> — this only changes what is drawn.</div>':'');
     /* Said once, above the whole timeline, rather than on every card that happens to
        contain an inferred leg - which was most of them. */
     if(legs.some(function(l){ return l.dhg && !l.dhFix; }) || legs.some(function(l){ return l.gnd; }))
@@ -9389,6 +9421,7 @@
          'The <b>&times;</b> sets a leg aside if it never happened.</div>';
     duties.forEach(function(d,i){
       if(i<startAt) return;
+      if(show && !show[i]) return;
       var dEnd=(d.release!=null? d.release : (d.report!=null? d.report+18*3600000 : null));
       var isNow = d.report!=null && dEnd!=null && nowMs>=d.report && nowMs<=dEnd;
       var isNext = (i===futureIdx && !isNow);
