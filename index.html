@@ -767,6 +767,23 @@
   .rawsave{background:rgba(20,58,42,.9);border:1px solid rgba(78,227,154,.45);color:#a9f0cd}
   .rawreset{background:rgba(6,14,28,.6);border:1px solid rgba(120,160,220,.3);color:#9fb8d8}
   .rawhint{font-size:11px;color:var(--faint);line-height:1.55;margin-top:8px}
+  /* ---- what's new ---- */
+  .wnbox{background:linear-gradient(180deg,rgba(30,58,44,.9),rgba(14,32,26,.9));
+    border:1px solid rgba(78,227,154,.32);border-radius:15px;padding:14px 15px;margin-bottom:12px}
+  .wnprev{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#ffd166;
+    background:rgba(255,209,102,.13);border:1px solid rgba(255,209,102,.35);border-radius:6px;
+    padding:4px 8px;display:inline-block;margin-bottom:9px}
+  .wnhead{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;
+    font-weight:700;color:#8fd9b4}
+  .wntag{font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+    background:#2f8f63;color:#eafff4;border-radius:5px;padding:2px 7px}
+  .wntitle{font-size:16px;font-weight:800;color:#eafff4;margin-top:6px;line-height:1.3}
+  .wnlist{margin:10px 0 0;padding-left:19px}
+  .wnlist li{font-size:12.5px;line-height:1.65;color:#cfe9db;margin:7px 0}
+  .wnlist li b{color:#eafff4}
+  .wnok{margin-top:12px;width:100%;padding:10px;border-radius:10px;font-family:inherit;
+    font-size:13px;font-weight:800;cursor:pointer;
+    background:rgba(47,143,99,.32);border:1px solid rgba(78,227,154,.45);color:#a9f0cd}
   .impbtn3{display:block;width:100%;margin-top:8px;padding:11px;border-radius:11px;font-family:inherit;
     background:rgba(20,58,42,.85);border:1px solid rgba(78,227,154,.42);color:#a9f0cd;font-size:13px;font-weight:800;cursor:pointer}
   /* ---- setup guide ---- */
@@ -1212,6 +1229,7 @@
   </div>
 
   <div id="view-decode">
+  <div id="wnCard"></div>
   <div class="card">
     <label class="fld" for="input">Coded report</label>
     <div class="sub-codes">METAR · TAF · SIGMET · AIRMET · PIREP · NOTAM — worldwide</div>
@@ -5599,6 +5617,103 @@
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
+/* CargoDecode — sign-in reporting -------------------------------------------------------
+   Answers one question for whoever maintains this: is anybody using it.
+
+   What it sends: the salted hash the gate already computes from the employee number, the
+   build version, and a timestamp. That is the whole payload. The hash is the same one that
+   is already in allow.json, so the maintainer can match it back against the list they built
+   without a raw employee number ever crossing the wire or sitting on a server.
+
+   What it does not send, and has no access to: the roster, the flight plan, the fatigue
+   answers, the sleep plan, hotel information, stations, or anything else the app holds.
+   Those live in localStorage and this module never reads them.
+
+   How it behaves, which matters more than what it sends:
+
+     It cannot delay the app. The first send is scheduled well after load, it is never
+     awaited, and it is never on the path the service worker uses. An app that hangs on the
+     ground because a beacon is retrying is worse than no beacon.
+
+     It cannot break the app offline. There is no network at FL350 and there is none on the
+     ramp with airplane mode on. A failed send is remembered and goes out next time, and a
+     queue that never drains is capped rather than growing forever.
+
+     It cannot fire without an endpoint. ENDPOINT ships empty, which disables the module
+     completely — no timers, no storage, nothing. */
+(function(root){
+  'use strict';
+
+  var ENDPOINT='';                  // set to the collector URL to switch this on
+  var EVERY_MS=6*3600000;           // at most one report per install per six hours
+  var QUEUE_MAX=20;                 // stale sign-ins past this are dropped, oldest first
+  var DELAY_MS=2500;                // let the app finish starting before touching the radio
+  var TIMEOUT_MS=4000;
+
+  function get(k,d){ try{ var v=localStorage.getItem(k); return v==null? d : v; }catch(e){ return d; } }
+  function set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function queue(){ try{ return JSON.parse(get('ad_bq','[]'))||[]; }catch(e){ return []; } }
+  function setQueue(q){ set('ad_bq', JSON.stringify(q.slice(-QUEUE_MAX))); }
+
+  /* Who is signed in, as the hash the allowlist already holds. Returns null when nobody is
+     signed in, which is the only state where there is nothing to report. */
+  function who(){
+    try{
+      var c=JSON.parse(get('ad_unlock','null'));
+      if(!c) return null;
+      if(c.owner) return 'owner';
+      if(c.id && root.AEROGATE && root.AEROGATE.idHash) return root.AEROGATE.idHash(c.id);
+    }catch(e){}
+    return null;
+  }
+
+  function send(batch){
+    if(!ENDPOINT || !batch.length) return Promise.resolve(false);
+    var body=JSON.stringify({ e:batch });
+    /* sendBeacon is the right transport: the browser owns the request, it survives the page
+       going away, and it cannot block anything the user is doing. It reports only that the
+       request was handed over, not that it arrived, which is why the queue is cleared on
+       the fetch path where the answer is real. */
+    var ctl=(typeof AbortController!=='undefined')? new AbortController() : null;
+    var timer=ctl? setTimeout(function(){ try{ ctl.abort(); }catch(e){} }, TIMEOUT_MS) : null;
+    return fetch(ENDPOINT, { method:'POST', body:body, keepalive:true,
+                             headers:{'Content-Type':'text/plain'},
+                             signal:ctl? ctl.signal : undefined })
+      .then(function(r){ if(timer) clearTimeout(timer); return !!(r && r.ok); })
+      .catch(function(){ if(timer) clearTimeout(timer); return false; });
+  }
+
+  /* Called once per launch, and again straight after a sign-in. Everything inside is
+     wrapped, because a reporting module has no business being able to break the app it
+     reports on. */
+  function ping(version, force){
+    if(!ENDPOINT) return;
+    setTimeout(function(){
+      try{
+        var u=who();
+        if(!u) return;                                   // nobody signed in, nothing to say
+        var last=+get('ad_blast','0')||0, lastV=get('ad_bver','');
+        var now=Date.now();
+        var due = force || !last || (now-last)>=EVERY_MS || lastV!==String(version||'');
+        var q=queue();
+        if(due){
+          q.push({ u:u, v:String(version||''), t:new Date(now).toISOString() });
+          set('ad_blast', String(now));
+          set('ad_bver', String(version||''));
+          setQueue(q);
+          q=queue();
+        }
+        if(!q.length) return;
+        send(q).then(function(ok){ if(ok) setQueue([]); });
+      }catch(e){}
+    }, force? 400 : DELAY_MS);
+  }
+
+  var API={ ping:ping, who:who, enabled:function(){ return !!ENDPOINT; },
+            _queue:queue, ENDPOINT:ENDPOINT };
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.BEACON=API;
+})(typeof window!=='undefined'?window:globalThis);
 /* AeroDecode access gate — employee-number allowlist (offline).
    Authorized pilots are stored as SALTED HASHES (not the raw numbers), so the
    public source never shows the actual roster. Login = employee number.
@@ -5672,10 +5787,62 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v13.3 · 2026-08-31';
+  var BUILD='v13.4 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
+  /* Sign-in reporting. Fires well after load, never awaited, and does nothing at all until
+     an endpoint is configured in beacon.js. */
+  try{ if(window.BEACON) BEACON.ping(BUILD); }catch(e){}
+
+  /* ---------- What's new -------------------------------------------------------------
+     Release notes for the crew, held back until they are deliberately released.
+
+     WHATSNEW.live is the switch. While it is false the card is visible to the owner login
+     ONLY, marked as a preview, so notes can be written, pushed and read on a real phone
+     before anybody else sees them. Flip it to true in the build you actually want to
+     announce. That separation matters because the app updates itself: without it, every
+     push would shout at three hundred people about work that was not finished.
+
+     Write the items for a line pilot who has been away for three weeks — what changed for
+     THEM, not what changed in the code. Once someone dismisses a version's notes they stay
+     dismissed until the version in this block changes. */
+  var WHATSNEW={
+    live:false,
+    version:'v13.4',
+    title:'Your schedule, and where to sleep on a layover',
+    items:[
+      'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
+      'New <b>Sleep Plan</b> tab. Pick a layover and it works out where to put your sleep in the hours you have, when to stop drinking coffee, and what time the wake-up call lands.',
+      'The app now understands <b>sims, ground school, briefings and reserve</b>. They count toward duty and rest, as they should, and no longer show up pretending to be flights.',
+      'Rebooked deadheads that AIMS never retracted are spotted and left out, so they stop inflating your duty totals. Where the app genuinely cannot tell which itinerary happened, it now shows you both and lets you strike out the one that did not.',
+      'You can <b>see and correct the schedule data</b> the app is working from — Fatigue tab, <b>See and correct the schedule data</b>. Anything you fix stays fixed through later imports.'
+    ]
+  };
+  function wnSeen(){ try{ return localStorage.getItem('ad_wnseen')||''; }catch(e){ return ''; } }
+  function wnRender(){
+    var box=document.getElementById('wnCard'); if(!box) return;
+    box.innerHTML='';
+    if(!WHATSNEW.items || !WHATSNEW.items.length) return;
+    var owner=false;
+    try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); owner=!!(c&&c.owner); }catch(e){}
+    if(!WHATSNEW.live && !owner) return;                 // held back
+    if(wnSeen()===WHATSNEW.version && !(!WHATSNEW.live && owner)) return;
+    box.innerHTML='<div class="wnbox">'+
+      (!WHATSNEW.live? '<div class="wnprev">Preview — not released. Only you can see this.</div>':'')+
+      '<div class="wnhead"><span class="wntag">New</span>'+esc(WHATSNEW.version)+'</div>'+
+      '<div class="wntitle">'+esc(WHATSNEW.title)+'</div>'+
+      '<ul class="wnlist">'+WHATSNEW.items.map(function(i){ return '<li>'+i+'</li>'; }).join('')+'</ul>'+
+      '<button class="wnok" id="wnOk">Got it</button></div>';
+    var b=document.getElementById('wnOk');
+    if(b) b.onclick=function(){
+      try{ localStorage.setItem('ad_wnseen', WHATSNEW.version); }catch(e){}
+      box.innerHTML='';
+    };
+  }
+  window.wnRender=wnRender;
+  window.WHATSNEW=WHATSNEW;      // so the notes can be previewed as a crew member would see them
+  wnRender();
 
   /* Every network call in this app is time-boxed. navigator.onLine reports TRUE whenever a
      radio is switched on, whether or not there is any route to anywhere — which is exactly
@@ -5932,6 +6099,8 @@
       save(r.owner? {owner:true} : {id:r.id});
       pinErr.textContent=''; hideLock();
       try{ if(window.ftApplyOwner) window.ftApplyOwner(); }catch(e){}
+      try{ if(window.BEACON) BEACON.ping(BUILD, true); }catch(e){}
+      try{ if(window.wnRender) window.wnRender(); }catch(e){}
     }
     if(pinBtn) pinBtn.onclick=tryUnlock;
     if(pinInput) pinInput.addEventListener('keydown',function(e){ if(e.key==='Enter') tryUnlock(); });
