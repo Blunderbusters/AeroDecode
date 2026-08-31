@@ -372,6 +372,16 @@
   .updbar.stale .updmain{padding:15px;font-size:17px;font-weight:800;letter-spacing:.3px;color:#fff;
     background:linear-gradient(180deg,#d0453a,#a12c20);border:1px solid #e06b5c;
     box-shadow:0 8px 26px rgba(190,50,40,.45);animation:updpl 1.5s ease-in-out infinite}
+  .preflight{margin-top:10px;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;
+    border:1px solid rgba(120,160,220,.3);background:rgba(6,14,28,.5)}
+  .pfhead{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13.5px}
+  .pfdot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+  .pfrow{display:flex;align-items:center;gap:7px;margin-top:6px;color:var(--dim);font-size:11.5px}
+  .pfmark{flex:0 0 14px;text-align:center;font-weight:800}
+  .pfnote{font-size:11px;color:var(--faint);line-height:1.5;margin-top:8px}
+  .pfbtn{display:block;width:100%;margin-top:9px;padding:10px;border-radius:10px;font-family:inherit;
+    background:rgba(24,64,44,.85);border:1px solid rgba(78,227,154,.5);color:#bff5da;font-size:13px;font-weight:800;cursor:pointer}
+  .pfbtn[disabled]{opacity:.5;cursor:default}
   .updstat{font-size:12.5px;color:var(--dim);text-align:center;margin-top:6px;min-height:0;line-height:1.45}
   .updstat:empty{display:none}
   .updbar.stale .updstat{color:#ffd0d0;font-size:13.5px;font-weight:700;cursor:pointer}
@@ -987,6 +997,7 @@
   <div class="updbar" id="updBar">
     <button id="updBtn" class="updmain">Check for updates</button>
     <div id="updStatus" class="updstat"></div>
+    <div id="preflight" class="preflight"></div>
   </div>
 
   <button id="shareBtn" class="sharebtn">
@@ -4645,19 +4656,38 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v11.8 · 2026-08-31';
+  var BUILD='v12.0 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
+
+  /* Every network call in this app is time-boxed. navigator.onLine reports TRUE whenever a
+     radio is switched on, whether or not there is any route to anywhere — which is exactly
+     the state of a phone that was left out of airplane mode at takeoff. In that state a
+     fetch does not fail, it hangs on DNS and TCP timeouts, so anything awaiting it stalls.
+     A hard AbortController deadline is the only reliable way out. */
+  var NET_OK=null;                       // null = untested, true/false = last real result
+  var SW_OK=null;                        // did the service worker actually register?
+  function netFetch(url, ms){
+    ms=ms||4000;
+    return new Promise(function(resolve, reject){
+      var done=false, ac=(typeof AbortController!=='undefined')? new AbortController() : null;
+      var t=setTimeout(function(){ if(done) return; done=true; NET_OK=false;
+        try{ if(ac) ac.abort(); }catch(e){} reject(new Error('network timeout')); }, ms);
+      var opt={cache:'no-store'}; if(ac) opt.signal=ac.signal;
+      fetch(url, opt).then(function(r){ if(done) return; done=true; clearTimeout(t); NET_OK=true; resolve(r); },
+                           function(e){ if(done) return; done=true; clearTimeout(t); NET_OK=false; reject(e); });
+    });
+  }
 
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
   var updStatus=document.getElementById('updStatus');
   function setUpd(msg){ if(updStatus) updStatus.textContent=msg||''; }
   async function getLatestBuild(){
     try{
-      if(navigator.onLine===false) return null;            // offline: skip the doomed fetch entirely
+      if(navigator.onLine===false) return null;            // definitely offline: skip it
       var u=location.pathname+'?ck='+Date.now();
-      var r=await fetch(u,{cache:'no-store'});
+      var r=await netFetch(u, 4000);                        // and never wait longer than this
       if(!r.ok) return null;
       var t=await r.text();
       var m=t.match(/var BUILD='([^']+)'/);
@@ -4778,7 +4808,7 @@
     try{
       if(navigator.onLine===false) return;                           // can't kill an offline device
       var url=location.pathname.replace(/[^\/]*$/,'')+'kill.txt?t='+Date.now();
-      fetch(url,{cache:'no-store'}).then(function(r){ if(!r.ok) return null; return r.text(); }).then(function(t){
+      netFetch(url, 3500).then(function(r){ if(!r.ok) return null; return r.text(); }).then(function(t){
         if(t==null) return;                                          // no kill.txt → not killed
         var lines=t.replace(/\r/g,'').split('\n'); var first=(lines[0]||'').trim().toLowerCase();
         if(first==='on'||first==='1'||first==='kill'||first==='true'||first==='yes'){
@@ -4822,7 +4852,7 @@
     try{
       if(navigator.onLine===false) return;                              // offline devices can't be reached
       var url=location.pathname.replace(/[^\/]*$/,'')+'announce.txt?t='+Date.now();
-      fetch(url,{cache:'no-store'}).then(function(r){ if(!r.ok) return null; return r.text(); }).then(function(t){
+      netFetch(url, 3500).then(function(r){ if(!r.ok) return null; return r.text(); }).then(function(t){
         if(t==null) return;                                             // no announce.txt → nothing to show
         var lines=t.replace(/\r/g,'').split('\n');
         var first=(lines[0]||'').trim(); var firstL=first.toLowerCase();
@@ -5782,7 +5812,7 @@
     if(_chartsDone || navigator.onLine===false) return Promise.resolve();
     var names=['hf-pac.jpg','hf-atl.jpg','hf-vhf.jpg','hf-mex.jpg'];
     return Promise.all(names.map(function(n){
-      return fetch(n).then(function(r){ return r.ok?r.blob():null; }).catch(function(){ return null; });
+      return netFetch(n, 6000).then(function(r){ return r.ok?r.blob():null; }).catch(function(){ return null; });
     })).then(function(res){
       if(res.every(function(x){ return x; })){ _chartsDone=true; try{ localStorage.setItem('ad_charts_ready','1'); }catch(e){} }
     });
@@ -7532,22 +7562,67 @@
 
   /* ---- auto-cache the OFP readers when online, so opening the app on the ground = ready in flight ---- */
   setFlReady();
-  setTimeout(function(){ prewarmEngines(); }, 2500);
+  /* ---------- Preflight readiness -------------------------------------------------
+     The failure this exists to prevent: the app was open on the ground, went airborne with
+     the radio still on, and would not load. Nothing warned that anything was missing,
+     because nothing was missing — the page just could not decide it was offline.
+     This says, before pushback, whether everything needed in the air is already on the
+     device, and gives one button to finish the job while there is still signal. */
+  var PF_ITEMS=[
+    {k:'app',    label:'App itself cached'},
+    {k:'ocr',    label:'OFP reader (PDF + OCR engines)'},
+    {k:'charts', label:'ARINC HF coverage charts'}
+  ];
+  function pfState(){
+    var st={app:false, ocr:false, charts:false};
+    try{ st.charts = localStorage.getItem('ad_charts_ready')==='1'; }catch(e){}
+    try{ st.ocr = localStorage.getItem('ad_ocr_ready')==='1'; }catch(e){}
+    st.app = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller && SW_OK!==false;
+    return st;
+  }
+  function pfRender(busy){
+    var el=document.getElementById('preflight'); if(!el) return;
+    var st=pfState(), ready=st.app && st.ocr && st.charts;
+    var col=ready? '#4ee39a' : (st.app? '#ffd166' : '#ff6b6b');
+    var h='<div class="pfhead"><span class="pfdot" style="background:'+col+'"></span>'+
+      '<span style="color:'+col+'">'+(ready? 'Ready for flight — works with no signal'
+        : (st.app? 'Partly ready — finish this on the ground' : 'Not cached yet — open once with a connection'))+'</span></div>';
+    PF_ITEMS.forEach(function(it){
+      var ok=st[it.k];
+      h+='<div class="pfrow"><span class="pfmark" style="color:'+(ok?'#4ee39a':'#ff9d4d')+'">'+(ok?'✓':'○')+'</span>'+esc(it.label)+'</div>';
+    });
+    if(!ready) h+='<button class="pfbtn" id="pfGo"'+(busy?' disabled':'')+'>'+(busy?'Caching…':'Cache everything now')+'</button>';
+    h+='<div class="pfnote"><b>In the air, put the device in airplane mode.</b> With the radio switched on but no signal, requests do not fail — they hang, and any app waiting on one appears frozen. Airplane mode makes them fail instantly, which is what lets this app fall straight through to its offline copy.'+
+       (NET_OK===false? '<br><br><b style="color:var(--warn)">No usable connection right now</b> — running from the cached copy.' : '')+'</div>';
+    el.innerHTML=h;
+    var go=document.getElementById('pfGo');
+    if(go) go.onclick=function(){
+      pfRender(true);
+      Promise.resolve().then(function(){ return prewarmEngines(); }).catch(function(){})
+        .then(function(){ setTimeout(function(){ pfRender(false); }, 400); });
+    };
+  }
+  window.addEventListener('online', function(){ pfRender(false); });
+  window.addEventListener('offline', function(){ pfRender(false); });
+  setTimeout(function(){ pfRender(false); }, 400);
+  setTimeout(function(){ prewarmEngines().then(function(){ pfRender(false); }, function(){ pfRender(false); }); }, 2500);
   window.addEventListener('online', function(){ prewarmEngines(); });
 
   /* ---------- offline app-shell cache when hosted ---------- */
   if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
-    var sw="var V='aerodecode-v4';"+
-      "self.addEventListener('install',function(e){self.skipWaiting()});"+
-      "self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return k===V?null:caches.delete(k)}))}).then(function(){return self.clients.claim()}))});"+
-      "self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;var req=e.request;"+
-      "var isDoc=req.mode==='navigate'||req.destination==='document';"+
-      // HTML: network-first so updates arrive when online; fall back to cache when offline
-      "if(isDoc){e.respondWith(fetch(req,{cache:'no-store'}).then(function(resp){caches.open(V).then(function(c){try{c.put(req,resp.clone())}catch(_){}}); return resp;})"+
-      ".catch(function(){return caches.match(req).then(function(r){return r||caches.match('./')})}));return;}"+
-      // everything else (OCR engine, static): cache-first for speed + full offline
-      "e.respondWith(caches.open(V).then(function(c){return c.match(req).then(function(r){return r||fetch(req).then(function(resp){try{c.put(req,resp.clone())}catch(_){}; return resp;}).catch(function(){return r})})}));});";
-    try{navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'}))).catch(function(){});}catch(_){}
+    /* Registered from a real same-origin file. The previous build registered a worker built
+       from a Blob URL, which every browser rejects outright ("The URL protocol of the script
+       ('blob:...') is not supported") — and the failure was swallowed by an empty catch, so
+       the app reported itself as offline-capable while having no service worker at all. */
+    navigator.serviceWorker.register('./sw.js', {scope:'./'}).then(function(reg){
+      SW_OK=true;
+      try{ reg.update(); }catch(e){}
+      if(typeof pfRender==='function') setTimeout(function(){ pfRender(false); }, 600);
+    }).catch(function(err){
+      SW_OK=false;
+      try{ console.warn('Service worker registration failed:', err && err.message); }catch(e){}
+      if(typeof pfRender==='function') setTimeout(function(){ pfRender(false); }, 600);
+    });
   }
 })();
 </script>
