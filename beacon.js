@@ -25,7 +25,9 @@
 (function(root){
   'use strict';
 
-  var ENDPOINT='';                  // set to the collector URL to switch this on
+  /* The collector. It accepts and discards until a KV namespace is bound to the Worker, so
+     this can be live long before there is anywhere for it to write. */
+  var ENDPOINT='https://cargodecode.aeroscribe.workers.dev/hit';
   var EVERY_MS=6*3600000;           // at most one report per install per six hours
   var QUEUE_MAX=20;                 // stale sign-ins past this are dropped, oldest first
   var DELAY_MS=2500;                // let the app finish starting before touching the radio

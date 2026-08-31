@@ -5678,7 +5678,9 @@
 (function(root){
   'use strict';
 
-  var ENDPOINT='';                  // set to the collector URL to switch this on
+  /* The collector. It accepts and discards until a KV namespace is bound to the Worker, so
+     this can be live long before there is anywhere for it to write. */
+  var ENDPOINT='https://cargodecode.aeroscribe.workers.dev/hit';
   var EVERY_MS=6*3600000;           // at most one report per install per six hours
   var QUEUE_MAX=20;                 // stale sign-ins past this are dropped, oldest first
   var DELAY_MS=2500;                // let the app finish starting before touching the radio
@@ -5821,7 +5823,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v13.8 · 2026-08-31';
+  var BUILD='v13.9 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5843,7 +5845,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v13.8',
+    version:'v13.9',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -7998,8 +8000,11 @@
 
      The address itself never leaves the phone except to go to the relay, and the relay is
      told to accept nothing but calendar hosts, so it cannot be turned into an open proxy for
-     anything else. */
-  var CAL_PROXY='';
+     anything else.
+
+     The address below is the account's own Worker subdomain. If the Worker is ever renamed
+     or moved, this is the one line to change. */
+  var CAL_PROXY='https://cargodecode.aeroscribe.workers.dev/cal';
 
   function calCfg(){ try{ return JSON.parse(localStorage.getItem('ad_calurl')||'{}')||{}; }catch(e){ return {}; } }
   function calSave(p){
