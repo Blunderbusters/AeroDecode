@@ -4923,15 +4923,37 @@
         '. The body re-adjusts by only about an hour a day going east and an hour and a half going west, so this does not fix itself overnight.');
       if(x.tzMis>=3) sum.push('body clock '+x.tzMis.toFixed(1)+' h out of step');
     }
-    // 4. What the preceding rest could actually deliver
+    /* 4. What the preceding rest could actually deliver.
+
+       Two completely different situations, and they used to share one sentence. On a SHORT
+       rest the constraint is the clock: subtract transport, food and winding down and very
+       little is left to sleep in. On a LONG one there is plenty of time and the constraint
+       is WHERE the last sleep falls on the body clock.
+
+       The model only simulates the final sleep once a rest passes 24 hours, because by then
+       you arrive rested and only that last sleep still moves the number. Reporting that
+       internal figure as "8.5 hours of sleep opportunity in a 56-hour layover" was simply
+       false, and it was false in a document a crew member might paraphrase to the company —
+       where one obviously wrong number discredits every true one next to it. */
     if(x.restMin!=null){
-      var poor = x.restNightH!=null && x.restSleepH && (x.restNightH < x.restSleepH*0.4);
-      if(poor || (x.restSleepH!=null && x.restSleepH<6)){
-        add(poor&&x.restSleepH<6?3:2,
+      var restHrs = x.restMin/60;
+      var outOfPhase = x.restNightH!=null && x.restSleepH && (x.restNightH < x.restSleepH*0.4);
+      if(x.restRecovered){
+        /* Long rest. Never call this a shortage of opportunity — it plainly is not. */
+        if(outOfPhase){
+          add(2,'The rest before this duty was <b>'+hm(x.restMin)+'</b> at '+(x.restStation||'the layover')+
+            ', which is long enough to arrive rested. The problem is not how much time I had, it is <b>when the last sleep had to happen</b>: '+
+            'to make the wake-up call I would be going to bed in the middle of my own body clock\'s day, and only about <b>'+
+            (x.restInBodyNight||0).toFixed(1)+' hours</b> of that final sleep lands in my body night. '+
+            'Long rest does not fix a sleep taken at the wrong end of the clock.');
+          sum.push('final sleep out of phase');
+        }
+      } else if(outOfPhase || (x.restSleepH!=null && x.restSleepH<6)){
+        add(outOfPhase && x.restSleepH<6 ? 3 : 2,
           'The rest before this duty was <b>'+hm(x.restMin)+'</b> at '+(x.restStation||'the layover')+
           ', but once you take out transport, eating and winding down it is realistically <b>'+
           (x.restSleepH||0).toFixed(1)+' hours</b> of sleep opportunity'+
-          (poor? ', and almost none of it lands when my body is ready to sleep — I would be trying to sleep through my own daytime':'')+'.');
+          (outOfPhase? ', and almost none of it lands when my body is ready to sleep — I would be trying to sleep through my own daytime':'')+'.');
         sum.push('poor sleep opportunity');
       }
     }
@@ -5841,7 +5863,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.2 · 2026-08-31';
+  var BUILD='v14.3 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5863,7 +5885,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.2',
+    version:'v14.3',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -8758,9 +8780,12 @@
        base rail under the whole break and the chart stays compact. A station the app has no
        coordinates for gets no strip and no empty gap where one would have been. */
     var stn=inp.station, hasSun=(typeof SUN!=='undefined' && stn && SUN.has(stn));
-    var W=360, L=6, R=6, dayY=10, hourY=25,
-        bandT=31, bandH=56, barY=41, barH=38, footY=115, sunY=122, sunH=12;
-    var H=hasSun? 138 : 122;
+    /* Every label gets a row of its own. The wake-up call used to sit in the four-pixel gap
+       between the hour numbers and the sleep blocks, where it collided with both. */
+    var W=360, L=6, R=6, dayY=10, hourY=24,
+        bandT=30, bandH=52, barY=40, barH=34,
+        wakeY=94, nowY=106, footY=120, sunY=127, sunH=12;
+    var H=hasSun? 143 : 127;
     var t0=inp.startMs, t1=inp.reportMs, span=t1-t0;
     var x=function(ms){ return L + (ms-t0)/span*(W-L-R); };
     var loc=(inp.localOff==null? 0 : inp.localOff), bod=(inp.bodyOff==null? 0 : inp.bodyOff);
@@ -8788,9 +8813,9 @@
       if(rw<0.4) return;
       var wocl=(rn[2]==='wocl');
       g+='<rect x="'+rx.toFixed(1)+'" y="'+bandT+'" width="'+rw.toFixed(1)+'" height="'+bandH+
-         '" fill="'+(wocl?'rgba(255,157,77,.34)':'rgba(120,160,225,.22)')+'"/>'+
+         '" fill="'+(wocl?'rgba(255,157,77,.32)':'rgba(164,121,232,.20)')+'"/>'+
          '<rect x="'+rx.toFixed(1)+'" y="'+bandT+'" width="'+rw.toFixed(1)+
-         '" height="4" fill="'+(wocl?'#ff9d4d':'#6f93d6')+'"/>';
+         '" height="4" fill="'+(wocl?'#ff9d4d':'#a479e8')+'"/>';
     });
     /* The hour ruler. Two rules, both learned the hard way from staring at it:
        the numbers never break their rhythm - a weekday substituted for "00" makes the row
@@ -8871,7 +8896,9 @@
       var kx=x(c.cutoffMs);
       g+='<line x1="'+kx.toFixed(1)+'" y1="'+(barY-5)+'" x2="'+kx.toFixed(1)+'" y2="'+(barY+barH+5)+
          '" stroke="#e0b53a" stroke-width="1.4" stroke-dasharray="3 2.5"/>';
-      if(kx-lastLab>78 && kx<W-58){
+      /* Report now carries its time, so it is wider than it was and the last coffee label
+         has to stand further clear of it. */
+      if(kx-lastLab>82 && kx<W-96){
         g+='<text x="'+kx.toFixed(1)+'" y="'+footY+'" fill="#e0b53a" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">Last coffee</text>';
         lastLab=kx;
       }
@@ -8881,10 +8908,11 @@
     var wk=res.best.wakeCallMs;
     if(wk!=null && wk>t0 && wk<t1){
       var wx=x(wk);
-      g+='<line x1="'+wx.toFixed(1)+'" y1="'+(barY-13)+'" x2="'+wx.toFixed(1)+'" y2="'+(barY+barH+6)+
+      g+='<line x1="'+wx.toFixed(1)+'" y1="'+bandT+'" x2="'+wx.toFixed(1)+'" y2="'+(bandT+bandH+4)+
          '" stroke="#ff5252" stroke-width="2" stroke-dasharray="5 3"/>'+
-         '<text x="'+(wx-4).toFixed(1)+'" y="'+(barY-7)+'" fill="#ff8a8a" font-size="9.5" font-weight="700" '+
-         'font-family="ui-monospace,monospace" text-anchor="end">WAKE-UP '+slpL(wk,loc)+'</text>';
+         '<text x="'+wx.toFixed(1)+'" y="'+wakeY+'" fill="#ff8a8a" font-size="9.5" font-weight="700" '+
+         'font-family="ui-monospace,monospace" text-anchor="'+
+         (wx>W-72?'end':(wx<72?'start':'middle'))+'">WAKE-UP '+slpL(wk,loc)+'</text>';
     }
     g+='<line x1="'+(W-R).toFixed(1)+'" y1="'+(barY-8)+'" x2="'+(W-R).toFixed(1)+'" y2="'+(barY+barH+8)+'" stroke="#ff6b6b" stroke-width="2"/>'+
        '<text x="'+(W-R).toFixed(1)+'" y="'+footY+'" fill="#ff6b6b" font-size="9" text-anchor="end" font-family="ui-monospace,monospace" font-weight="700">Report '+slpL(t1,loc)+'</text>'+
@@ -8897,7 +8925,7 @@
     g+='<g id="slpNow"'+(nowIn?'':' style="display:none"')+'>'+
        '<line x1="'+nx.toFixed(1)+'" y1="'+(bandT-2)+'" x2="'+nx.toFixed(1)+'" y2="'+(bandT+bandH+4)+'" stroke="#5ee6ff" stroke-width="1.6"/>'+
        '<path d="M'+(nx-4).toFixed(1)+' '+(bandT-8)+' L'+(nx+4).toFixed(1)+' '+(bandT-8)+' L'+nx.toFixed(1)+' '+(bandT-2)+' Z" fill="#5ee6ff"/>'+
-       '<text x="'+nx.toFixed(1)+'" y="'+(bandT+bandH+13)+'" fill="#5ee6ff" font-size="9" font-weight="700" '+
+       '<text x="'+nx.toFixed(1)+'" y="'+nowY+'" fill="#5ee6ff" font-size="9" font-weight="700" '+
        'text-anchor="'+(nx>W-58?'end':(nx<58?'start':'middle'))+'" font-family="ui-monospace,monospace">Now '+
        slpL(Date.now(),loc)+'L</text></g>';
     slpNowGeom={ t0:t0, t1:t1, L:L, R:R, W:W, bandT:bandT, bandH:bandH, loc:loc, bod:bod };
@@ -8908,7 +8936,7 @@
        behind everything, which nobody could be expected to guess. */
     g+='<div class="slpkey">'+
        '<span><i style="background:#4d76d8"></i>Asleep</span>'+
-       '<span><i style="background:#6f93d6"></i>Your body’s night</span>'+
+       '<span><i style="background:#a479e8"></i>Your body’s night</span>'+
        '<span><i style="background:#ff9d4d"></i>Circadian low (0200–0600 body time)</span>'+
        '<div class="slpkeyfoot">Every time on this chart is <b>local hotel time</b>, including the ones written on the sleep blocks. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div>'+
        '<div class="slpkeyfoot" id="slpNowCap">'+slpNowCaption(t0,t1,loc,bod)+'</div></div>';
@@ -9639,6 +9667,7 @@
           woclH:wocl, tzMis:mis, bodyOffset:d.bodyOffset,
           restMin:(rp?rp.min:null), restStation:(rp?rp.station:null),
           restSleepH:d.restSleepH, restNightH:d.restInBodyNight,
+          restRecovered:d.restRecovered, restInBodyNight:d.restInBodyNight,
           reqRestMin:(rqp?rqp.min:null), reqRestCite:(rqp?rqp.cite:null), reqRestWho:(rqp?rqp.who:null),
           bac:(F&&F.bacEquivalent? F.bacEquivalent(d.awakeAtRelease||0):null),
           thirtyTwo:(cum? {ok:cum.thirtyTwoOk, hours:cum.free168.hours, covered:cum.thirtyTwoCovered}:null), cum:cum,
