@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v18';
+var V='cargodecode-v19';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
@@ -52,6 +52,18 @@ self.addEventListener('fetch', function(e){
   var url;
   try{ url=new URL(req.url); }catch(_){ return; }
   if(url.protocol!=='http:' && url.protocol!=='https:') return;
+
+  /* Anything on another origin is none of this worker's business — the calendar relay and
+     the sign-in beacon go straight to the network.
+
+     Two separate things went wrong without this. The obvious one: a relay request that
+     failed or ran past the eight-second deadline came back as Response.error(), and the app
+     reported "response served by service worker is an error" rather than the real reason.
+     The quiet one was worse — the branch below is CACHE-FIRST, so the first calendar pull
+     would have been stored and every later pull would have returned that same stored copy.
+     The roster would have looked like it was refreshing while silently never changing
+     again, which is a far harder problem to notice than an error message. */
+  if(url.origin!==self.location.origin) return;
 
   var isDoc = req.mode==='navigate' || req.destination==='document';
 

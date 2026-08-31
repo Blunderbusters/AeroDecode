@@ -5839,7 +5839,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.0 · 2026-08-31';
+  var BUILD='v14.1 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5861,7 +5861,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.0',
+    version:'v14.1',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -8022,6 +8022,24 @@
      or moved, this is the one line to change. */
   var CAL_PROXY='https://cargodecode.aeroscribe.workers.dev/cal';
 
+  /* Browsers describe a failed cross-origin fetch in terms that mean nothing to anybody:
+     "Failed to fetch", "Load failed", "response served by service worker is an error". Each
+     one has a different real cause and a different fix, so they are translated rather than
+     shown raw. */
+  function calWhy(err){
+    var e=String(err||'');
+    if(/service worker/i.test(e))
+      return 'The app\'s offline cache got in the way of that request. Fully close the app and reopen it — that lets the corrected version take over — then try again.';
+    if(/abort|timeout/i.test(e))
+      return 'That took too long and was given up on. Usually a weak signal — worth another try on better coverage.';
+    if(/failed to fetch|load failed|networkerror/i.test(e))
+      return 'Could not reach the relay. Either there is no usable signal, or the relay address is wrong or not deployed yet.';
+    if(/answered 4\d\d/.test(e))
+      return 'The calendar refused that address ('+esc(e)+'). Check you copied the whole <b>secret</b> iCal address, all the way to <code>basic.ics</code>.';
+    if(/did not return a calendar/i.test(e))
+      return 'That address answered, but with something that is not a calendar. It is probably the HTML page for the calendar rather than the <b>secret address in iCal format</b>.';
+    return 'Could not fetch it — '+esc(e);
+  }
   function calCfg(){ try{ return JSON.parse(localStorage.getItem('ad_calurl')||'{}')||{}; }catch(e){ return {}; } }
   function calSave(p){
     var c=calCfg(); for(var k in p) if(p.hasOwnProperty(k)) c[k]=p[k];
@@ -8091,7 +8109,7 @@
       if(!calOk(u)){ say('That does not look like a Google or Apple calendar address. It should start <b>https://calendar.google.com/</b> or <b>webcal://</b>.','impbad'); return; }
       say('Fetching…','');
       calFetch(u,false).then(function(r){
-        if(r.err){ say('Could not fetch it — '+esc(r.err),'impbad'); return; }
+        if(r.err){ say(calWhy(r.err),'impbad'); return; }
         lm.classList.remove('on');
       });
     };
