@@ -645,8 +645,71 @@
   .leg input[type=checkbox]{width:19px;height:19px;flex:0 0 auto;margin-top:2px;accent-color:#ffd166}
   .leginfo{flex:1;min-width:0}
   .legtop{font-size:14px;font-weight:800;color:var(--ink)}
-  .legtop .dhpill{font-size:9.5px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:6px;
-    background:rgba(150,90,220,.28);color:#d5b6ff;border:1px solid rgba(180,130,240,.45);vertical-align:middle}
+  .legtop .dhpill{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px;
+    background:rgba(150,90,220,.28);color:#d5b6ff;border:1px solid rgba(180,130,240,.45);vertical-align:middle;
+    font-family:inherit;line-height:1.25;cursor:pointer;-webkit-appearance:none;appearance:none}
+  .legtop .dhpill.off{background:transparent;color:#7f95b5;border:1px dashed rgba(120,160,220,.3);opacity:.55}
+  .legtop .dhpill:active{transform:scale(.94)}
+  .legtop .gndpill{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:5px;
+    background:rgba(120,150,190,.2);color:#c2d5ee;border:1px solid rgba(140,175,220,.3);letter-spacing:.2px}
+  .legtop .gndcode{font-family:var(--mono);font-size:10.5px;color:var(--faint);font-weight:700;margin-left:6px}
+  .legtop .legx{float:right;background:none;border:0;color:#7f95b5;font-size:17px;line-height:1;
+    padding:0 2px;cursor:pointer;opacity:.4;font-family:inherit}
+  .legtop .legx:hover,.legtop .legx:active{opacity:1;color:var(--bad)}
+  .leg.legclash{background:rgba(255,209,102,.07);border-left:3px solid rgba(255,209,102,.5);padding-left:7px;margin-left:-10px}
+  .impcal{margin-top:9px;background:rgba(91,147,232,.1);border-left:3px solid #5b93e8;border-radius:0 8px 8px 0;
+    padding:8px 11px;font-size:12px;line-height:1.55;color:#c9dcf7}
+  .dhnote{font-size:11px;color:var(--faint);margin-top:7px;line-height:1.5}
+  .impdrop{margin-top:7px;font-size:11.5px;color:var(--faint)}
+  .dplegend{margin:12px 2px 2px;font-size:11.5px;line-height:1.6;color:var(--faint)}
+  /* ---- Sleep Plan ---- */
+  .slphead h2{font-size:19px;margin:16px 0 4px;color:var(--ink);letter-spacing:-.2px}
+  .slplead{font-size:13px;line-height:1.65;color:var(--faint);margin:0 0 14px}
+  .slppicklab{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+  .slpbreaks{display:flex;flex-direction:column;gap:7px}
+  .slpbrk{display:block;width:100%;text-align:left;background:rgba(6,14,28,.5);border:1px solid rgba(120,160,220,.18);
+    border-radius:10px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13px;cursor:pointer;line-height:1.45}
+  .slpbrk.on{border-color:#5b93e8;background:rgba(91,147,232,.14);box-shadow:0 0 0 1px rgba(91,147,232,.35)}
+  .slpbrk b{font-weight:800}
+  .slpbrk .sub{display:block;font-size:11.5px;color:var(--faint);margin-top:3px;font-family:var(--mono)}
+  .slpmanual{margin-top:12px}
+  .slpgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .slpopt{margin-top:12px}
+  .slpchk{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--faint);cursor:pointer}
+  .slpchk input{width:17px;height:17px;accent-color:#5b93e8}
+  .slptl{width:100%;max-width:560px;height:auto;display:block;margin:14px auto 4px;border-radius:10px;background:rgba(6,14,28,.55)}
+  .slpkey{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:10.5px;color:var(--faint);margin:2px 2px 14px}
+  .slpkey span{display:inline-flex;align-items:center;gap:5px}
+  .slpkeyfoot{width:100%;display:block;line-height:1.6;margin-top:2px}
+  .slpkey i{width:12px;height:9px;border-radius:2px;display:inline-block}
+  .slpsteps{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+  .slpstep{display:flex;gap:11px;background:rgba(6,14,28,.5);border:1px solid rgba(120,160,220,.15);
+    border-radius:11px;padding:11px 13px}
+  .slpstep.sleep{border-left:3px solid #6f9bff}
+  .slpstep.up{border-left:3px solid #ffd166}
+  .slpstep.go{border-left:3px solid #ff6b6b}
+  .slptime{font-family:var(--mono);font-size:13.5px;font-weight:800;color:var(--ink);white-space:nowrap;min-width:104px}
+  .slptime .z{display:block;font-size:10.5px;font-weight:600;color:var(--faint);margin-top:2px}
+  .slpwhat{flex:1;min-width:0;font-size:13px;line-height:1.55}
+  .slpwhat .t{font-weight:800;color:var(--ink)}
+  .slpwhat .d{font-size:11.5px;color:var(--faint);margin-top:3px;line-height:1.55}
+  .slpwhat ul{margin:5px 0 0;padding-left:17px}
+  .slpwhat li{font-size:11.5px;color:var(--faint);margin:2px 0;line-height:1.5}
+  .slpstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin:14px 0 4px}
+  .slpstat{background:rgba(6,14,28,.55);border:1px solid rgba(120,160,220,.15);border-radius:10px;padding:9px 11px}
+  .slpstat .k{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
+  .slpstat .v{font-size:17px;font-weight:800;margin-top:3px}
+  .slpstat .s{font-size:10.5px;color:var(--faint);margin-top:2px;line-height:1.4}
+  .slpwarn{background:rgba(255,107,107,.1);border-left:3px solid #ff6b6b;border-radius:0 9px 9px 0;
+    padding:9px 12px;margin-top:12px;font-size:12.5px;line-height:1.6;color:#ffc9c9}
+  .slpsec{margin-top:14px;background:rgba(6,14,28,.4);border:1px solid rgba(120,160,220,.14);border-radius:11px;overflow:hidden}
+  .slpsec>summary{padding:11px 13px;font-size:12.5px;font-weight:700;color:#bcd6ff;cursor:pointer;list-style:none}
+  .slpsec>summary::-webkit-details-marker{display:none}
+  .slpsec>summary::before{content:'▸ ';color:var(--faint)}
+  .slpsec[open]>summary::before{content:'▾ '}
+  .slpsecb{padding:0 13px 13px;font-size:12px;line-height:1.7;color:var(--faint)}
+  .slpsecb p{margin:0 0 9px}
+  .slpsecb b{color:#c9dcf7}
   .legcity{font-size:11.5px;color:var(--faint);margin-top:1px}
   .legtimes{font-family:var(--mono);font-size:11.5px;color:#bcd6ff;margin-top:3px;line-height:1.5}
   .leggw{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.3px}
@@ -1071,6 +1134,7 @@
     <button class="tab" data-view="hf">HF&nbsp;Checks</button>
     <button class="tab" data-view="catering">Catering</button>
     <button class="tab" id="ftTab" data-view="fatigue" hidden>Fatigue <span class="protopill">DEV</span></button>
+    <button class="tab" id="slpTab" data-view="sleep" hidden>Sleep&nbsp;Plan <span class="protopill">DEV</span></button>
     <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
     <button class="tab tab-fun" data-view="wheel">🎡 Wheel of Misfortune</button>
   </div>
@@ -1185,10 +1249,10 @@
       <summary>Controlled rest on the flight deck — what the research actually says</summary>
       <p class="nsp">The 40-minute figure everyone quotes is not arbitrary. It comes from a NASA Ames study on long-haul crews, and the numbers are worth knowing because they are the argument for taking the rest rather than pushing through.</p>
       <div class="nsgrid">
-        <div class="nsi"><div class="k">Planned rest</div><div class="v">40 min</div><div class="s">during low-workload cruise</div></div>
-        <div class="nsi"><div class="k">Average time to fall asleep</div><div class="v">5.6 min</div><div class="s">pilots slept on 93% of opportunities</div></div>
-        <div class="nsi"><div class="k">Average sleep obtained</div><div class="v">25.8 min</div><div class="s">per rest period</div></div>
-        <div class="nsi"><div class="k">Recovery before duties</div><div class="v">20 min</div><div class="s">before resuming or briefing</div></div>
+        <div class="nsi"><div class="k">Planned rest</div><div class="v">40 min</div><div class="s">During low-workload cruise</div></div>
+        <div class="nsi"><div class="k">Average time to fall asleep</div><div class="v">5.6 min</div><div class="s">Pilots slept on 93% of opportunities</div></div>
+        <div class="nsi"><div class="k">Average sleep obtained</div><div class="v">25.8 min</div><div class="s">Per rest period</div></div>
+        <div class="nsi"><div class="k">Recovery before duties</div><div class="v">20 min</div><div class="s">Before resuming or briefing</div></div>
       </div>
       <p class="nsp"><b>What it bought them.</b> Across the in-flight trials the rested group recorded <b>81</b> lapses of attention against <b>124</b> in the group that did not rest. Microsleeps — brief involuntary sleep intrusions measured on EEG — ran <b>34</b> in the rested group against <b>120</b> in the group that did not. Crews who had not rested were about twice as likely to have a microsleep during descent and landing, which is precisely where you do not want one.</p>
       <p class="nsp"><b>Why 40 minutes and not longer.</b> NASA's own reasoning: "a longer nap increases the possibility that deep sleep will occur and, therefore, might increase the potential effects of sleep inertia." Sleep inertia is the grogginess on waking — it is worst in the first 10 to 15 minutes and typically clears within 20 to 30 minutes after a short nap, which is exactly what the 20-minute recovery period is for.</p>
@@ -1384,9 +1448,9 @@
       <div class="impcard">
         <button id="impBtn" class="impbtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-          Upload schedule (CSV or XLS)
+          Upload schedule (calendar, CSV or XLS)
         </button>
-        <input type="file" id="impFile" accept=".csv,.xls,text/csv,application/vnd.ms-excel" multiple hidden>
+        <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,text/csv,text/calendar,application/vnd.ms-excel,application/zip" multiple hidden>
         <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
         <div id="impStat" class="impstat"></div>
         <div id="impSpan" class="impspan"></div>
@@ -1493,6 +1557,43 @@
       </div>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
       <div id="ftOut"></div>
+    </div>
+  </div>
+
+  <div id="view-sleep" hidden>
+    <div class="card">
+      <div class="warnbox">
+        <div class="wtitle">⚠️ A starting point, not a prescription</div>
+        <p>This works out <b>where to put your sleep</b> in the break you have been given. It is arithmetic on a published model of how sleep pressure and the body clock behave — it is not medical advice, and it cannot know how you personally sleep in a strange room.</p>
+        <p>Everything on the Fatigue tab about what this app is and is not applies here too, including <b>who not to show it to</b>.</p>
+      </div>
+      <div class="slphead">
+        <h2>Sleep Plan</h2>
+        <p class="slplead">You get a hotel room and a number of hours. This says when to be in bed, when to get up, and when to stop drinking coffee — and it tells you what it expects that to buy you.</p>
+      </div>
+
+      <div class="slppick">
+        <div class="slppicklab">Plan for</div>
+        <div id="slpBreaks" class="slpbreaks"></div>
+      </div>
+
+      <div id="slpManual" class="slpmanual" hidden>
+        <div class="slpgrid">
+          <div><div class="ftk">Rest starts (Zulu, HHMM)</div><input id="slpStart" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+          <div><div class="ftk">Day</div><select id="slpStartDay" class="ftin"><option value="0">Today</option><option value="1">Tomorrow</option></select></div>
+          <div><div class="ftk">Report (Zulu, HHMM)</div><input id="slpRep" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+          <div><div class="ftk">Days later</div><select id="slpRepDay" class="ftin"><option value="0">Same day</option><option value="1">+1</option><option value="2">+2</option></select></div>
+          <div><div class="ftk">Layover station</div><input id="slpStn" class="ftin" maxlength="4" placeholder="ANC"></div>
+          <div><div class="ftk">Home base</div><input id="slpHome" class="ftin" maxlength="4" placeholder="MIA"></div>
+        </div>
+        <button id="slpGo" class="impbtn" style="margin-top:10px">Work out the plan</button>
+      </div>
+
+      <div class="slpopt">
+        <label class="slpchk"><input type="checkbox" id="slpSingle"> I would rather sleep in one go</label>
+      </div>
+
+      <div id="slpOut"></div>
     </div>
   </div>
 
@@ -3608,6 +3709,7 @@
   function toUtc(parsed, offsetFor){
     var isLocal = parsed.mode==='LOCAL';
     parsed.rows.forEach(function(rec){
+      if(rec.resolved) return;              // .ics rows arrive in absolute UTC already
       rec.utc={}; rec.tzError=null;
       if(!rec.from||!rec.to) return;
       var offDep=0, offArr=0;
@@ -3656,7 +3758,13 @@
        Grouped by SOURCE ROW, not by calendar date: a date can carry two separate duty
        periods, and chaining one onto the other pushes the second forward by whole days. */
     var byDay={};
-    parsed.rows.forEach(function(r){ if(r.from){ var k=r.src!=null?('r'+r.src):('d'+r.ymd); (byDay[k]=byDay[k]||[]).push(r); } });
+    parsed.rows.forEach(function(r){
+      if(r.resolved) return;      // calendar rows are absolute already, and rolling them
+                                  // forward here overwrote the zero block time that marks
+                                  // a ground activity, turning a five-hour sim into five
+                                  // hours of block.
+      if(r.from){ var k=r.src!=null?('r'+r.src):('d'+r.ymd); (byDay[k]=byDay[k]||[]).push(r); }
+    });
     Object.keys(byDay).forEach(function(k){
       var seq=byDay[k].sort(function(a,b){ return a.leg-b.leg; }), prev=null;
       seq.forEach(function(r){
@@ -3674,7 +3782,254 @@
     return parsed;
   }
 
-  /* ---- XLS grid -> the same nine columns ------------------------------------------
+  /* ---- AIMS eCrew calendar (.ics) -> the same rows ---------------------------------
+     This is the best of the three sources. Google/AIMS has already resolved every time to
+     absolute UTC in DTSTART and DTEND, and LOCATION states block out and block in with an
+     explicit Z, so nothing here needs a timezone lookup and the date-line ambiguity that
+     dogs the CSV and XLS simply cannot arise.
+
+       SUMMARY      "3628  LAX-SNN"                       activity code and route
+       DTSTART      20260512T222500Z                      REPORT, or block out on a later leg
+       DTEND        20260513T101000Z                      DEBRIEF, or block in on an earlier leg
+       LOCATION     "(2355Z-0940Z) LAX"                   block out Z, block in Z, departure
+       DESCRIPTION  "3628  - LAX  (1555) - SNN  (0140) ... eCrew app ---"
+
+     Three things about this feed are easy to get wrong, and each one moves real numbers:
+
+     1. DTSTART is the REPORT time only on the first activity of a duty period. On every
+        activity after it, DTSTART equals block out exactly. Treating all of them as report
+        times shatters a four-leg duty day into four duty periods, and four short duty
+        periods look far more legal - and far less tiring - than the one long one that was
+        actually flown. So a report is only recorded when DTSTART genuinely precedes block
+        out; the same test in reverse decides whether DTEND is a debrief or a block in.
+
+     2. The code in SUMMARY is not always the flight. On entries the app marks "Inserted"
+        the SUMMARY carries the PAIRING code and the DESCRIPTION carries the flight that was
+        actually taken - "OE903" in the title, "AA2817" in the body. Reading the title alone
+        misfiles a commercial deadhead under a number no airline operates.
+
+     3. Not every timed entry is a flight. Proficiency checks, ground school, door trainers,
+        CRM, reserve and limo transfers all arrive in the same shape, with a station-to-itself
+        route. They are duty - a 2045-0115 sim is one of the most fatiguing things on the
+        line - so they are kept and they count toward duty and rest. What they are not is
+        flight time, so their block time is zero and they never carry a deadhead tag.
+
+     A shared calendar also carries personal events. Only entries stamped by the eCrew app
+     are read; everything else is ignored and never leaves the device. */
+  var ICS_OPERATOR=/^(?:\d{1,4}[A-Z]?|(?:PO|GTI|5Y)\s*\d{1,4}[A-Z]?)$/i;   // Atlas / Polar metal
+  var ICS_AIRLINE =/^[A-Z0-9]{2}\d{1,4}[A-Z]?$/i;                          // any other carrier
+  var ICS_TRANSFER=/^(?:LIMO|BUS|TAXI|TRAIN|TRN)\s*\d*$/i;                // surface positioning
+  /* "OWN" is not ground transport. AIMS prints it when the crew member travels on their own
+     arrangement, and the routes prove it - ICN to ANC, ORD to ANC, ANC to LAX. That is a
+     commercial deadhead by any measure: it is duty, and it is not flight time. */
+  var ICS_OWNAIR  =/^OWN\s*\d*$/i;
+  /* Ground and training activities, keyed by the code AIMS prints. The label is what the
+     duty timeline shows in place of a flight number, so it has to read like something a
+     crew member would say out loud. Anything not listed still counts as duty; it simply
+     shows its own code. */
+  var ICS_GROUND={
+    PC:'Proficiency check', PCW:'Proficiency check', PT:'Proficiency training',
+    PTW:'Proficiency training', RFT:'Recurrent flight training', SIM:'Simulator',
+    SIMX:'Simulator', CRM:'CRM training', CRMR:'CRM recurrent',
+    GS:'Ground school', GSX:'Ground school', GET:'Ground/egress training', GETD:'Ground/egress training',
+    GOS:'Ground school', DOOR:'Door trainer', LDGE:'Ground training',
+    TBRF:'Training briefing', BRF:'Briefing', NOGO:'Cancelled - no go',
+    PPD:'Pre-planned duty', R1:'Reserve', R2:'Reserve', R3:'Reserve', RSV:'Reserve',
+    SBY:'Standby', OFC:'Office duty', MTG:'Meeting'
+  };
+  /* Timed entries that are not duty at all. Counting a layover rest block or a vacation
+     day as duty would be worse than ignoring it. */
+  var ICS_NOTDUTY=/^(?:REST|VAC|MED|SICK|TOFF|AWRD|HTL|HOTEL|X|GDO|OFF)$/i;
+  function icsUnfold(text){ return String(text).replace(/\r\n/g,'\n').replace(/\n[ \t]/g,''); }
+  function icsField(ev, name){
+    var m=ev.match(new RegExp('^'+name+'(?:;[^:\n]*)?:(.*)$','m'));
+    return m? m[1].trim() : '';
+  }
+  function icsStamp(v){                                    // 20260512T222500Z -> ms
+    var m=String(v).match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+    return m? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]) : null;
+  }
+  function icsDay(v){                                      // 20260824 -> {y,m,d}
+    var m=String(v).match(/^(\d{4})(\d{2})(\d{2})$/);
+    return m? {y:+m[1], m:+m[2], d:+m[3]} : null;
+  }
+  /* What kind of activity is this, and is it flying? */
+  function icsClassify(code){
+    var c=String(code||'').toUpperCase().replace(/\s+/g,'').replace(/[.\-]+$/,'');
+    if(!c) return null;
+    if(ICS_NOTDUTY.test(c)) return null;                                   // not duty, drop it
+    if(ICS_OWNAIR.test(c)) return {kind:'flight', dh:true, label:null};    // own-arrangement deadhead
+    if(ICS_TRANSFER.test(c)) return {kind:'ground', dh:false, label:'Ground transport'};
+    if(ICS_OPERATOR.test(c)) return {kind:'flight', dh:false, label:null};
+    if(ICS_GROUND[c]) return {kind:'ground', dh:false, label:ICS_GROUND[c]};
+    if(/^GS\d+$/.test(c)) return {kind:'ground', dh:false, label:'Ground school'};
+    if(/^R\d+$/.test(c))  return {kind:'ground', dh:false, label:'Reserve'};
+    if(ICS_AIRLINE.test(c)) return {kind:'flight', dh:true, label:null};   // someone else's metal
+    return {kind:'ground', dh:false, label:null};                          // unknown code, still duty
+  }
+  function parseIcs(text){
+    var raw=icsUnfold(text), parts=raw.split('BEGIN:VEVENT'), rows=[], offs=[], seen={};
+    for(var i=1;i<parts.length;i++){
+      var ev=parts[i].split('END:VEVENT')[0];
+      var desc=icsField(ev,'DESCRIPTION');
+      if(desc.indexOf('AIMS eCrew')<0) continue;           // personal calendar entries stay private
+      var sum=icsField(ev,'SUMMARY').replace(/\\n/g,' ').replace(/\s+/g,' ').trim();
+      var loc=icsField(ev,'LOCATION');
+      var dsRaw=icsField(ev,'DTSTART'), deRaw=icsField(ev,'DTEND');
+
+      // all-day rows: days off and guaranteed days off, which end a pattern
+      var day=icsDay(dsRaw);
+      if(day){
+        if(/OFF Day/i.test(sum)||/OFF Day/i.test(desc)) offs.push({date:day, type:'OFF'});
+        else if(/\bGDO\b/i.test(sum)||/GUARANTEED DAY OFF/i.test(desc)) offs.push({date:day, type:'GDO'});
+        continue;
+      }
+
+      var lm=loc.match(/\((\d{4})Z-(\d{4})Z\)\s*([A-Z]{3})/);
+      var ds=icsStamp(dsRaw), de=icsStamp(deRaw);
+      if(!lm || ds==null) continue;
+      if(lm[1]==='0000' && lm[2]==='0000') continue;       // placeholder, not an activity
+
+      var sm=sum.match(/^([A-Z0-9]+)\s+([A-Z]{3})\s*-\s*([A-Z]{3})/);
+      var code = sm? sm[1] : (sum.split(/\s+/)[0]||'');
+      var from = sm? sm[2] : lm[3];
+      var to   = sm? sm[3] : null;
+
+      /* The body names the activity that was actually performed. On an "Inserted" entry
+         that differs from the title, and the body is the one to believe. */
+      var body=String(desc).replace(/\\n/g,'\n');
+      var am=body.match(/(?:^|\n)([A-Z0-9]{1,8})\s*-\s*([A-Z]{3})\s*\(\d{4}[^)]*\)\s*-\s*([A-Z]{3})\s*\(/);
+      if(am){ code=am[1]; if(!sm){ from=am[2]; to=am[3]; } }
+      /* A fully described entry names its own report time and its own activity line. The
+         thin ones - a bare title and nothing else - are the alternates AIMS left behind
+         when a routing changed, and that is the tie-breaker when two legs cannot both be
+         true. */
+      var detailed = !!am || /Reporting time/i.test(body);
+      if(!from || !to) continue;
+
+      var cls=icsClassify(code);
+      if(!cls) continue;
+
+      // Block times carry an explicit Z; roll each forward from the event start so the
+      // ordering is correct by construction rather than inferred from a calendar date.
+      function place(hhmm, after){
+        var h=+hhmm.slice(0,2), mi=+hhmm.slice(2);
+        var d0=new Date(after), t=Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth(), d0.getUTCDate(), h, mi);
+        while(t<after) t+=86400000;
+        return t;
+      }
+      var bo=place(lm[1], ds), bi=place(lm[2], bo), fuzzy=false;
+      /* Very occasionally the LOCATION string and the timestamps disagree - a stale trip
+         revision the calendar never caught up with. It shows as an impossible gap, because
+         no crew member reports twenty hours before block out. Google resolved DTSTART and
+         DTEND to real instants, so those are the ones to trust: keep only the block DURATION
+         from LOCATION and hang it off the timestamps, then mark the row so the app can say
+         the times were reconstructed rather than read. */
+      if(bo-ds > 6*3600000){
+        fuzzy=true;
+        var dur=bi-bo;
+        bo=ds+90*60000; bi=bo+dur;
+        if(de!=null && bi > de-20*60000){ bi=de-30*60000; bo=bi-dur; }
+        if(bo<ds) bo=ds;
+        if(bi<=bo) bi=bo+dur;
+      }
+      /* DTSTART is the report only when it precedes block out; otherwise this activity sits
+         inside a duty period that reported earlier, and claiming a report here would split
+         the duty in two. Same logic decides whether DTEND is a debrief. */
+      var rep = (ds < bo)? ds : null;
+      var deb = (de!=null && de > bi)? de : null;
+
+      var key=bo+'|'+code;
+      if(seen[key]) continue; seen[key]=1;
+
+      /* AIMS books a company car as a one-minute event at the same station. It is a
+         placeholder for a ride, not a duty period, and left alone it puts a one-minute duty
+         period on the timeline between two real ones. A limo that actually moves you - SNN
+         to DUB, FRA to LUX - has real duration and is kept, because under Art. 12.D.3 that
+         time is duty. */
+      if(cls.label==='Ground transport' && from===to && (bi-bo) < 20*60000) continue;
+      var isFlight=(cls.kind==='flight');
+      rows.push({
+        date:{y:new Date(bo).getUTCFullYear(), m:new Date(bo).getUTCMonth()+1, d:new Date(bo).getUTCDate()},
+        ymd:0, src:i, flight:code, from:from, to:to, mode:'UTC', leg:0, legs:1,
+        deadhead:!!cls.dh, dhGuess:!!cls.dh, aircraft:null,
+        ground:!isFlight, actLabel:cls.label||null, icsFuzzy:fuzzy, icsDetail:detailed,
+        type:isFlight? (cls.dh?'DEADHEAD':'FLIGHT') : 'GROUND',
+        blockMin:isFlight? Math.round((bi-bo)/60000) : 0,
+        dutyMin:null, tzError:null,
+        utc:{report:rep, blockOut:bo, blockIn:bi, debrief:deb}, resolved:true
+      });
+    }
+    rows.sort(function(a,b){ return a.utc.blockOut-b.utc.blockOut; });
+    var res=icsChain(rows);
+    return { mode:'UTC', period:null, crew:null, rows:res.rows, offDays:offs,
+             source:'ics', superseded:res.dropped, clashes:res.clashes };
+  }
+
+  /* ---- one body, one place at a time ------------------------------------------------
+     When a deadhead is rebooked, AIMS does not always retract the itinerary it replaced,
+     so the calendar can hold two of them side by side: a leg out of DFW that begins before
+     the leg into CVG has even landed, or a leg out of MEX forty-five minutes after landing
+     in DFW. Both cannot have happened. Left in, they inflate duty time, invent flying that
+     was never done, and turn one duty period into an apparent 22-hour marathon.
+
+     So the legs are walked in order and treated as a chain. A leg is dropped when it starts
+     before the previous one has finished, or when it departs somewhere the crew member could
+     not have reached in the time available. Where the two conflict and only one carries a
+     full description, the described one is believed - the thin entry is the leftover. What
+     was dropped is reported rather than discarded quietly. */
+  /* Airports that serve the same city. Landing at NLU and deadheading out of MEX is an
+     ordinary Mexico City turn, not a contradiction, and the same goes for JFK and EWR,
+     NRT and HND, LHR and LGW. Without this the chain reads every one of them as an
+     impossible jump and starts flagging perfectly normal trips. */
+  var ICS_CITY=[
+    ['MEX','NLU','TLC'], ['JFK','LGA','EWR','HPN','ISP'], ['ORD','MDW','RFD'],
+    ['LAX','BUR','SNA','LGB','ONT'], ['SFO','OAK','SJC'], ['IAD','DCA','BWI'],
+    ['MIA','FLL','PBI'], ['DFW','DAL','AFW'], ['IAH','HOU','EFD'], ['MCO','SFB'],
+    ['LHR','LGW','LCY','STN','LTN','SEN'], ['CDG','ORY','BVA'], ['MXP','LIN','BGY'],
+    ['NRT','HND'], ['KIX','ITM','UKB'], ['ICN','GMP'], ['PVG','SHA'], ['PEK','PKX'],
+    ['CAN','SZX','HKG','ZUH','MFM'], ['TPE','TSA'], ['BKK','DMK'], ['KUL','SZB'],
+    ['DXB','SHJ','AUH','DWC'], ['IST','SAW'], ['GRU','CGH','VCP'], ['EZE','AEP'],
+    ['YYZ','YHM','YTZ'], ['YVR','YXX'], ['BER','LEJ'], ['FRA','HHN'], ['STO','ARN','NYO'],
+    ['SVO','DME','VKO'], ['DEL','HDO'], ['BOM','NMI'], ['TLV','SDV'], ['LIS','OPO']
+  ];
+  var ICS_CITYMAP=(function(){ var m={};
+    for(var i=0;i<ICS_CITY.length;i++) for(var j=0;j<ICS_CITY[i].length;j++) m[ICS_CITY[i][j]]=i;
+    return m; })();
+  function icsSameCity(a,b){
+    if(!a||!b) return false;
+    if(a===b) return true;
+    return ICS_CITYMAP[a]!=null && ICS_CITYMAP[a]===ICS_CITYMAP[b];
+  }
+  function icsChain(rows){
+    var kept=[], dropped=[], clash=[], pos=null, MOVE=8*3600000;
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i], prev=kept.length? kept[kept.length-1] : null;
+      if(!prev){ kept.push(r); pos=r.to; continue; }
+      var overlaps = r.utc.blockOut < prev.utc.blockIn;
+      var teleports = (pos && !icsSameCity(r.from,pos) && (r.utc.blockOut - prev.utc.blockIn) < MOVE);
+      if(!overlaps && !teleports){ kept.push(r); pos=r.to; continue; }
+      if(r.icsDetail && prev.icsDetail){
+        /* Both entries are fully described, so the feed itself does not know which one
+           happened - a taxi-out that came back and cancelled, or a deadhead rebooked at the
+           gate. Guessing here would either invent flying or delete it. Both are kept, the
+           pair is flagged, and the duty timeline asks the one person who actually knows. */
+        clash.push({a:prev, b:r});
+        kept.push(r); pos=r.to;
+      }else if(r.icsDetail && !prev.icsDetail){          // the described one wins
+        dropped.push(prev); kept.pop();
+        var back=kept.length? kept[kept.length-1] : null;
+        pos=back? back.to : null;
+        kept.push(r); pos=r.to;
+      }else{
+        dropped.push(r);
+      }
+    }
+    for(var j=0;j<clash.length;j++){ clash[j].a.icsClash=true; clash[j].b.icsClash=true; }
+    return { rows:kept, dropped:dropped, clashes:clash };
+  }
+
+  /* ---- XLS grid -> the same nine columns  /* ---- XLS grid -> the same nine columns ------------------------------------------
      The XLS lays the report out across 29 sparse spreadsheet columns instead of nine
      CSV fields, so map by HEADER TEXT rather than by position - a merged cell moving
      one column to the left must not silently shift every time into the wrong field. */
@@ -3740,7 +4095,7 @@
     return out;
   }
 
-  var API={parse:parse,parseGrid:parseGrid,parseXls:parseXls,fromXls:fromXls,
+  var API={parse:parse,parseGrid:parseGrid,parseXls:parseXls,fromXls:fromXls,parseIcs:parseIcs,
            toUtc:toUtc,splitCsv:splitCsv,parseTime:parseTime,parseDate:parseDate,addDays:addDays,utcMs:utcMs};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.AIMSCSV=API;
@@ -4675,6 +5030,344 @@
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
+/* CargoDecode — layover sleep planner --------------------------------------------------
+   Where to put your sleep between one release and the next report.
+
+   The Fatigue tab answers "how tired will I be?". This answers the question that actually
+   comes up in the hotel room at four in the afternoon in Anchorage: "when should I lie
+   down, and for how long?" Those are different problems. Scoring a schedule you were given
+   only needs a rough alertness curve. CHOOSING one needs a model that knows sleep is easier
+   at some hours than others, and that an hour of sleep taken when pressure is high is worth
+   more than an hour taken when it is low. So this module carries its own two-process model
+   underneath, of the Borbély type, and uses it only for RANKING candidate plans.
+
+   Every alertness percentage the app puts on screen still comes from FATIGUE.effectiveness,
+   the same function the Fatigue and Duty tabs use. Two models on one screen disagreeing
+   about how tired you are would be worse than no second model at all.
+
+   The physiology, and how much of it to believe:
+
+     Process S, sleep pressure. Rises while awake toward a ceiling and falls during sleep,
+     both exponentially. Borbély (1982), Daan, Beersma & Borbély (1984). The time constants
+     used here - about 18 h rising, about 4 h falling - are the ones commonly fitted to
+     slow-wave activity in that literature. Individuals vary a lot.
+
+     Process C, circadian sleep propensity. A 24-hour term with its peak in the window of
+     circadian low, plus a smaller 12-hour term that produces the mid-afternoon dip. The
+     hours either side of habitual bedtime are the wake maintenance zone, where sleep is
+     genuinely hard to start - that falls out of the curve rather than being bolted on.
+
+     Ninety-minute cycles. This is a rule of thumb, not a measurement. Real cycles run
+     roughly 70 to 120 minutes and lengthen through the night. The planner uses it only to
+     break ties between otherwise equal durations, and it will never shorten useful sleep to
+     make the arithmetic tidy.
+
+   Nothing here is a regulation, and nothing here is a promise about how you personally
+   sleep. It is a starting point that beats guessing. */
+(function(root){
+  'use strict';
+
+  var CFG={
+    tauWake: 18.2,        // h, rise constant of sleep pressure while awake
+    tauSleep: 4.2,        // h, fall constant during sleep
+    sBeforeBed: 0.92,     // pressure a normally-rested person carries at habitual bedtime
+    bedBodyHour: 23,      // habitual lights-out, body clock
+    nadirBodyHour: 4,     // peak sleep propensity / centre of the WOCL
+    dipBodyHour: 15,      // afternoon secondary peak in propensity
+    /* The 12-hour term has to be big enough to do its job. Too small and the curve has a
+       single smooth trough in the late afternoon, which loses both of the features that
+       matter: the mid-afternoon flattening everybody recognises, and the wake maintenance
+       zone in the couple of hours before habitual bedtime, where sleep is hardest of all. */
+    a1: 1.0, a2: 0.45,    // amplitudes of the 24 h and 12 h terms
+    latencyMin: 20,       // time to fall asleep, added to every block
+    inertiaMin: 30,       // groggy window after waking; never inside 30 min of report
+    windDownMin: 45,      // release to actually being horizontal: transport, shower, food
+    prepMin: 75,          // wake-up to report: shower, dress, van, security
+    maxBlockH: 9.0,       // beyond this, sleep fragments and stops being restorative
+    minBlockH: 1.0,
+    cycleMin: 90,
+    step: 10              // simulation step, minutes
+  };
+
+  function norm24(h){ h=h%24; return h<0? h+24 : h; }
+  function clamp(v,a,b){ return v<a? a : (v>b? b : v); }
+
+  /* Circadian sleep propensity, -1 (hardest to sleep) to +1 (easiest). The 24-hour term
+     peaks in the window of circadian low; the 12-hour term puts a smaller hump in the
+     early afternoon and deepens the evening wake maintenance zone. */
+  function propensity(bodyHour){
+    var h=norm24(bodyHour);
+    var c1=CFG.a1*Math.cos(2*Math.PI*(h-CFG.nadirBodyHour)/24);
+    var c2=CFG.a2*Math.cos(4*Math.PI*(h-CFG.dipBodyHour)/24);
+    return clamp((c1+c2)/(CFG.a1+CFG.a2), -1, 1);
+  }
+  /* How much of the time in bed is actually spent asleep, at this hour and this pressure.
+     High pressure will put you under at any hour; low pressure in the wake maintenance zone
+     will not, however tired you feel you ought to be. */
+  function sleepEfficiency(bodyHour, S){
+    var p=propensity(bodyHour);
+    return clamp(0.42 + 0.34*p + 0.34*S, 0.15, 0.98);
+  }
+  function riseS(S0, hours){ return 1-(1-S0)*Math.exp(-hours/CFG.tauWake); }
+  function fallS(S0, hours){ return S0*Math.exp(-hours/CFG.tauSleep); }
+
+  /* Walk a plan minute by minute and report what it does to sleep pressure, how much sleep
+     is actually obtained rather than merely scheduled, and where the window of circadian
+     low falls. */
+  function simulate(plan, ctx){
+    var stepH=CFG.step/60, S=ctx.s0, t=ctx.startMs;
+    var slept=0, inBed=0, woclSlept=0, worst=0, trace=[];
+    var blocks=plan.slice().sort(function(a,b){ return a.start-b.start; });
+    var bi=0;
+    while(t < ctx.reportMs){
+      var b=null;
+      for(var i=0;i<blocks.length;i++) if(t>=blocks[i].start && t<blocks[i].end){ b=blocks[i]; break; }
+      var bodyH=norm24(t/3600000 + ctx.bodyOff);
+      if(b){
+        var lat=(t - b.start) < CFG.latencyMin*60000;      // still falling asleep
+        var eff=lat? 0 : sleepEfficiency(bodyH, S);
+        inBed+=stepH;
+        slept+=stepH*eff;
+        if(bodyH>=2 && bodyH<6) woclSlept+=stepH*eff;
+        S=fallS(S, stepH*eff) + (1-eff)*(riseS(S,stepH)-S);
+      }else{
+        S=riseS(S, stepH);
+      }
+      if(S>worst) worst=S;
+      trace.push({t:t, s:S, asleep:!!b});
+      t+=CFG.step*60000;
+    }
+    return { sAtReport:S, sleptH:slept, inBedH:inBed, woclSleptH:woclSlept, peakS:worst, trace:trace };
+  }
+
+  /* What the plan is worth. Lower is better.
+       - pressure carried into the duty is the headline term
+       - and again at the end of it, because the landing is what matters
+       - short sleep is penalised on its own, since pressure alone forgives a long nap
+       - waking a long time before report wastes the sleep you just took
+       - waking inside the inertia window means starting the duty groggy
+       - fragmenting into many blocks costs a little, all else equal */
+  function score(plan, ctx, sim){
+    var v=0;
+    v += 100*sim.sAtReport;
+    if(ctx.dutyEndMs){
+      var awakeH=(ctx.dutyEndMs-ctx.reportMs)/3600000;
+      v += 55*riseS(sim.sAtReport, awakeH);
+    }
+    var need=Math.min(8, Math.max(4, (ctx.reportMs-ctx.startMs)/3600000*0.45));
+    if(sim.sleptH < need) v += 14*(need-sim.sleptH);
+    var last=plan.slice().sort(function(a,b){ return a.end-b.end; })[plan.length-1];
+    var gapH=(ctx.reportMs-last.end)/3600000;
+    if(gapH > 3.0) v += 9*(gapH-3.0);
+    if(gapH*60 < CFG.inertiaMin) v += 40;                    // no time to shake it off
+    if(gapH*60 < CFG.prepMin) v += 6*(CFG.prepMin-gapH*60)/60;
+    v += 2.5*(plan.length-1);
+    /* A block that lands squarely in the wake maintenance zone will mostly be spent staring
+       at the ceiling. Charge for the time in bed the model says will not be slept, or the
+       plan degenerates into "be horizontal for the entire layover", which is advice nobody
+       needs and nobody follows. */
+    v += 10*(sim.inBedH - sim.sleptH);
+    if(sim.inBedH > 8.5) v += 3*(sim.inBedH-8.5);
+    /* Sleeping across the body's own night is worth something the pressure curve alone
+       does not capture. */
+    v -= 4*sim.woclSleptH;
+    return v;
+  }
+
+  function cycles(min){ return Math.max(1, Math.round((min-CFG.latencyMin)/CFG.cycleMin)); }
+  /* Nudge a duration onto a whole number of 90-minute cycles when that costs less than
+     twenty minutes of sleep. Never shorten a block by more than that to make it tidy. */
+  function quantise(min){
+    var n=Math.round((min-CFG.latencyMin)/CFG.cycleMin);
+    if(n<1) return Math.min(min, CFG.maxBlockH*60);
+    var q=n*CFG.cycleMin+CFG.latencyMin;
+    if(Math.abs(q-min)>20) q=min;
+    return Math.min(q, CFG.maxBlockH*60);          // rounding must never breach the cap
+  }
+
+  function blk(type, start, end){
+    return { blockType:type, start:start, end:end,
+             durationMinutes:Math.round((end-start)/60000), cycleCount:cycles((end-start)/60000) };
+  }
+
+  /* Candidate plans. The shapes come from what crews actually do on layovers - one long
+     sleep, a sleep now and a nap before the van, a body-night sleep in the middle of a long
+     break - and the parameters inside each shape are swept and scored. */
+  function candidates(ctx){
+    var out=[], MIN=60000;
+    var winH=(ctx.reportMs-ctx.startMs)/3600000;
+    var earliest=ctx.startMs + CFG.windDownMin*MIN;
+    var latest  =ctx.reportMs - CFG.prepMin*MIN;
+    if(latest<=earliest) return out;
+
+    var d, s, e;
+    // one block, finishing just before the van
+    for(d=2.0; d<=CFG.maxBlockH+0.001; d+=0.5){
+      e=latest; s=e-quantise(d*60)*MIN;
+      if(s>=earliest) out.push([blk('CORE',s,e)]);
+    }
+    // one block, starting as soon as you are through the door
+    for(d=3.0; d<=CFG.maxBlockH+0.001; d+=0.5){
+      s=earliest; e=s+quantise(d*60)*MIN;
+      if(e<=latest) out.push([blk('CORE',s,e)]);
+    }
+    // one block, free to sit anywhere in the window - this is what finds the body night
+    for(var off=0; off<=winH*60; off+=30){
+      s=earliest+off*MIN;
+      for(d=4.0; d<=CFG.maxBlockH+0.001; d+=0.5){
+        e=s+quantise(d*60)*MIN;
+        if(e<=latest) out.push([blk('CORE',s,e)]);
+      }
+    }
+    // core now, anchor before the van
+    if(winH>=10){
+      for(var delay=0; delay<=6.0; delay+=0.5){
+        var cs=earliest+delay*3600000;
+        for(var cd=3.0; cd<=7.5; cd+=0.5){
+          var ce=cs+quantise(cd*60)*MIN;
+          if(ce>latest-2.5*3600000) break;
+          for(var ad=1.5; ad<=4.5; ad+=0.5){
+            var ae=latest, as=ae-quantise(ad*60)*MIN;
+            if(as-ce < 2.5*3600000) continue;         // no point getting up for ninety minutes
+            out.push([blk('CORE',cs,ce), blk('PRE_DUTY_ANCHOR',as,ae)]);
+          }
+        }
+      }
+    }
+    // recovery now, body night in the middle, nap before the van
+    if(winH>=22){
+      for(var rd2=3.0; rd2<=6.0; rd2+=0.5){
+        var rs=earliest, re=rs+quantise(rd2*60)*MIN;
+        for(var no=0; no<=winH*60; no+=60){
+          var ns=re+2.5*3600000+no*MIN;
+          for(var nd=5.0; nd<=8.0; nd+=0.5){
+            var ne=ns+quantise(nd*60)*MIN;
+            if(ne>latest-2.5*3600000) break;
+            out.push([blk('CORE',rs,re), blk('CORE',ns,ne),
+                      blk('TACTICAL_NAP', latest-quantise(90)*MIN, latest)]);
+          }
+        }
+      }
+    }
+    return out;
+  }
+
+  /* Sleep pressure at the start of the break. If the app knows when you last woke, use it;
+     otherwise assume a normal night behind you and count forward from the release. */
+  function initialS(ctx){
+    if(ctx.awakeSinceMs!=null && ctx.awakeSinceMs<ctx.startMs)
+      return riseS(0.28, (ctx.startMs-ctx.awakeSinceMs)/3600000);
+    return 0.62;
+  }
+
+  function plan(input){
+    var startMs=input.startMs, reportMs=input.reportMs;
+    var warn=[];
+    if(!(startMs>0)||!(reportMs>0)) return { error:'Need a start and a report time.' };
+    if(reportMs<=startMs) return { error:'The report time is before the rest starts.' };
+    var winH=(reportMs-startMs)/3600000;
+    var ctx={ startMs:startMs, reportMs:reportMs, dutyEndMs:input.dutyEndMs||null,
+              bodyOff:(input.bodyOff==null? 0 : input.bodyOff),
+              localOff:(input.localOff==null? 0 : input.localOff),
+              awakeSinceMs:input.awakeSinceMs };
+    ctx.s0=initialS(ctx);
+
+    if(winH < 5) warn.push('This break is under five hours. There is no good plan for it — take everything you can get and treat the duty that follows as a fatigue risk in its own right.');
+    else if(winH < 8) warn.push('Under eight hours from release to report. After transport and preparation there is little left, so this plan is about salvage rather than recovery.');
+
+    var cands=candidates(ctx);
+    if(input.preferSingleBlock) cands=cands.filter(function(c){ return c.length===1; });
+    if(!cands.length) return { error:'The break is too short to place any sleep in.', warnings:warn };
+
+    /* Kept as the best of each SHAPE - one block, two, three - because that is the choice a
+       crew member actually faces. A plan thirty minutes to the left of the best one is not
+       an alternative, it is noise. */
+    var byShape={}, best=null;
+    for(var i=0;i<cands.length;i++){
+      var sim=simulate(cands[i], ctx), sc=score(cands[i], ctx, sim);
+      var rec={ blocks:cands[i], sim:sim, score:sc }, n=cands[i].length;
+      if(!byShape[n] || sc<byShape[n].score) byShape[n]=rec;
+      if(!best || sc<best.score) best=rec;
+    }
+    var alt=null, bn=best.blocks.length;
+    Object.keys(byShape).forEach(function(k){
+      if(+k===bn) return;
+      var r=byShape[k];
+      if(r.score < best.score+40 && (!alt || r.score<alt.score)) alt=r;
+    });
+
+    return { ok:true, window:{ startMs:startMs, reportMs:reportMs, hours:winH },
+             best:dress(best, ctx), alternative: alt? dress(alt, ctx) : null,
+             warnings:warn, ctx:ctx };
+  }
+
+  /* Turn a scored plan into something a person can act on. */
+  function dress(rec, ctx){
+    var MIN=60000, out={ blocks:[], wake:[], caffeine:[],
+      totalPlannedSleepMinutes:0, predictedSleepMinutes:Math.round(rec.sim.sleptH*60),
+      sAtReport:rec.sim.sAtReport, woclSleptMinutes:Math.round(rec.sim.woclSleptH*60), score:rec.score };
+    var b=rec.blocks.slice().sort(function(x,y){ return x.start-y.start; });
+    for(var i=0;i<b.length;i++){
+      var body=norm24(b[i].start/3600000+ctx.bodyOff);
+      /* Judged across the whole block, not at its midpoint. A sleep that starts in the
+         wake maintenance zone and runs deep into the body night is a good sleep with a
+         hard first hour, and calling it "the hardest hours of the day" because of where
+         its centre happens to land tells the wrong story. */
+      var p=meanPropensity(b[i].start, b[i].end, ctx.bodyOff);
+      out.totalPlannedSleepMinutes+=b[i].durationMinutes;
+      out.blocks.push({
+        blockType:b[i].blockType, sleepStart:b[i].start, sleepEnd:b[i].end,
+        durationMinutes:b[i].durationMinutes, cycleCount:b[i].cycleCount,
+        bodyStartHour:body, ease:p,
+        easeLabel: p>0.55? 'Your body wants to sleep here' :
+                   p>0.05? 'With the clock, not against it' :
+                   p>-0.42? 'Against the clock — expect to lie there a while' :
+                            'Wake maintenance zone — the hardest hours of the day to get to sleep',
+        description:describe(b[i], ctx, p)
+      });
+      out.caffeine.push({ cutoffMs:b[i].start-6*3600000, forSleepStart:b[i].start });
+      if(i<b.length-1) out.wake.push({ start:b[i].end, end:b[i+1].start,
+        recommendations:wakeAdvice(b[i].end, b[i+1].start, ctx) });
+    }
+    var last=b[b.length-1];
+    out.wake.push({ start:last.end, end:ctx.reportMs, recommendations:['Up, showered and moving',
+      'Daylight or bright light if there is any to be had', 'Something to eat',
+      'Coffee now is fine — it is the last thing before the van'] });
+    out.inertiaClearanceBufferMinutes=Math.round((ctx.reportMs-last.end)/MIN);
+    return out;
+  }
+  function meanPropensity(startMs, endMs, bodyOff){
+    var n=0, t=0;
+    for(var m=startMs; m<endMs; m+=30*60000){ t+=propensity(norm24(m/3600000+bodyOff)); n++; }
+    return n? t/n : 0;
+  }
+  function describe(b, ctx, p){
+    if(b.blockType==='TACTICAL_NAP')
+      return 'A short nap straight before the van. It will not clear the debt, but it takes the edge off the first hours of the duty.';
+    if(b.blockType==='PRE_DUTY_ANCHOR')
+      return p<-0.42
+        ? 'The anchor. It falls in the hardest hours of the day to get to sleep, so go to bed expecting to lie there a while — its job is to stop you starting the duty already six hours into your day, and even broken sleep here does that.'
+        : 'The anchor. Its whole job is to make sure you are not starting the duty already six hours into your day.';
+    return p>0.3? 'The main sleep, placed where your body clock is already pulling you under.'
+                : 'The main sleep. It is not in your body night, so protect it — blackout, earplugs, phone off.';
+  }
+  function wakeAdvice(fromMs, toMs, ctx){
+    var a=['Get out of the room if you can — light and movement make the second block work'];
+    var h=(toMs-fromMs)/3600000;
+    a.push('Eat properly; this is the meal that matters');
+    a.push('Last caffeine by '+hhmm(toMs-6*3600000+ctx.localOff*3600000)+' local, six hours before you lie down again');
+    if(h>6) a.push('This is a long break — treat it like a short day, not like waiting');
+    return a;
+  }
+  function hhmm(ms){ var d=new Date(ms); return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2); }
+
+  var API={ CFG:CFG, plan:plan, propensity:propensity, sleepEfficiency:sleepEfficiency,
+            riseS:riseS, fallS:fallS, simulate:simulate, quantise:quantise, norm24:norm24 };
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.SLEEP=API;
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
 /* AeroDecode access gate — employee-number allowlist (offline).
    Authorized pilots are stored as SALTED HASHES (not the raw numbers), so the
    public source never shows the actual roster. Login = employee number.
@@ -4748,7 +5441,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v12.7 · 2026-08-31';
+  var BUILD='v12.9 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5369,6 +6062,7 @@
       var vhf=$('#view-hf'); if(vhf) vhf.hidden=(v!=='hf');
       var vct=$('#view-catering'); if(vct) vct.hidden=(v!=='catering');
       var vft=$('#view-fatigue'); if(vft) vft.hidden=(v!=='fatigue');
+      var vsl=$('#view-sleep'); if(vsl){ vsl.hidden=(v!=='sleep'); if(v==='sleep'){ try{ slpRender(); }catch(e){} } }
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
       var vw=$('#view-wheel'); if(vw) vw.hidden=(v!=='wheel');
       var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
@@ -5984,7 +6678,7 @@
     if(!flWpts.length){ flStatus('No waypoints found — try PDF upload, or make sure the nav-log pages are included.',false); flQC.innerHTML='';flSum.innerHTML='';flTable.innerHTML=''; return; }
     flStatus('Found '+flWpts.length+' waypoints'+(flTrip?' · trip time '+flTrip.str:'')+
       (flDepFromOfp? ' · departure '+flOrig+'Z read from the OFP'
-                   : ' · <b style="color:var(--warn)">no departure time found in the OFP — check the Departure box</b>')+'.',false);
+                   : ' · <b style="color:var(--warn)">No departure time found in the OFP — check the Departure box</b>')+'.',false);
     flRender();
   }
   function renderJepp(){
@@ -6464,9 +7158,11 @@
     var owner=false;
     try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); owner=!!(c&&c.owner); }catch(e){}
     var t=document.getElementById('ftTab'); if(t) t.hidden=!owner;
+    var t2=document.getElementById('slpTab'); if(t2) t2.hidden=!owner;
     if(!owner){                                    // signed out / crew login: leave the tab
-      var v=document.getElementById('view-fatigue');
-      if(v && !v.hidden){ var d=document.querySelector('.tab[data-view="decode"]'); if(d) d.click(); }
+      var v=document.getElementById('view-fatigue'), v2=document.getElementById('view-sleep');
+      var leave=(v&&!v.hidden)||(v2&&!v2.hidden);
+      if(leave){ var d=document.querySelector('.tab[data-view="decode"]'); if(d) d.click(); }
     }
   }
   window.ftApplyOwner=ftApplyOwner;
@@ -6664,12 +7360,23 @@
              two duty periods' worth of block time from every cumulative total. Anything at
              or above 24 hours would swallow a daily flight, so the window stays well under
              it, and the block duration has to agree as well. */
-          var tol=(o.src==='UTC' && n.src==='UTC')? 6*3600000 : 12*3600000;
+          /* Ground activities break that reasoning. Three blocks of CRM recurrent on one
+             Thursday share a code, a station, and a block time of zero, so a tolerance
+             measured in hours folds a nine-hour training day into a single entry. They are
+             only the same activity if they start at the same time. */
+          var tol=(o.gnd || n.gnd)? 30*60000
+                 : (o.src==='UTC' && n.src==='UTC')? 6*3600000 : 12*3600000;
           var blkOk=(o.blk==null||n.blk==null)? true : Math.abs(o.blk-n.blk)<=30;
           if(o.flight===n.flight && o.from===n.from && o.to===n.to && blkOk &&
              Math.abs((o.out||0)-(n.out||0)) <= tol){ hit=i; break; }
         }
         if(hit<0) all.push(n);
+        /* A calendar feed publishes the SCHEDULE. The Personal Crew Schedule Report publishes
+           what actually happened, block times and all. When both describe the same leg the
+           actual one wins, whichever arrived last — otherwise re-subscribing to the calendar
+           would quietly replace flown times with planned ones. */
+        else if(all[hit].sch && !n.sch) all[hit]=n;
+        else if(!all[hit].sch && n.sch){ /* keep the actual */ }
         else if(n.src==='UTC' || all[hit].src!=='UTC') all[hit]=n;   // prefer the UTC rendering
       });
       all.sort(function(a,b){ return (a.out||0)-(b.out||0); });
@@ -6679,6 +7386,19 @@
   }
   /* X and GDO days. They carry no times, but they are what separates one pattern from the
      next, so they are worth keeping even though nothing else in the roster uses them. */
+  function impSaveOffDaysList(list){
+    try{
+      var all=JSON.parse(localStorage.getItem('ad_offdays')||'[]');
+      var seen={}; all.forEach(function(o){ seen[o.d]=1; });
+      (list||[]).forEach(function(o){
+        if(!o||!o.date) return;
+        var key=o.date.y+'-'+('0'+o.date.m).slice(-2)+'-'+('0'+o.date.d).slice(-2);
+        if(!seen[key]){ seen[key]=1; all.push({d:key, t:o.type||'OFF'}); }
+      });
+      all.sort(function(a,b){ return a.d<b.d? -1:1; });
+      localStorage.setItem('ad_offdays', JSON.stringify(all));
+    }catch(e){}
+  }
   function impSaveOffDays(rows){
     try{
       var all=JSON.parse(localStorage.getItem('ad_offdays')||'[]');
@@ -6710,6 +7430,21 @@
       localStorage.setItem('ad_offcover', JSON.stringify(all));
     }catch(e){}
   }
+  /* A calendar has no period header, so its coverage is simply the span of what it holds. */
+  function impSaveCoverSpan(rows, offs){
+    try{
+      var lo=null, hi=null;
+      var take=function(ms){ if(ms==null) return; var d=Math.floor(ms/86400000);
+        if(lo==null||d<lo) lo=d; if(hi==null||d>hi) hi=d; };
+      (rows||[]).forEach(function(r){ if(r.utc){ take(r.utc.report); take(r.utc.debrief); } });
+      (offs||[]).forEach(function(o){ if(o.date) take(Date.UTC(o.date.y,o.date.m-1,o.date.d)); });
+      if(lo==null) return;
+      var all=JSON.parse(localStorage.getItem('ad_offcover')||'[]');
+      for(var i=0;i<all.length;i++) if(all[i][0]===lo && all[i][1]===hi) return;
+      all.push([lo,hi]);
+      localStorage.setItem('ad_offcover', JSON.stringify(all));
+    }catch(e){}
+  }
   function dpCoverRanges(){ try{ return JSON.parse(localStorage.getItem('ad_offcover')||'[]'); }catch(e){ return []; } }
   /* Hotels come from the XLS only; keyed by port + the date the room is held. */
   function impSaveHotels(list){
@@ -6733,21 +7468,27 @@
     if(!legs.length){ return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'}; }
     impSaveHotels(parsed.hotels);
     impSaveOffDays(parsed.rows);
+    if(parsed.offDays) impSaveOffDaysList(parsed.offDays);
     impSaveCover(parsed.period);
+    if(parsed.source==='ics') impSaveCoverSpan(parsed.rows, parsed.offDays);
     var store=legs.map(function(r){
       return { k:r.utc.blockOut+'|'+r.flight, src:parsed.mode, flight:r.flight, from:r.from, to:r.to,
-               dh:!!r.deadhead, ac:r.aircraft||null, report:r.utc.report, out:r.utc.blockOut,
+               dh:!!r.deadhead, dhg:!!r.dhGuess, sch:(parsed.source==='ics'?1:0),
+               gnd:!!r.ground, lab:r.actLabel||null, fz:!!r.icsFuzzy, cl:!!r.icsClash,
+               ac:r.aircraft||null, report:r.utc.report, out:r.utc.blockOut,
                in:r.utc.blockIn, deb:r.utc.debrief, blk:r.blockMin||null, duty:r.dutyMin||null };
     });
     var total=impSaveRoster(store);
     var a=new Date(Math.min.apply(null,legs.map(function(r){return r.utc.blockOut;})));
     var b=new Date(Math.max.apply(null,legs.map(function(r){return r.utc.blockOut;})));
     var f=function(d){ return d.toISOString().slice(0,10); };
-    var ops=legs.filter(function(r){return !r.deadhead;});
+    var gndN=legs.filter(function(r){return r.ground;}).length;
+    var ops=legs.filter(function(r){return !r.deadhead && !r.ground;});
     var blk=ops.reduce(function(t,r){return t+(r.blockMin||0);},0);
     var uniq=tzBad.filter(function(v,i,s2){return s2.indexOf(v)===i;});
-    return { name:name, legs:legs.length, ops:ops.length, dh:legs.length-ops.length,
-             from:f(a), to:f(b), mode:parsed.mode, blk:blk, total:total,
+    return { name:name, legs:legs.length, ops:ops.length, dh:legs.length-ops.length-gndN,
+             from:f(a), to:f(b), mode:parsed.mode, src:parsed.source||'report', blk:blk, total:total,
+             sup:(parsed.superseded||[]).length, clash:(parsed.clashes||[]).length, gnd:gndN,
              hotels:(parsed.hotels||[]).length, bad:uniq };
   }
   /* Same flight, same route, close together but not close enough to merge. Usually two
@@ -6759,6 +7500,7 @@
     var out=[];
     for(var i=0;i<r.length;i++) for(var j=i+1;j<r.length;j++){
       var a=r[i], b=r[j];
+      if(a.gnd || b.gnd) continue;      // reserve two days running is not a duplicate
       if(a.flight!==b.flight || a.from!==b.from || a.to!==b.to) continue;
       var dh=Math.abs((a.out||0)-(b.out||0))/3600000;
       if(dh>12 && dh<=36) out.push({flight:a.flight, route:a.from+'→'+a.to, a:a.out, b:b.out, dh:dh});
@@ -6782,10 +7524,16 @@
           esc(f(x.a))+' and '+esc(f(x.b)); }).join('; ')+
         (sus.length>3? '; and '+(sus.length-3)+' more':'')+
         '.<br>Two exports of the same trip can date a date-line duty a whole day apart. If that flight only operated once, clear the roster and re-import in <b>UTC</b> only — otherwise every cumulative total counts it twice.</div>':'');
+    var nd=0; try{ nd=Object.keys(JSON.parse(localStorage.getItem('ad_legdrop')||'{}')).length; }catch(e){}
+    if(nd) el.innerHTML+='<div class="impdrop">'+nd+' leg'+(nd>1?'s':'')+' set aside and not counted. '+
+      '<button id="impUndrop" class="impclear">Bring them back</button></div>';
+    var ub=$('#impUndrop');
+    if(ub) ub.onclick=function(){ try{ localStorage.removeItem('ad_legdrop'); }catch(e){}
+      impSpan(); try{ dpRender(); }catch(e){} };
     var cb=$('#impClear');
     if(cb) cb.onclick=function(){
       if(!confirm('Remove every imported leg and hotel? Your gateway ticks are kept.')) return;
-      try{ ['ad_roster','ad_hotels','ad_offdays','ad_offcover'].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+      try{ ['ad_roster','ad_hotels','ad_offdays','ad_offcover','ad_legdrop','ad_dhfix'].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
       impSay('Roster cleared.',''); impSpan(); try{ dpRender(); }catch(e){}
     };
   }
@@ -6804,9 +7552,15 @@
             parsed=AIMSCSV.toUtc(AIMSCSV.parseXls(XLSREAD.toGrid(buf)), impOffsetFor);
           } else {
             var txt;
-            try{ txt=new TextDecoder('iso-8859-1').decode(new Uint8Array(buf)); }
-            catch(_){ txt=String.fromCharCode.apply(null, new Uint8Array(buf)); }
-            parsed=AIMSCSV.toUtc(AIMSCSV.parse(txt), impOffsetFor);
+            try{ txt=new TextDecoder('utf-8').decode(new Uint8Array(buf)); }
+            catch(_){ txt=null; }
+            if(txt==null || (/\uFFFD/.test(txt) && !/BEGIN:VCALENDAR/i.test(txt))){
+              try{ txt=new TextDecoder('iso-8859-1').decode(new Uint8Array(buf)); }
+              catch(_){ txt=String.fromCharCode.apply(null, new Uint8Array(buf)); }
+            }
+            parsed = /BEGIN:VCALENDAR/i.test(txt)
+              ? AIMSCSV.toUtc(AIMSCSV.parseIcs(txt), impOffsetFor)
+              : AIMSCSV.toUtc(AIMSCSV.parse(txt), impOffsetFor);
           }
           resolve(impHandle(parsed, file.name));
         }catch(err){ resolve({err:'Could not read <b>'+esc(file.name)+'</b> — '+esc(err.message)}); }
@@ -6854,7 +7608,14 @@
         return;
       }
       if(kind==='ics'){
-        say('That looks like a calendar feed. The <b>Schedule Checks</b> tab already reads .ics for picking your next flight, but the fatigue roster needs the flight number, both stations and the deadhead flag, which this app cannot yet pull out of a calendar event. Send a sample .ics to '+esc(FEEDBACK_EMAIL)+' and it can be wired up properly.','impwarn');
+        try{
+          var pc=AIMSCSV.toUtc(AIMSCSV.parseIcs(t), impOffsetFor);
+          var rr=impHandle(pc, 'pasted calendar');
+          if(!rr){ say('No eCrew entries found in that calendar.','impbad'); return; }
+          if(rr.err){ say(rr.err,'impbad'); return; }
+          pm.classList.remove('on');
+          impReport([rr],[]);
+        }catch(err){ say('Could not read that calendar — '+esc(err.message),'impbad'); }
         return;
       }
       say('That does not look like an AIMS schedule export or a calendar feed. A CSV should have a line saying <b>All times in UTC</b> or <b>All times in Local Station</b> near the top.','impbad');
@@ -6886,26 +7647,307 @@
   function impReport(done, errs){
     var msg='';
     if(done.length){
-      var legs=0, ops=0, blk=0, hot=0, total=null, bad=[];
+      var legs=0, ops=0, dhs=0, blk=0, hot=0, total=null, bad=[];
       var lo=null, hi=null, modes={};
       done.forEach(function(d){
-        legs+=d.legs; ops+=d.ops; blk+=d.blk; hot+=d.hotels; total=d.total; modes[d.mode]=1;
+        legs+=d.legs; ops+=d.ops; dhs+=(d.dh||0); blk+=d.blk; hot+=d.hotels; total=d.total; modes[d.mode]=1;
         if(lo==null||d.from<lo) lo=d.from; if(hi==null||d.to>hi) hi=d.to;
         d.bad.forEach(function(x){ if(bad.indexOf(x)<0) bad.push(x); });
       });
-      msg+='<b class="impok">✓ Imported '+legs+' legs</b> ('+ops+' operating, '+(legs-ops)+' deadhead) from <b>'+
+      var gnd=0, sup=0, clash=0;
+      done.forEach(function(d){ gnd+=(d.gnd||0); sup+=(d.sup||0); clash+=(d.clash||0); });
+      msg+='<b class="impok">✓ Imported '+legs+' entries</b> ('+ops+' operating, '+dhs+' deadhead'+
+        (gnd? ', '+gnd+' ground or training':'')+') from <b>'+
         esc(lo)+'</b> to <b>'+esc(hi)+'</b>'+(done.length>1? ' across <b>'+done.length+'</b> files':'')+'.<br>'+
         'Times in file: <b>'+esc(Object.keys(modes).map(function(m){return m==='UTC'?'UTC':'Local Station';}).join(' + '))+
         '</b> · operating block <b>'+(blk/60).toFixed(1)+'h</b>'+(hot? ' · <b>'+hot+'</b> hotel nights':'')+
         (total!=null? '<br><span style="color:var(--faint)">Roster now holds <b>'+total+'</b> legs across all imports.</span>':'');
       if(bad.length) msg+='<br><span class="impwarn">⚠ Unknown station'+(bad.length>1?'s':'')+': <b>'+esc(bad.join(', '))+
         '</b> — those legs were skipped rather than guessed. Re-export in <b>UTC</b> and they will import fine.</span>';
+      if(sup||clash)
+        msg+='<div class="impcal"><b>Conflicting entries in the feed.</b> '+
+          (sup? 'AIMS left <b>'+sup+'</b> superseded leg'+(sup>1?'s':'')+' in the calendar — a deadhead that was rebooked, with the old booking never retracted. '+
+                'They departed before the leg before them had landed, or from a city you were nowhere near, so they were left out. ':'')+
+          (clash? 'Another <b>'+clash+'</b> pair'+(clash>1?'s':'')+' could not be settled that way, because both entries are fully described. '+
+                  'Those are shown together on the Duty tab with a note; tap the <b>&times;</b> on whichever one did not happen.':'')+
+          '</div>';
+      if(done.some(function(d){ return d.src==='ics'; }))
+        msg+='<div class="impcal"><b>Read from your eCrew calendar.</b> Two things to know about it. '+
+             'The calendar carries <b>scheduled</b> times, not actual ones, so a leg that pushed late or blocked in early '+
+             'reads as planned until the Personal Crew Schedule Report for that month is imported over it — when that happens the actual times win. '+
+             'And the calendar never says who was deadheading, so the app worked it out from the operator: an Atlas or Polar number is treated as operating, '+
+             'anything else as a deadhead. Those legs show a <b>DH?</b> chip on the Duty tab. Tap any chip to correct it.</div>';
     }
     if(errs.length) msg+=(msg?'<br>':'')+'<span class="impwarn">'+errs.join('<br>')+'</span>';
     impSay(msg||'Nothing was imported.', done.length?'':'impbad');
     impSpan(); try{ dpRender(); }catch(e){}
   }
 
+
+  /* ---------- Sleep Plan: where to put the sleep in the break you were given ----------
+     The Fatigue tab scores a schedule. This one plans against it. The planning model lives
+     in SLEEP; everything on screen that calls itself alertness still comes from FATIGUE, so
+     the two tabs can never quote different numbers at each other. */
+  var slpSel=null, slpManualPlan=null;
+
+  function slpZ(ms){ var d=new Date(ms); return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2)+'Z'; }
+  function slpL(ms, off){
+    if(off==null) return '—';
+    var d=new Date(ms+off*3600000);
+    return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2);
+  }
+  function slpDayName(ms, off){
+    var d=new Date(ms+((off==null?0:off)*3600000));
+    return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()];
+  }
+  function slpHM(min){ min=Math.round(min); var h=Math.floor(min/60); return h+'h'+(min%60? ' '+(min%60)+'m':''); }
+
+  /* Every gap between one release and the next report, with the station and the body-clock
+     offset the crew member will actually arrive carrying. */
+  function slpBreaks(){
+    if(typeof DUTY==='undefined') return [];
+    var legs=dpRoster(); if(!legs.length) return [];
+    var duties=DUTY.buildDuties(legs), rests=DUTY.restPeriods(duties);
+    var F=(typeof FATIGUE!=='undefined')?FATIGUE:null;
+    var homeOff=dpBaseOff(Date.now());
+    try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
+    var out=[], now=Date.now();
+    for(var i=0;i<duties.length-1;i++){
+      var a=duties[i], b=duties[i+1];
+      if(a.release==null || b.report==null) continue;
+      var h=(b.report-a.release)/3600000;
+      if(h<3 || h>72) continue;
+      if(b.report < now-12*3600000) continue;          // history is not a plan
+      out.push({ i:i, startMs:a.release, reportMs:b.report, hours:h,
+                 station:a.to, next:b, prev:a,
+                 dutyEndMs:(b.release!=null? b.release : null),
+                 bodyOff:(a.bodyOffset!=null? a.bodyOffset : homeOff),
+                 localOff:dpOff(a.to, a.release),
+                 awakeSinceMs:(a.report!=null? a.report-2*3600000 : null) });
+    }
+    return out.slice(0,8);
+  }
+
+  function slpRender(){
+    var box=$('#slpBreaks'), out=$('#slpOut');
+    if(!box||!out||typeof SLEEP==='undefined') return;
+    var brs=slpBreaks();
+    var h='';
+    brs.forEach(function(b,i){
+      var on=(slpSel===('r'+i));
+      h+='<button class="slpbrk'+(on?' on':'')+'" data-brk="'+i+'">'+
+         '<b>'+esc(b.station||'Layover')+' — '+b.hours.toFixed(1)+' hours off</b>'+
+         '<span class="sub">'+slpDayName(b.startMs,b.localOff)+' '+slpL(b.startMs,b.localOff)+' local'+
+         ' → '+slpDayName(b.reportMs,b.localOff)+' '+slpL(b.reportMs,b.localOff)+' local report</span></button>';
+    });
+    h+='<button class="slpbrk'+(slpSel==='manual'?' on':'')+'" data-brk="manual"><b>Enter it myself</b>'+
+       '<span class="sub">'+(brs.length? 'A break that is not in the roster yet':'Nothing imported yet — type the times in')+'</span></button>';
+    box.innerHTML=h;
+    if(slpSel==null) slpSel=brs.length? 'r0' : 'manual';
+    Array.prototype.forEach.call(box.querySelectorAll('[data-brk]'),function(bt){
+      bt.onclick=function(){
+        var v=bt.getAttribute('data-brk');
+        slpSel=(v==='manual')? 'manual' : 'r'+v;
+        slpRender();
+      };
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.slpbrk'),function(bt){
+      var v=bt.getAttribute('data-brk');
+      bt.className='slpbrk'+((slpSel===(v==='manual'?'manual':'r'+v))?' on':'');
+    });
+    var man=$('#slpManual'); if(man) man.hidden=(slpSel!=='manual');
+
+    if(slpSel==='manual'){ out.innerHTML= slpManualPlan? slpDraw(slpManualPlan) :
+      '<div class="hint" style="margin-top:14px">Fill in the two times above and the app will work out where the sleep goes.</div>'; return; }
+    var idx=+String(slpSel).slice(1), br=brs[idx];
+    if(!br){ out.innerHTML=''; return; }
+    out.innerHTML=slpDraw(slpInput(br));
+    slpWire(out);
+  }
+
+  function slpInput(br){
+    return { startMs:br.startMs, reportMs:br.reportMs, dutyEndMs:br.dutyEndMs,
+             localOff:br.localOff, bodyOff:br.bodyOff, awakeSinceMs:br.awakeSinceMs,
+             station:br.station, preferSingleBlock:!!($('#slpSingle')&&$('#slpSingle').checked) };
+  }
+
+  /* The picture. One strip: the clock along the top, the body's own night shaded behind,
+     the window of circadian low picked out inside it, the sleep blocks laid on top, and the
+     two things that are easy to get wrong - the last coffee and the van - marked. */
+  function slpChart(res, inp){
+    /* Drawn in units that are close to CSS pixels on a phone, so the labels stay legible
+       instead of being scaled down to nothing. The card caps the width, so on a laptop the
+       whole strip scales up in proportion rather than stretching. */
+    var W=360, H=120, L=6, R=6, ruler=20, bandT=26, bandH=54, barY=36, barH=34, footY=H-5;
+    var t0=inp.startMs, t1=inp.reportMs, span=t1-t0;
+    var x=function(ms){ return L + (ms-t0)/span*(W-L-R); };
+    var loc=(inp.localOff==null? 0 : inp.localOff), bod=(inp.bodyOff==null? 0 : inp.bodyOff);
+    var g='<svg class="slptl" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="where the sleep goes across this break">';
+    // the body's own night behind everything, with the circadian low picked out inside it
+    var stepMs=10*60000;
+    for(var t=t0; t<t1; t+=stepMs){
+      var bh=SLEEP.norm24(t/3600000+bod);
+      if(!(bh>=22||bh<7)) continue;
+      var wocl=(bh>=2&&bh<6);
+      g+='<rect x="'+x(t).toFixed(1)+'" y="'+bandT+'" width="'+Math.max(0.5,(x(Math.min(t+stepMs,t1))-x(t))).toFixed(2)+
+         '" height="'+bandH+'" fill="'+(wocl?'rgba(255,157,77,.26)':'rgba(110,150,220,.14)')+'"/>';
+    }
+    // hour ruler, local hotel time; midnight carries the weekday so a long break stays readable
+    var stepH=(span/3600000>30)? 6 : (span/3600000>14? 3 : 2);
+    var first=Math.ceil((t0+loc*3600000)/3600000)*3600000-loc*3600000;
+    for(t=first; t<t1; t+=3600000){
+      var lh=new Date(t+loc*3600000).getUTCHours();
+      if(lh%stepH) continue;
+      var mid=(lh===0);
+      g+='<line x1="'+x(t).toFixed(1)+'" y1="'+bandT+'" x2="'+x(t).toFixed(1)+'" y2="'+(bandT+bandH)+
+         '" stroke="rgba(140,175,220,'+(mid?'.4':'.16')+')" stroke-width="'+(mid?1.2:0.8)+'"/>'+
+         '<text x="'+x(t).toFixed(1)+'" y="'+(ruler-4)+'" fill="'+(mid?'#9fb8d8':'#7f95b5')+
+         '" font-size="9" font-family="ui-monospace,monospace" text-anchor="middle">'+
+         (mid? slpDayName(t,loc) : ('0'+lh).slice(-2))+'</text>';
+    }
+    // the break itself, then the sleep laid on top of it
+    g+='<rect x="'+L+'" y="'+barY+'" width="'+(W-L-R)+'" height="'+barH+'" rx="5" fill="rgba(120,160,220,.09)" stroke="rgba(120,160,220,.22)" stroke-width="0.8"/>';
+    res.best.blocks.forEach(function(bk){
+      var bx=x(bk.sleepStart), bw=Math.max(2,x(bk.sleepEnd)-x(bk.sleepStart));
+      g+='<rect x="'+bx.toFixed(1)+'" y="'+barY+'" width="'+bw.toFixed(1)+'" height="'+barH+'" rx="5" fill="#4d76d8" opacity=".93"/>';
+      if(bw>=34) g+='<text x="'+(bx+bw/2).toFixed(1)+'" y="'+(barY+barH/2+4)+'" fill="#eaf2ff" font-size="11" font-weight="700" '+
+        'font-family="ui-monospace,monospace" text-anchor="middle">'+(bk.durationMinutes/60).toFixed(1)+'h</text>';
+    });
+    // caffeine cut-offs; the marker always shows, the words only when there is room for them
+    var lastLab=-99;
+    res.best.caffeine.forEach(function(c){
+      if(c.cutoffMs<=t0||c.cutoffMs>=t1) return;
+      var cx=x(c.cutoffMs);
+      g+='<line x1="'+cx.toFixed(1)+'" y1="'+(barY-5)+'" x2="'+cx.toFixed(1)+'" y2="'+(barY+barH+5)+
+         '" stroke="#e0b53a" stroke-width="1.4" stroke-dasharray="3 2.5"/>';
+      if(cx-lastLab>78 && cx<W-58){
+        g+='<text x="'+cx.toFixed(1)+'" y="'+footY+'" fill="#e0b53a" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">Last coffee</text>';
+        lastLab=cx;
+      }
+    });
+    g+='<line x1="'+(W-R).toFixed(1)+'" y1="'+(barY-8)+'" x2="'+(W-R).toFixed(1)+'" y2="'+(barY+barH+8)+'" stroke="#ff6b6b" stroke-width="2"/>'+
+       '<text x="'+(W-R).toFixed(1)+'" y="'+footY+'" fill="#ff6b6b" font-size="9" text-anchor="end" font-family="ui-monospace,monospace" font-weight="700">Report</text>'+
+       '<text x="'+L+'" y="'+footY+'" fill="#7f95b5" font-size="9" font-family="ui-monospace,monospace">Release</text>';
+    g+='</svg>';
+    g+='<div class="slpkey">'+
+       '<span><i style="background:#4d76d8"></i>Asleep</span>'+
+       '<span><i style="background:rgba(110,150,220,.4)"></i>Your body’s night</span>'+
+       '<span><i style="background:rgba(255,157,77,.6)"></i>Circadian low (0200–0600 body time)</span>'+
+       '<span><i style="background:#e0b53a"></i>Caffeine cut-off</span>'+
+       '<div class="slpkeyfoot">Hours along the top are <b>local hotel time</b>. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div></div>';
+    return g;
+  }
+
+  function slpDraw(inp){
+    var res=SLEEP.plan(inp);
+    if(res.error) return '<div class="slpwarn">'+esc(res.error)+'</div>';
+    var loc=inp.localOff, bod=inp.bodyOff;
+    var F=(typeof FATIGUE!=='undefined')?FATIGUE:null;
+    var h='';
+    (res.warnings||[]).forEach(function(w){ h+='<div class="slpwarn">'+esc(w)+'</div>'; });
+    h+=slpChart(res, inp);
+
+    /* Alertness comes from the model the rest of the app already uses, fed with the sleep
+       this plan expects to deliver. Quoting a second model's number here would put two
+       different answers to the same question on two tabs of one app. */
+    var eff=null, effBand=null;
+    if(F){
+      var sleptH=res.best.predictedSleepMinutes/60;
+      var last=res.best.blocks[res.best.blocks.length-1];
+      var q=F.sleepQuality(F.sleepInBodyNight(last.sleepStart/3600000, (last.sleepEnd-last.sleepStart)/3600000, bod||0), 'bed');
+      var r0=F.reservoirAtWake(sleptH, q, 0);
+      var awake=(inp.reportMs-last.sleepEnd)/3600000;
+      eff=Math.round(F.effectiveness(r0, awake, F.norm24(inp.reportMs/3600000), bod||0));
+      effBand=F.band(eff);
+    }
+    h+='<div class="slpstats">'+
+       '<div class="slpstat"><div class="k">In bed</div><div class="v" style="color:#8fb4ff">'+slpHM(res.best.totalPlannedSleepMinutes)+'</div>'+
+         '<div class="s">Across '+res.best.blocks.length+' block'+(res.best.blocks.length>1?'s':'')+'</div></div>'+
+       '<div class="slpstat"><div class="k">Sleep expected</div><div class="v" style="color:#4ee39a">'+slpHM(res.best.predictedSleepMinutes)+'</div>'+
+         '<div class="s">What the model expects you to get</div></div>'+
+       (eff!=null? '<div class="slpstat"><div class="k">At report</div><div class="v" style="color:'+effBand.color+'">'+eff+'%</div>'+
+         '<div class="s">'+esc(effBand.label)+'</div></div>':'')+
+       '<div class="slpstat"><div class="k">Up before the van</div><div class="v" style="color:#ffd166">'+slpHM(res.best.inertiaClearanceBufferMinutes)+'</div>'+
+         '<div class="s">Time to shake off sleep inertia</div></div>'+
+       '</div>';
+
+    h+='<div class="slpsteps">';
+    var seq=[];
+    res.best.blocks.forEach(function(b,i){
+      seq.push({ t:b.sleepStart, cls:'sleep', title:'Lights out',
+        d:'<b>'+slpHM(b.durationMinutes)+'</b> — about '+b.cycleCount+' sleep cycle'+(b.cycleCount>1?'s':'')+
+          '. '+esc(b.easeLabel)+'.<br>'+esc(b.description) });
+      seq.push({ t:b.sleepEnd, cls:'up', title:(i<res.best.blocks.length-1?'Up':'Up for good'),
+        d:null, wake:res.best.wake[i] });
+    });
+    seq.sort(function(a,b){ return a.t-b.t; });
+    seq.forEach(function(x){
+      h+='<div class="slpstep '+x.cls+'"><div class="slptime">'+slpL(x.t,loc)+' local<span class="z">'+slpZ(x.t)+
+         ' · body '+slpL(x.t,bod)+'</span></div><div class="slpwhat"><div class="t">'+esc(x.title)+'</div>';
+      if(x.d) h+='<div class="d">'+x.d+'</div>';
+      if(x.wake && x.wake.recommendations && x.wake.recommendations.length){
+        h+='<ul>'+x.wake.recommendations.map(function(r){ return '<li>'+esc(r)+'</li>'; }).join('')+'</ul>';
+      }
+      h+='</div></div>';
+    });
+    h+='<div class="slpstep go"><div class="slptime">'+slpL(inp.reportMs,loc)+' local<span class="z">'+slpZ(inp.reportMs)+
+       ' · body '+slpL(inp.reportMs,bod)+'</span></div><div class="slpwhat"><div class="t">Report</div>'+
+       '<div class="d">Sleep inertia takes about half an hour to clear, so the plan never wakes you closer than that to the van.</div></div></div>';
+    h+='</div>';
+
+    if(res.alternative){
+      var alt=res.alternative;
+      h+='<details class="slpsec"><summary>The other way to play it — '+alt.blocks.length+' block'+(alt.blocks.length>1?'s':'')+
+         ', '+slpHM(alt.predictedSleepMinutes)+' of sleep expected</summary><div class="slpsecb">';
+      alt.blocks.forEach(function(b){
+        h+='<p><b>'+slpL(b.sleepStart,loc)+' – '+slpL(b.sleepEnd,loc)+' local</b> · '+slpHM(b.durationMinutes)+
+           ' · '+esc(b.easeLabel)+'.</p>';
+      });
+      h+='<p>'+(alt.predictedSleepMinutes>res.best.predictedSleepMinutes
+        ? 'This buys more sleep but leaves you less settled going into the duty. Worth it if the duty ahead is long.'
+        : 'Less total sleep, but a simpler night and less time lying awake. Worth it if you struggle to sleep twice in a day.')+'</p>';
+      h+='</div></details>';
+    }
+
+    h+='<details class="slpsec"><summary>Why here, and how much to believe it</summary><div class="slpsecb">'+
+      '<p>Two things decide when sleep works. <b>Pressure</b> builds from the moment you wake and drains while you sleep, quickly at first and then more slowly — which is why the first four hours of a sleep are worth more than the last two. <b>The body clock</b> decides how easy it is to fall asleep at all, and it does not care what the hotel clock says. Its low point sits around 0400 on <i>your</i> body time, and the hours either side of your normal bedtime are the hardest of the whole day to get to sleep in, however tired you are.</p>'+
+      '<p>The app swept every sensible way of splitting this break, scored each one on the pressure you would carry into the duty and how much of the time in bed you would realistically be asleep for, and kept the best. That is why it sometimes offers you less time in bed than you have available: lying awake for three hours is not rest, and planning for it just moves the disappointment around.</p>'+
+      '<p><b>Ninety-minute cycles are a rule of thumb, not a measurement.</b> Real cycles run anywhere from about seventy minutes to two hours and get longer through the night. The app uses the ninety-minute figure only to round a block when rounding costs nothing — it will never cut useful sleep short to make the arithmetic tidy.</p>'+
+      '<p><b>Caffeine</b> is cut off six hours before each sleep because it takes roughly five hours to clear half of a dose, and the half that is left is enough to cost you sleep you cannot afford. If you are a heavy user, treat six hours as the floor.</p>'+
+      '<p><b>What this cannot know:</b> how you sleep in a strange bed, noise, the room, a night flight you have not recovered from, or anything you take to help. Model constants come from published work on averaged groups — Borbély and colleagues for the pressure curve, and the standard two-harmonic form for the body clock — and you are not an average group. Treat the plan as a strong starting point and adjust it from what actually happened last time.</p>'+
+      '</div></details>';
+    return h;
+  }
+
+  function slpWire(out){}
+
+  /* Manual entry, for a break the roster does not know about yet. */
+  (function(){
+    var go=$('#slpGo'); if(!go) return;
+    go.onclick=function(){
+      var hm=function(el){ var v=(el&&el.value||'').replace(/\D/g,''); if(v.length!==4) return null;
+        var hh=+v.slice(0,2), mm=+v.slice(2); return (hh<24&&mm<60)? hh*60+mm : null; };
+      var a=hm($('#slpStart')), b=hm($('#slpRep'));
+      if(a==null||b==null){ $('#slpOut').innerHTML='<div class="slpwarn">Both times need to be four digits, Zulu — 1830, 0645.</div>'; return; }
+      var base=Math.floor(Date.now()/86400000)*86400000;
+      var sMs=base+(+($('#slpStartDay').value||0))*86400000+a*60000;
+      var rMs=base+((+($('#slpStartDay').value||0))+(+($('#slpRepDay').value||0)))*86400000+b*60000;
+      while(rMs<=sMs) rMs+=86400000;
+      var stn=(($('#slpStn').value||'').toUpperCase().trim())||null;
+      var home=(($('#slpHome').value||'').toUpperCase().trim())||dpHome();
+      var lo=stn? dpOff(stn,sMs) : null;
+      var ho=home? dpOff(home,sMs) : null;
+      slpManualPlan={ startMs:sMs, reportMs:rMs, dutyEndMs:null, localOff:(lo==null?0:lo),
+                      bodyOff:(ho==null?0:ho), awakeSinceMs:null, station:stn,
+                      preferSingleBlock:!!($('#slpSingle')&&$('#slpSingle').checked) };
+      $('#slpOut').innerHTML=slpDraw(slpManualPlan);
+      if(lo==null&&stn) $('#slpOut').innerHTML='<div class="slpwarn">I do not know the station <b>'+esc(stn)+
+        '</b>, so local time would be a guess. Leave it blank and the plan still works — it will just show Zulu.</div>'+$('#slpOut').innerHTML;
+    };
+    var sg=$('#slpSingle');
+    if(sg) sg.onchange=function(){ if(slpSel==='manual'){ if(slpManualPlan){ slpManualPlan.preferSingleBlock=sg.checked; $('#slpOut').innerHTML=slpDraw(slpManualPlan); } }
+                                   else slpRender(); };
+  })();
 
   /* ---------- duty-period timeline, limits, rest and risk ---------- */
   var dpRegime='FLAG', dpCrew=3, dpArt33=false, dpReserve=false;
@@ -6914,9 +7956,28 @@
   var dpWhy={};
   function dpGw(){ try{ return JSON.parse(localStorage.getItem('ad_gateway')||'{}'); }catch(e){ return {}; } }
   function dpSetGw(k,on){ var g=dpGw(); if(on) g[k]=1; else delete g[k]; try{ localStorage.setItem('ad_gateway',JSON.stringify(g)); }catch(e){} }
+  /* A calendar feed does not say who was deadheading, only what the entry was called, so the
+     app infers it from the operator of the flight. That inference is right far more often
+     than not, but it is still an inference, and it moves real numbers: a deadhead leg counts
+     toward duty and rest but not toward flight time. So every leg carries a tap-to-correct
+     switch, and a correction is remembered against that leg for good. */
+  function dpDhFix(){ try{ return JSON.parse(localStorage.getItem('ad_dhfix')||'{}'); }catch(e){ return {}; } }
+  /* Legs struck out by hand. A calendar occasionally holds two itineraries for the same
+     afternoon because a deadhead was rebooked and the old one was never retracted. The app
+     can see that both cannot be true, but only the person who was there knows which one
+     happened, so it shows both and lets one be removed. Nothing is deleted from the roster;
+     the leg is simply set aside and can be brought back. */
+  function dpDrop(){ try{ return JSON.parse(localStorage.getItem('ad_legdrop')||'{}'); }catch(e){ return {}; } }
+  function dpSetDrop(k,on){ var d=dpDrop(); if(on) d[k]=1; else delete d[k]; try{ localStorage.setItem('ad_legdrop',JSON.stringify(d)); }catch(e){} }
+  function dpSetDh(k,on){ var f=dpDhFix(); f[k]=on?1:0; try{ localStorage.setItem('ad_dhfix',JSON.stringify(f)); }catch(e){} }
   function dpRoster(){
     var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
-    var g=dpGw(); r.forEach(function(l){ l.gw=!!g[l.k]; });
+    var g=dpGw(), fx=dpDhFix(), dr=dpDrop();
+    r=r.filter(function(l){ return !dr[l.k]; });
+    r.forEach(function(l){
+      l.gw=!!g[l.k];
+      if(Object.prototype.hasOwnProperty.call(fx,l.k)){ l.dh=!!fx[l.k]; l.dhFix=true; }
+    });
     return r;
   }
   function dpAirport(code){
@@ -7208,6 +8269,16 @@
        '<button class="scopebtn'+(dpScope==='upcoming'?' on':'')+'" data-scope="upcoming">From now on</button>'+
        '<button class="scopebtn'+(dpScope==='all'?' on':'')+'" data-scope="all">Whole roster</button>'+
        (hidden? '<span class="scopeh">'+hidden+' earlier duty period'+(hidden>1?'s':'')+' hidden</span>':'')+'</div>';
+    /* Said once, above the whole timeline, rather than on every card that happens to
+       contain an inferred leg - which was most of them. */
+    if(legs.some(function(l){ return l.dhg && !l.dhFix; }) || legs.some(function(l){ return l.gnd; }))
+      h+='<div class="dplegend"><b>Reading a leg.</b> '+
+         (legs.some(function(l){ return l.dhg && !l.dhFix; })
+           ? 'A <b>DH?</b> chip means the app worked out from the flight number that you were riding, not flying — your calendar does not say. Tap any chip to switch it: a deadhead counts toward duty and rest, but not toward flight time. '
+           : 'Tap a <b>DH</b> chip to switch a leg between operating and deadhead. ')+
+         (legs.some(function(l){ return l.gnd; })
+           ? 'Sims, ground school, briefings and reserve show their name instead of a flight number; they count as duty and carry no block time. ' : '')+
+         'The <b>&times;</b> sets a leg aside if it never happened.</div>';
     duties.forEach(function(d,i){
       if(i<startAt) return;
       var dEnd=(d.release!=null? d.release : (d.report!=null? d.report+18*3600000 : null));
@@ -7267,16 +8338,41 @@
          })()+'</div><div class="dpbody">';
 
       d.legs.forEach(function(l){
-        h+='<div class="leg"><input type="checkbox" data-gw="'+esc(l.k)+'"'+(l.gw?' checked':'')+' title="Gateway flight — exclude from duty time">'+
-           '<div class="leginfo"><div class="legtop">'+
-           (/^\d+$/.test(String(l.flight))? '<span class="legfl">FLT</span>'+esc(l.flight) : esc(l.flight))+
-           ' '+esc(l.from)+'→'+esc(l.to)+
-           (l.dh?'<span class="dhpill">DH</span>':'')+(l.ac?'<span style="color:var(--faint);font-weight:600;font-size:11px"> ['+esc(l.ac)+']</span>':'')+
-           (l.gw?' <span class="leggw">· GATEWAY (excluded)</span>':'')+'</div>'+
-           '<div class="legcity">'+dpAirport(l.from)+' → '+dpAirport(l.to)+'</div>'+
-           '<div class="legtimes">OUT '+dpBoth(l.out,l.from)+'  ·  IN '+dpBoth(l['in'],l.to)+'  ·  blk '+dpHM(l.blk)+'</div>'+
+        /* Ground and training activities are duty, so they belong on the timeline, but they
+           are not flights: no block time, no deadhead question, and a name rather than a
+           flight number. Showing a proficiency check as "PC MIA-MIA, DH" helped nobody. */
+        var title = l.gnd
+          ? '<span class="gndpill">'+esc(l.lab||'Ground duty')+'</span>'+
+            (l.flight && l.flight!==l.lab? '<span class="gndcode">'+esc(l.flight)+'</span>':'')
+          : (/^\d+[A-Z]?$/.test(String(l.flight))? '<span class="legfl">FLT</span>'+esc(l.flight) : esc(l.flight))+
+            ' '+esc(l.from)+'→'+esc(l.to)+
+            '<button type="button" class="dhpill'+(l.dh?'':' off')+'" data-dh="'+esc(l.k)+'" title="'+
+              (l.dh? 'Counted as deadhead: duty and rest yes, flight time no. Tap if you actually operated this leg.'
+                   : 'Counted as operating. Tap if you rode this leg as a passenger.')+'">DH'+
+              ((l.dhg && !l.dhFix)? '?':'')+'</button>';
+        h+='<div class="leg'+(l.cl?' legclash':'')+'"><input type="checkbox" data-gw="'+esc(l.k)+'"'+(l.gw?' checked':'')+
+           ' title="Gateway flight — exclude from duty time">'+
+           '<div class="leginfo"><div class="legtop">'+title+
+           (l.ac?'<span style="color:var(--faint);font-weight:600;font-size:11px"> ['+esc(l.ac)+']</span>':'')+
+           (l.gw?' <span class="leggw">· GATEWAY (excluded)</span>':'')+
+           '<button type="button" class="legx" data-drop="'+esc(l.k)+'" title="Set this leg aside — it stops counting toward duty, block and rest">&times;</button>'+
+           '</div>'+
+           (l.gnd? '<div class="legcity">'+dpAirport(l.from)+'</div>'
+                 : '<div class="legcity">'+dpAirport(l.from)+' → '+dpAirport(l.to)+'</div>')+
+           '<div class="legtimes">'+(l.gnd? 'START '+dpBoth(l.out,l.from)+'  ·  END '+dpBoth(l['in'],l.to)+'  ·  No block time'
+                                          : 'OUT '+dpBoth(l.out,l.from)+'  ·  IN '+dpBoth(l['in'],l.to)+'  ·  blk '+dpHM(l.blk))+
+           (l.fz? '  ·  <span style="color:var(--gold)">Times reconstructed</span>':'')+'</div>'+
            '</div></div>';
       });
+      /* Two itineraries for the same afternoon. The app will not choose between them,
+         because choosing wrong either invents duty or deletes it. */
+      if(d.legs.some(function(l){ return l.cl; }))
+        h+='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">Two itineraries here — one of them did not happen.</b><br>'+
+           'Your calendar holds legs that overlap or that leave from somewhere you could not have reached in time. That is what a rebooked deadhead, or a departure that taxied back, looks like once the old entry is left behind. '+
+           'Both are counted until you say otherwise, which overstates this duty period. Tap the <b>&times;</b> on the leg that did not happen and everything recalculates.</div>';
+      if(d.legs.some(function(l){ return l.fz; }))
+        h+='<div class="dpcite" style="border-left-color:#5b93e8">The calendar entry for one leg here contradicted itself — the stated block times could not sit inside the duty they belong to. '+
+           'The duration was kept and hung off the report and debrief times, which the calendar had resolved properly. Treat those block times as close, not exact.</div>';
 
       h+='<div class="dpstats">'+
          '<div class="dpstat"><div class="k">Report</div><div class="v">'+dpBoth(d.report,d.from)+'</div></div>'+
@@ -7413,7 +8509,7 @@
           reportBoth:dpBoth(d.report,d.from), releaseBoth:dpBoth(d.release,d.to),
           blockMin:d.blockMin, flightMin:d.flightMin, patternN:d.patternN,
           offDaysBefore:d.offDaysBefore, restSleeps:d.restSleeps,
-          legs:d.legs.map(function(l){ return {flight:l.flight, from:l.from, to:l.to, dh:!!l.dh,
+          legs:d.legs.map(function(l){ return {flight:l.flight, from:l.from, to:l.to, dh:!!l.dh, dhg:!!l.dhg, dhFix:!!l.dhFix,
                  out:dpBoth(l.out,l.from), inn:dpBoth(l['in'],l.to), blk:dpHM(l.blk)}; }),
           restFromBoth:(rp? dpBoth(rp.from, rp.station):null), restToBoth:(rp? dpBoth(rp.to, rp.station):null),
           hotel:(rp? dpHotel(rp.station, rp.from, rp.to):null)
@@ -7467,6 +8563,16 @@
     });
     out.innerHTML=h;
 
+    Array.prototype.forEach.call(out.querySelectorAll('[data-drop]'),function(bt){
+      bt.onclick=function(){ dpSetDrop(bt.getAttribute('data-drop'), true); dpRender(); impSpan(); };
+    });
+    Array.prototype.forEach.call(out.querySelectorAll('[data-dh]'),function(bt){
+      bt.onclick=function(){
+        var k=bt.getAttribute('data-dh');
+        dpSetDh(k, bt.className.indexOf('off')>=0);
+        dpRender();
+      };
+    });
     Array.prototype.forEach.call(out.querySelectorAll('[data-gw]'),function(cb){
       cb.onchange=function(){ dpSetGw(cb.getAttribute('data-gw'), cb.checked); dpRender(); };
     });
@@ -7508,7 +8614,7 @@
       var lab=!c[0]? 'Domestic' : (c[1]<=12&&!c[2]? 'International, not before a flight, previous duty ≤ 12 h'
               : (c[1]>18? 'International, previous duty over 18 h':'International, previous duty up to 18 h'));
       h+='<div class="cbai"><div class="k">'+esc(lab)+'</div><div class="v">'+r.h+':00</div>'+
-         (r.reducible? '<div class="s">may be operationally reduced to '+r.reducible+':00</div>':'<div class="s">&nbsp;</div>')+'</div>';
+         (r.reducible? '<div class="s">May be operationally reduced to '+r.reducible+':00</div>':'<div class="s">&nbsp;</div>')+'</div>';
     });
     h+='</div>'+
        '<p class="dtybody" style="margin-top:9px">'+esc(CBA.REST_AFTER_CRITICAL.cite)+'</p>'+
@@ -7746,8 +8852,8 @@
               : 'not enough imported history to check')))+'</div></div>'+
         '<div class="ovs"><div class="k">Flight time, last 7 days</div><div class="v">'+(cum.d168.flightMin/60).toFixed(1)+' h</div>'+
           '<div class="s">'+(cum.d168.blockMin/60).toFixed(1)+' h block incl. deadhead</div></div>'+
-        '<div class="ovs"><div class="k">Duty, last 28 days</div><div class="v">'+(cum.d672.dutyMin/60).toFixed(1)+' h</div><div class="s">block '+(cum.d672.blockMin/60).toFixed(1)+' h</div></div>'+
-        '<div class="ovs"><div class="k">Landings 0100–0459</div><div class="v">'+cum.criticalLandings168+'</div><div class="s">last 7 days, base local</div></div>'+
+        '<div class="ovs"><div class="k">Duty, last 28 days</div><div class="v">'+(cum.d672.dutyMin/60).toFixed(1)+' h</div><div class="s">Block '+(cum.d672.blockMin/60).toFixed(1)+' h</div></div>'+
+        '<div class="ovs"><div class="k">Landings 0100–0459</div><div class="v">'+cum.criticalLandings168+'</div><div class="s">Last 7 days, base local</div></div>'+
       '</div>';
       // The caps that actually bind this operation, as opposed to the Part 117 yardstick.
       if(cum.caps && cum.caps.length){
