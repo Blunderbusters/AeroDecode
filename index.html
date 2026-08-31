@@ -796,6 +796,25 @@
     border-radius:11px;background:linear-gradient(180deg,rgba(90,40,40,.9),rgba(60,24,24,.9));
     border:1px solid rgba(255,107,107,.5);color:#ffd9d9;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit}
   .whybtn:active{transform:translateY(1px)}
+  .rptbtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:8px;padding:11px;
+    border-radius:11px;background:linear-gradient(180deg,rgba(30,52,86,.95),rgba(18,34,60,.95));
+    border:1px solid rgba(120,160,220,.5);color:#cfe0fb;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
+  .rptbtn:active{transform:translateY(1px)}
+  .rptsec{margin-top:13px}
+  .rpth{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);
+    padding-bottom:4px;border-bottom:1px solid rgba(120,160,220,.2)}
+  .rptrow{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid rgba(120,160,220,.1);font-size:12.5px;line-height:1.5}
+  .rptk{flex:0 0 40%;color:var(--faint);font-weight:700}
+  .rptv{flex:1;color:var(--ink);font-family:var(--mono);font-weight:700}
+  .rptv.free{font-family:inherit;font-weight:600;color:#ffcf9d}
+  .rptask{font-size:12.5px;color:var(--dim);line-height:1.6;padding:5px 0 5px 16px;position:relative}
+  .rptask:before{content:'☐';position:absolute;left:0;color:var(--faint)}
+  .rptwarn{margin-top:2px;padding:12px 13px;border-radius:12px;
+    border:1px solid rgba(255,107,107,.5);background:linear-gradient(180deg,rgba(58,20,20,.7),rgba(28,10,12,.55))}
+  .rptwarn-t{font-size:15px;font-weight:800;color:#ffd9d9}
+  .rptwarn p{font-size:12.5px;color:var(--dim);line-height:1.6;margin-top:7px}
+  .rptwarn p b{color:#ffb3b3}
+  .fprepnote{font-size:11px;color:var(--faint);line-height:1.5;margin-top:7px}
   .whyT{font-size:17px;font-weight:800;color:var(--ink)}
   .whySub{font-size:12.5px;font-weight:700;margin-top:3px}
   .whyD{margin-top:12px}
@@ -1653,6 +1672,20 @@
 </div>
 
 <div class="tipModal" id="tipModal"><div class="tipBox"><div class="tipT" id="tipT"></div><div class="tipD" id="tipD"></div><button class="tipC" id="tipC">Close</button></div></div>
+<div class="tipModal" id="fprepModal"><div class="tipBox">
+  <div class="whyT">Fatigue report prep</div>
+  <div class="whySub" id="fprepSub"></div>
+  <div class="rptwarn">
+    <div class="rptwarn-t">Notes for you. Not a report.</div>
+    <p>Everything below is a <b>memory aid so you are not reconstructing times from scratch inside a 48-hour window</b>. Read it, then write the report yourself, in your own words, in whatever form the Company designates.</p>
+    <p>Copy it into a mail draft if that is easier, then <b>rewrite it there in your own words</b>. What you send should read as yours, because a report in someone else's phrasing invites the question of where the phrasing came from — and that question is nobody's business. <b>Never name this app, quote it, or hint that it exists.</b></p>
+    <p>Say only what you actually know. The sleep figures are <b>estimates from your schedule, not measurements</b> — the app cannot know what you slept. Replace them with what you actually got, and where you genuinely cannot remember, say so.</p>
+  </div>
+  <div id="fprepBody"></div>
+  <button class="whyCopy" id="fprepCopy">Copy as a working draft</button>
+  <div class="fprepnote">Copied text is deliberately anonymous — nothing in it names this app. It opens with a line telling you to rewrite it, so you have to delete that line on purpose before anything goes out.</div>
+  <button class="tipC" id="fprepC">Close</button>
+</div></div>
 <div class="tipModal" id="whyModal"><div class="tipBox">
   <div class="whyT" id="whyT"></div>
   <div class="whySub" id="whySub"></div>
@@ -4701,7 +4734,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v12.4 · 2026-08-31';
+  var BUILD='v12.6 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6927,6 +6960,156 @@
         }
     $('#tipT').textContent=t; $('#tipD').innerHTML=d; $('#tipModal').classList.add('on');
   }
+  /* ---- Fatigue report prep -------------------------------------------------------
+     The contract requires a Fatigue Event Report within 48 hours of the rest period
+     (FRMS LOA, Art. 35, p. 318, para F.6) but does not define the form — it is "via the
+     means designated by the Company". So this does not try to be the form. It lays out the
+     facts such a report asks for, leaves the ones only the crew member knows blank, and
+     stops there. Deliberately no copy button: the report has to be in his own words. */
+  function dpRptShow(n){
+    var x=dpWhy[n]; if(!x) return;
+    var hm=function(m){ if(m==null) return '—'; var g=m<0?'-':''; m=Math.abs(m);
+      return g+Math.floor(m/60)+':'+('0'+(m%60)).slice(-2); };
+    $('#fprepSub').innerHTML='<span style="color:var(--dim)">Duty Period '+x.n+' · '+esc(x.day)+' · '+esc(x.route)+'</span>';
+    var h='';
+    function sec(t){ h+='<div class="rptsec"><div class="rpth">'+t+'</div>'; }
+    function row(k,v,free){ h+='<div class="rptrow"><div class="rptk">'+k+'</div><div class="rptv'+(free?' free':'')+'">'+v+'</div></div>'; }
+    function end(){ h+='</div>'; }
+    function ask(t){ h+='<div class="rptask">'+t+'</div>'; }
+
+    sec('The duty period');
+    row('Date', esc(x.day));
+    row('Route', esc(x.route)+(x.allDeadhead? ' (all deadhead)':''));
+    (x.legs||[]).forEach(function(l){
+      row((l.dh?'DH ':'')+esc(l.flight), esc(l.from)+'→'+esc(l.to)+' &nbsp;'+esc(l.out)+' → '+esc(l.inn)+' &nbsp;blk '+esc(l.blk));
+    });
+    row('Report', esc(x.reportBoth||'—'));
+    row('Release', esc(x.releaseBoth||'—'));
+    row('Duty', hm(x.dutyMin));
+    row('Block / flight time', hm(x.blockMin)+' / '+hm(x.flightMin));
+    end();
+
+    sec('Sleep and time awake — check these against what actually happened');
+    row('Rest before this duty', (x.restMin!=null? hm(x.restMin)+' at '+esc(x.restStation||'') : '—'));
+    if(x.restFromBoth) row('Rest ran', esc(x.restFromBoth)+' → '+esc(x.restToBoth));
+    if(x.hotel) row('Hotel', esc(x.hotel.name||''));
+    row('Sleep the schedule allowed', (x.restSleepH!=null? x.restSleepH.toFixed(1)+' h (estimate)':'—'));
+    row('Sleep you ACTUALLY got', '__________ h', true);
+    row('Sleep in the previous 24 h', '__________ h', true);
+    row('Sleep in the previous 48 h', '__________ h', true);
+    row('Wake-up call', esc(x.wakeLocal||'—'));
+    row('Awake by end of duty', (x.awakeAtRelease!=null? x.awakeAtRelease.toFixed(1)+' h':'—')+
+        (x.awakeContinuousH&&x.awakeContinuousH>x.awakeAtRelease? ' ('+x.awakeContinuousH.toFixed(1)+' h since a real sleep)':''));
+    end();
+
+    sec('Body clock');
+    row('Through the circadian low', (x.woclH!=null? x.woclH.toFixed(2)+' h':'—')+' (0200–0559 body time)');
+    row('Body clock out of step', (x.tzMis!=null? x.tzMis.toFixed(1)+' h':'—'));
+    row('Day of this pattern', String(x.consecN||'—')+(x.patternN? ' (pattern '+x.patternN+')':''));
+    end();
+
+    sec('Rest and limits');
+    if(x.reqRestMin!=null) row('Rest required', hm(x.reqRestMin)+' ('+esc(x.reqRestWho||'')+')'+
+       (x.restMin!=null && x.restMin<x.reqRestMin? '  — SHORT':''));
+    if(x.schedLimitH!=null) row('CBA scheduled limit', x.schedLimitH.toFixed(2).replace('.00',':00').replace('.50',':30')+
+       (x.dutyMin!=null && x.dutyMin/60>x.schedLimitH? '  — EXCEEDED':''));
+    if(x.operLimitH!=null) row('CBA operational limit', x.operLimitH.toFixed(2).replace('.00',':00').replace('.50',':30'));
+    if(x.cum){ row('Duty, previous 7 days', (x.cum.d168.dutyMin/60).toFixed(1)+' h');
+               row('Flight time, previous 7 days', (x.cum.d168.flightMin/60).toFixed(1)+' h');
+               if(x.cum.free168) row('Longest break, previous 7 days', x.cum.free168.hours.toFixed(1)+' h');
+               if(x.cum.criticalLandings168) row('Landings 0100–0459 base local, 7 days', String(x.cum.criticalLandings168)); }
+    end();
+
+    sec('Only you know these — think before you write');
+    ask('What actually stopped you sleeping? Hotel noise, room not ready, heat, street, alarm, a late room change.');
+    ask('Transport and delays either side of the rest — did the rest really start when it was logged?');
+    ask('Anything on the day that added workload: weather, a maintenance issue, a diversion, a long sit, a reroute.');
+    ask('How you felt, and when it started. Be specific about the point in the flight rather than describing the whole duty.');
+    ask('Anything outside work that mattered — you are not obliged to volunteer private detail, but do not state something untrue.');
+    ask('What you did about it: controlled rest, extra crew, calling scheduling, declining an extension.');
+    h+='<div class="rptask" style="padding-left:0;color:var(--faint);font-size:11.5px;margin-top:6px">'+
+       'The contract sets the deadline: the Fatigue Event Report goes in within <b>48 hours after the rest period</b> associated with the call — FRMS Letter of Agreement, Article 35, CBA p. 318, paragraph F.6. The form itself is whatever the Company designates; the contract does not specify one.</div>';
+
+    $('#fprepBody').innerHTML=h;
+
+    /* Plain-text working draft. Structured for editing in a mail window, not for sending:
+       the blanks stay blank, the prompts stay as questions, and nothing in it names this
+       app — if it ever gets pasted and forgotten, it identifies nobody. */
+    /* Fixed-width labels. Any label longer than the pad silently ate its own value —
+       "Sleep the schedule allow2.8 h" — so the pad is measured, not assumed. */
+    var P=[], PADW=26, pad=function(k){ k=String(k); return k.length>=PADW? k+'  ' : (k+'                              ').slice(0,PADW); };
+    P.push('>>> WORKING NOTES — REWRITE IN YOUR OWN WORDS AND DELETE THIS LINE BEFORE SENDING <<<');
+    P.push('');
+    P.push('Fatigue report — duty period '+x.day+', '+x.route);
+    P.push('');
+    P.push('DUTY');
+    (x.legs||[]).forEach(function(l){
+      P.push('  '+pad((l.dh?'DH ':'')+l.flight)+l.from+'-'+l.to+'   '+l.out+' -> '+l.inn+'   blk '+l.blk);
+    });
+    P.push('  '+pad('Report')+(x.reportBoth||''));
+    P.push('  '+pad('Release')+(x.releaseBoth||''));
+    P.push('  '+pad('Duty')+hm(x.dutyMin));
+    P.push('  '+pad('Block / flight time')+hm(x.blockMin)+' / '+hm(x.flightMin));
+    P.push('');
+    P.push('SLEEP AND TIME AWAKE   (replace the estimates with what actually happened)');
+    if(x.restMin!=null) P.push('  '+pad('Rest before duty')+hm(x.restMin)+' at '+(x.restStation||''));
+    if(x.restFromBoth)  P.push('  '+pad('Rest ran')+x.restFromBoth+' -> '+x.restToBoth);
+    if(x.hotel&&x.hotel.name) P.push('  '+pad('Hotel')+x.hotel.name);
+    P.push('  '+pad('Sleep schedule allowed')+((x.restSleepH!=null? x.restSleepH.toFixed(1):'?'))+' h  (estimate only)');
+    P.push('  '+pad('Sleep I actually got')+'______ h');
+    P.push('  '+pad('Sleep in previous 24 h')+'______ h');
+    P.push('  '+pad('Sleep in previous 48 h')+'______ h');
+    P.push('  '+pad('Wake-up call')+(x.wakeLocal||''));
+    P.push('  '+pad('Awake by end of duty')+((x.awakeAtRelease!=null? x.awakeAtRelease.toFixed(1):'?'))+' h'+
+      (x.awakeContinuousH&&x.awakeContinuousH>x.awakeAtRelease? '   ('+x.awakeContinuousH.toFixed(1)+' h since a real sleep)':''));
+    P.push('');
+    P.push('BODY CLOCK');
+    P.push('  '+pad('Through circadian low')+((x.woclH!=null? x.woclH.toFixed(2):'?'))+' h  (0200-0559 body time)');
+    P.push('  '+pad('Body clock out of step')+((x.tzMis!=null? x.tzMis.toFixed(1):'?'))+' h');
+    P.push('  '+pad('Day of this pattern')+String(x.consecN||'?'));
+    P.push('');
+    P.push('REST AND LIMITS');
+    if(x.reqRestMin!=null) P.push('  '+pad('Rest required')+hm(x.reqRestMin)+
+      (x.restMin!=null && x.restMin<x.reqRestMin? '   -- SHORT':''));
+    if(x.schedLimitH!=null) P.push('  '+pad('Scheduled duty limit')+
+      x.schedLimitH.toFixed(2).replace('.00',':00').replace('.50',':30')+
+      (x.dutyMin!=null && x.dutyMin/60>x.schedLimitH? '   -- EXCEEDED':''));
+    if(x.cum){
+      P.push('  '+pad('Duty, previous 7 days')+(x.cum.d168.dutyMin/60).toFixed(1)+' h');
+      P.push('  '+pad('Flight, previous 7 days')+(x.cum.d168.flightMin/60).toFixed(1)+' h');
+      if(x.cum.free168) P.push('  '+pad('Longest break, 7 days')+x.cum.free168.hours.toFixed(1)+' h');
+    }
+    P.push('');
+    P.push('IN MY OWN WORDS   (answer these, then delete the questions)');
+    P.push('  - What actually stopped me sleeping:');
+    P.push('  - Whether the rest really started when it was logged:');
+    P.push('  - What added workload on the day:');
+    P.push('  - How I felt and at what point in the flight it started:');
+    P.push('  - What I did about it:');
+    P.push('');
+    P.push('Submitted within 48 hours of the rest period.');
+    fprepPlain=P.join('\n');
+
+    var cp=$('#fprepCopy'); if(cp) cp.textContent='Copy as a working draft';
+    $('#fprepModal').classList.add('on');
+  }
+  var fprepPlain='';
+  (function(){
+    var m=$('#fprepModal'), c=$('#fprepC'), cp=$('#fprepCopy');
+    if(c) c.onclick=function(){ m.classList.remove('on'); };
+    if(m) m.addEventListener('click', function(e){ if(e.target===m) m.classList.remove('on'); });
+    if(cp) cp.onclick=function(){
+      var done=function(){ cp.textContent='✓ Copied — now rewrite it'; setTimeout(function(){ cp.textContent='Copy as a working draft'; },2400); };
+      function fallback(){
+        var ta=document.createElement('textarea'); ta.value=fprepPlain;
+        ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+        ta.select(); try{ document.execCommand('copy'); done(); }catch(_){ cp.textContent='Press and hold to copy'; }
+        document.body.removeChild(ta);
+      }
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(fprepPlain).then(done, fallback);
+      else fallback();
+    };
+  })();
   function dpRender(){
     var out=$('#dpOut'); if(!out||typeof DUTY==='undefined') return;
     var legs=dpRoster();
@@ -7166,9 +7349,17 @@
           limitH:ctlH, limitWho:ctlWho, consecN:(d.consecN||i+1),
           schedLimitH:schedH, operLimitH:operH, awakeContinuousH:d.awakeContinuousH,
           allDeadhead:(d.legs.length>0 && d.legs.every(function(l){ return l.dh; })),
-          eff:d.effWorst, effLabel:(d.effBand&&d.effBand.label), score:score, band:bc.l
+          eff:d.effWorst, effLabel:(d.effBand&&d.effBand.label), score:score, band:bc.l,
+          reportBoth:dpBoth(d.report,d.from), releaseBoth:dpBoth(d.release,d.to),
+          blockMin:d.blockMin, flightMin:d.flightMin, patternN:d.patternN,
+          offDaysBefore:d.offDaysBefore, restSleeps:d.restSleeps,
+          legs:d.legs.map(function(l){ return {flight:l.flight, from:l.from, to:l.to, dh:!!l.dh,
+                 out:dpBoth(l.out,l.from), inn:dpBoth(l['in'],l.to), blk:dpHM(l.blk)}; }),
+          restFromBoth:(rp? dpBoth(rp.from, rp.station):null), restToBoth:(rp? dpBoth(rp.to, rp.station):null),
+          hotel:(rp? dpHotel(rp.station, rp.from, rp.to):null)
         };
-        h+='<button class="whybtn" data-why="'+d.n+'">⚠︎ Why am I fatigued? — what to tell scheduling</button>';
+        h+='<button class="whybtn" data-why="'+d.n+'">⚠︎ Why am I fatigued? — what to tell scheduling</button>'+
+           '<button class="rptbtn" data-rpt="'+d.n+'">📝 Fatigue report prep — the facts, in your hands</button>';
       }
       h+='</div></div>';
 
@@ -7233,6 +7424,9 @@
     });
     Array.prototype.forEach.call(out.querySelectorAll('[data-why]'),function(btn){
       btn.onclick=function(e){ e.stopPropagation(); dpWhyShow(+btn.getAttribute('data-why')); };
+    });
+    Array.prototype.forEach.call(out.querySelectorAll('[data-rpt]'),function(btn){
+      btn.onclick=function(e){ e.stopPropagation(); dpRptShow(+btn.getAttribute('data-rpt')); };
     });
     Array.prototype.forEach.call(out.querySelectorAll('[data-tip]'),function(row){
       row.onclick=function(){ var f=DUTY.FACTORS[row.getAttribute('data-tip')]; if(!f) return;
