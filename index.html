@@ -673,6 +673,11 @@
   .rfhint b{color:var(--dim)}
   .tipgood{font-size:13px;color:#bff5da;line-height:1.55;margin-bottom:10px;padding:8px 10px;
     background:rgba(16,48,34,.5);border-left:3px solid #4ee39a;border-radius:0 8px 8px 0}
+  .impbtn2{display:block;width:100%;margin-top:8px;padding:11px;border-radius:11px;font-family:inherit;
+    background:rgba(24,44,76,.85);border:1px solid rgba(120,160,220,.45);color:#cfe0fb;font-size:13px;font-weight:800;cursor:pointer}
+  .pasteta{width:100%;box-sizing:border-box;min-height:150px;margin-top:10px;padding:10px;border-radius:10px;
+    background:rgba(4,10,22,.8);border:1px solid rgba(120,160,220,.4);color:var(--ink);
+    font-family:var(--mono);font-size:12px;line-height:1.45;resize:vertical}
   .impspan{font-size:11px;color:var(--faint);margin-top:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .impspan b{color:var(--dim)}
   .impdup{flex:0 0 100%;width:100%;margin-top:6px;font-size:10.5px;line-height:1.5;color:#ffcf9d;
@@ -1382,6 +1387,7 @@
           Upload schedule (CSV or XLS)
         </button>
         <input type="file" id="impFile" accept=".csv,.xls,text/csv,application/vnd.ms-excel" multiple hidden>
+        <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
         <div id="impStat" class="impstat"></div>
         <div id="impSpan" class="impspan"></div>
         <details class="imphow">
@@ -1672,6 +1678,14 @@
 </div>
 
 <div class="tipModal" id="tipModal"><div class="tipBox"><div class="tipT" id="tipT"></div><div class="tipD" id="tipD"></div><button class="tipC" id="tipC">Close</button></div></div>
+<div class="tipModal" id="pasteModal"><div class="tipBox">
+  <div class="whyT">Paste a schedule</div>
+  <div class="whySub" style="color:var(--dim)">Anything text-based: a CSV opened and copied, or a calendar (.ics) feed. Saves the download-and-upload round trip.</div>
+  <textarea id="pasteTA" class="pasteta" placeholder="Paste here…" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+  <div id="pasteMsg" class="impstat"></div>
+  <button class="whyCopy" id="pasteGo">Import what I pasted</button>
+  <button class="tipC" id="pasteC">Close</button>
+</div></div>
 <div class="tipModal" id="fprepModal"><div class="tipBox">
   <div class="whyT">Fatigue report prep</div>
   <div class="whySub" id="fprepSub"></div>
@@ -4734,7 +4748,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v12.6 · 2026-08-31';
+  var BUILD='v12.7 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6800,6 +6814,52 @@
       rd.readAsArrayBuffer(file);
     });
   }
+  /* Paste import. On a phone the file route means: log into eCrew, navigate, set a date
+     range, print, save as XLS, find it in Files, then upload — twice, once per month.
+     Text on the clipboard skips all of it. */
+  function impSniffText(t){
+    if(/BEGIN:VCALENDAR/i.test(t)) return 'ics';
+    if(/All times in (UTC|Local Station)/i.test(t)) return 'csv';
+    if(/^\s*(\d{2}\/\d{2}\/\d{4})/m.test(t) && /,/.test(t)) return 'csv';
+    return null;
+  }
+  (function(){
+    var pb=$('#impPasteBtn'), pm=$('#pasteModal'), ta=$('#pasteTA'),
+        go=$('#pasteGo'), pc=$('#pasteC'), msg=$('#pasteMsg');
+    function say(h,cls){ if(msg){ msg.className='impstat '+(cls||''); msg.innerHTML=h; } }
+    if(pb) pb.onclick=function(){
+      if(ta) ta.value=''; say('');
+      if(pm) pm.classList.add('on');
+      // Offer the clipboard where the browser allows it; otherwise the user just pastes.
+      if(navigator.clipboard && navigator.clipboard.readText){
+        navigator.clipboard.readText().then(function(t){ if(t && ta && !ta.value) ta.value=t; }, function(){});
+      }
+      setTimeout(function(){ try{ ta.focus(); }catch(e){} }, 120);
+    };
+    if(pc) pc.onclick=function(){ pm.classList.remove('on'); };
+    if(pm) pm.addEventListener('click', function(e){ if(e.target===pm) pm.classList.remove('on'); });
+    if(go) go.onclick=function(){
+      var t=(ta&&ta.value||'').trim();
+      if(!t){ say('Nothing pasted yet.','impbad'); return; }
+      var kind=impSniffText(t);
+      if(kind==='csv'){
+        try{
+          var parsed=AIMSCSV.toUtc(AIMSCSV.parse(t), impOffsetFor);
+          var r=impHandle(parsed, 'pasted schedule');
+          if(!r){ say('Nothing readable in that text.','impbad'); return; }
+          if(r.err){ say(r.err,'impbad'); return; }
+          pm.classList.remove('on');
+          impReport([r],[]);
+        }catch(err){ say('Could not read that — '+esc(err.message),'impbad'); }
+        return;
+      }
+      if(kind==='ics'){
+        say('That looks like a calendar feed. The <b>Schedule Checks</b> tab already reads .ics for picking your next flight, but the fatigue roster needs the flight number, both stations and the deadhead flag, which this app cannot yet pull out of a calendar event. Send a sample .ics to '+esc(FEEDBACK_EMAIL)+' and it can be wired up properly.','impwarn');
+        return;
+      }
+      say('That does not look like an AIMS schedule export or a calendar feed. A CSV should have a line saying <b>All times in UTC</b> or <b>All times in Local Station</b> near the top.','impbad');
+    };
+  })();
   (function(){
     var b=$('#impBtn'), f=$('#impFile');
     if(b&&f) b.onclick=function(){ f.click(); };
