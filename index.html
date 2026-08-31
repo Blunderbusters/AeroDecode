@@ -672,6 +672,9 @@
   .slpbrk.on{border-color:#5b93e8;background:rgba(91,147,232,.14);box-shadow:0 0 0 1px rgba(91,147,232,.35)}
   .slpbrk b{font-weight:800}
   .slpbrk .sub{display:block;font-size:11.5px;color:var(--faint);margin-top:3px;font-family:var(--mono)}
+  .slpbrk .sub2{display:block;font-size:11px;color:#8ba4c4;margin-top:3px}
+  .slpraw{font-size:11.5px;color:var(--faint);line-height:1.6;margin-top:9px}
+  .slpraw button{background:none;border:0;padding:0;font:inherit;color:#7fb0ff;text-decoration:underline;cursor:pointer}
   .slpmanual{margin-top:12px}
   .slpgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .slpopt{margin-top:12px}
@@ -688,6 +691,9 @@
   .slpstep.sleep{border-left:3px solid #6f9bff}
   .slpstep.up{border-left:3px solid #ffd166}
   .slpstep.go{border-left:3px solid #ff6b6b}
+  .slpstep.wake{border-left:3px solid #ff5252;background:rgba(255,82,82,.09)}
+  .slpstep.wake .t{color:#ff8a8a;letter-spacing:.6px}
+  .slpstep.wake .slptime{color:#ffc9c9}
   .slptime{font-family:var(--mono);font-size:13.5px;font-weight:800;color:var(--ink);white-space:nowrap;min-width:104px}
   .slptime .z{display:block;font-size:10.5px;font-weight:600;color:var(--faint);margin-top:2px}
   .slpwhat{flex:1;min-width:0;font-size:13px;line-height:1.55}
@@ -738,6 +744,54 @@
     background:rgba(16,48,34,.5);border-left:3px solid #4ee39a;border-radius:0 8px 8px 0}
   .impbtn2{display:block;width:100%;margin-top:8px;padding:11px;border-radius:11px;font-family:inherit;
     background:rgba(24,44,76,.85);border:1px solid rgba(120,160,220,.45);color:#cfe0fb;font-size:13px;font-weight:800;cursor:pointer}
+  .rawlist{max-height:52vh;overflow-y:auto;margin-top:8px;-webkit-overflow-scrolling:touch}
+  .rawrow{display:block;width:100%;text-align:left;font-family:inherit;cursor:pointer;
+    background:rgba(6,14,28,.5);border:1px solid rgba(120,160,220,.15);border-radius:9px;
+    padding:8px 10px;margin-bottom:6px;color:var(--ink)}
+  .rawrow.on{border-color:#5b93e8;background:rgba(91,147,232,.13)}
+  .rawrow.edited{border-left:3px solid var(--gold)}
+  .rawtop{font-size:12.5px;font-weight:800;display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+  .rawtop .d{font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:700}
+  .rawtop .tag{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;
+    background:rgba(150,90,220,.25);color:#d5b6ff;border:1px solid rgba(180,130,240,.4)}
+  .rawtop .tag.g{background:rgba(120,150,190,.2);color:#c2d5ee;border-color:rgba(140,175,220,.3)}
+  .rawtop .tag.e{background:rgba(255,209,102,.18);color:#ffd166;border-color:rgba(255,209,102,.4)}
+  .rawtimes{font-family:var(--mono);font-size:10.5px;color:#bcd6ff;margin-top:3px;line-height:1.5}
+  .rawedit{margin-top:8px;padding-top:9px;border-top:1px solid rgba(120,160,220,.18)}
+  .rawgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  .rawf{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+  .rawin{width:100%;box-sizing:border-box;padding:7px 8px;border-radius:8px;background:rgba(4,10,22,.8);
+    border:1px solid rgba(120,160,220,.35);color:var(--ink);font-family:var(--mono);font-size:12.5px}
+  .rawbtns{display:flex;gap:7px;margin-top:9px}
+  .rawbtns button{flex:1;padding:9px;border-radius:9px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer}
+  .rawsave{background:rgba(20,58,42,.9);border:1px solid rgba(78,227,154,.45);color:#a9f0cd}
+  .rawreset{background:rgba(6,14,28,.6);border:1px solid rgba(120,160,220,.3);color:#9fb8d8}
+  .rawhint{font-size:11px;color:var(--faint);line-height:1.55;margin-top:8px}
+  .impbtn3{display:block;width:100%;margin-top:8px;padding:11px;border-radius:11px;font-family:inherit;
+    background:rgba(20,58,42,.85);border:1px solid rgba(78,227,154,.42);color:#a9f0cd;font-size:13px;font-weight:800;cursor:pointer}
+  /* ---- setup guide ---- */
+  .suWhy{background:rgba(91,147,232,.1);border-left:3px solid #5b93e8;border-radius:0 9px 9px 0;
+    padding:10px 13px;margin:2px 0 14px;font-size:12.5px;line-height:1.65;color:#c9dcf7}
+  .suPriv{background:rgba(78,227,154,.09);border-left:3px solid #4ee39a;border-radius:0 9px 9px 0;
+    padding:10px 13px;margin:0 0 14px;font-size:12.5px;line-height:1.65;color:#bff0d8}
+  .suPriv b{color:#e6fff2}
+  .suTabs{display:flex;gap:7px;margin:4px 0 12px}
+  .suTab{flex:1;padding:9px 6px;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:800;
+    background:rgba(6,14,28,.55);border:1px solid rgba(120,160,220,.2);color:#9fb8d8;cursor:pointer}
+  .suTab.on{border-color:#5b93e8;background:rgba(91,147,232,.16);color:#eaf2ff}
+  .suStep{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid rgba(120,160,220,.12)}
+  .suStep:last-child{border-bottom:0}
+  .suNum{flex:0 0 24px;height:24px;border-radius:50%;background:rgba(91,147,232,.22);border:1px solid rgba(120,160,220,.4);
+    color:#cfe0fb;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
+  .suBody{flex:1;min-width:0;font-size:13px;line-height:1.6;color:var(--ink)}
+  .suBody .sub{font-size:12px;color:var(--faint);margin-top:4px;line-height:1.6}
+  .suBody code{font-family:var(--mono);font-size:11.5px;background:rgba(4,10,22,.7);border:1px solid rgba(120,160,220,.22);
+    border-radius:5px;padding:1px 5px;color:#bcd6ff;word-break:break-word}
+  .suH{font-size:13.5px;font-weight:800;color:#eaf2ff;margin:16px 0 2px}
+  .suH:first-child{margin-top:4px}
+  .suNote{font-size:12px;color:var(--faint);line-height:1.65;margin-top:10px}
+  .suCode{font-family:var(--mono);font-size:11px;line-height:1.6;white-space:pre-wrap;background:rgba(4,10,22,.75);
+    border:1px solid rgba(120,160,220,.25);border-radius:9px;padding:10px;margin-top:7px;color:#bcd6ff;overflow-x:auto}
   .pasteta{width:100%;box-sizing:border-box;min-height:150px;margin-top:10px;padding:10px;border-radius:10px;
     background:rgba(4,10,22,.8);border:1px solid rgba(120,160,220,.4);color:var(--ink);
     font-family:var(--mono);font-size:12px;line-height:1.45;resize:vertical}
@@ -1452,6 +1506,8 @@
         </button>
         <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,text/csv,text/calendar,application/vnd.ms-excel,application/zip" multiple hidden>
         <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
+        <button id="impSetupBtn" class="impbtn3">🧭 First time? Step-by-step setup for your phone</button>
+        <button id="impRawBtn" class="impbtn2">🔍 See and correct the schedule data</button>
         <div id="impStat" class="impstat"></div>
         <div id="impSpan" class="impspan"></div>
         <details class="imphow">
@@ -1779,6 +1835,35 @@
 </div>
 
 <div class="tipModal" id="tipModal"><div class="tipBox"><div class="tipT" id="tipT"></div><div class="tipD" id="tipD"></div><button class="tipC" id="tipC">Close</button></div></div>
+<div class="tipModal" id="rawModal"><div class="tipBox">
+  <div class="whyT">Schedule data</div>
+  <div class="whySub" style="color:var(--dim)">Everything the app is working from, exactly as it read it. Tap any line to correct it.</div>
+  <input id="rawFind" class="ftin" style="margin-top:10px" placeholder="Filter — flight number, station or date">
+  <div id="rawCount" class="impspan"></div>
+  <div id="rawList" class="rawlist"></div>
+  <button class="tipC" id="rawC">Close</button>
+</div></div>
+<div class="tipModal" id="setupModal"><div class="tipBox">
+  <div class="whyT">Getting your schedule into the app</div>
+  <div class="whySub" style="color:var(--dim)">Fifteen minutes once. One tap after that.</div>
+
+  <div class="suPriv">
+    <b>Before anything else — where your schedule goes.</b><br>
+    Nowhere. There is no account, no sign-up and no server behind this app. Your schedule is read on your phone, stored on your phone, and never leaves it. Nothing is uploaded, nothing is backed up, and nobody — not the Company, not the union, not whoever wrote this — can see it. Delete the app and it is gone with it. The one thing your phone talks to is your own calendar, and only to read it.
+  </div>
+
+  <div class="suWhy">
+    <b>Why bother at all?</b><br>
+    The app cannot tell you anything useful about your duty limits, your rest or your fatigue until it knows what you are flying. Typing a month of trips in by hand is not realistic. Your roster is already sitting in eCrew, and eCrew can put it in your phone's calendar. Once it is there, the app can read it in one tap, and it stays current on its own.
+  </div>
+
+  <div class="suTabs">
+    <button class="suTab on" data-su="phone">On my iPhone</button>
+    <button class="suTab" data-su="computer">On a computer</button>
+  </div>
+  <div id="suBody"></div>
+  <button class="tipC" id="setupC">Close</button>
+</div></div>
 <div class="tipModal" id="pasteModal"><div class="tipBox">
   <div class="whyT">Paste a schedule</div>
   <div class="whySub" style="color:var(--dim)">Anything text-based: a CSV opened and copied, or a calendar (.ics) feed. Saves the download-and-upload round trip.</div>
@@ -3841,16 +3926,49 @@
      day as duty would be worse than ignoring it. */
   var ICS_NOTDUTY=/^(?:REST|VAC|MED|SICK|TOFF|AWRD|HTL|HOTEL|X|GDO|OFF)$/i;
   function icsUnfold(text){ return String(text).replace(/\r\n/g,'\n').replace(/\n[ \t]/g,''); }
+  /* Anything that looks like the start of another iCalendar property. Used to find where a
+     field ends, which matters because the strict format escapes newlines inside a value as
+     a literal backslash-n and a hand-built feed very often does not. */
+  var ICS_PROP=/^(?:[A-Z][A-Z0-9-]*)(?:;[^:\n]*)?:/;
+  /* DESCRIPTION is the field that carries the eCrew stamp and the activity line, and it is
+     also the one most likely to arrive with real line breaks in it — an iOS Shortcut reading
+     the Notes of an event hands them over exactly as typed. Reading only the first physical
+     line would drop the stamp, and every event would then be discarded as a personal entry.
+     So a value runs on until the next line that actually starts a new property. */
   function icsField(ev, name){
-    var m=ev.match(new RegExp('^'+name+'(?:;[^:\n]*)?:(.*)$','m'));
-    return m? m[1].trim() : '';
+    var re=new RegExp('^'+name+'(?:;[^:\n]*)?:(.*)$','m');
+    var m=ev.match(re);
+    if(!m) return '';
+    var lines=ev.slice(m.index+m[0].length).split('\n'), val=m[1];
+    for(var i=1;i<lines.length;i++){
+      var ln=lines[i];
+      if(ln==='' && i===lines.length-1) break;
+      if(ICS_PROP.test(ln) || /^(?:END|BEGIN):/.test(ln)) break;
+      val+='\\n'+ln;                                       // fold it in the escaped form
+    }
+    return val.trim();
   }
-  function icsStamp(v){                                    // 20260512T222500Z -> ms
-    var m=String(v).match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
-    return m? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]) : null;
+  /* Accepts the strict basic form and ISO 8601 with an offset. The second is there because
+     iOS Shortcuts can emit ISO 8601 directly but has no way to render a date in UTC, so
+     insisting on a trailing Z would make every time come out in whatever zone the phone
+     happened to be sitting in. The offset carries the truth instead. */
+  function icsStamp(v){
+    var t=String(v).trim();
+    var m=t.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+    if(m) return Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]);
+    m=t.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?\s*(Z|[+-]\d{2}:?\d{2})$/);
+    if(m){
+      var ms=Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +(m[6]||0));
+      if(m[7]!=='Z'){
+        var sg=m[7][0]==='-'? -1 : 1, hh=+m[7].slice(1,3), mm=+m[7].replace(':','').slice(3,5);
+        ms -= sg*(hh*60+mm)*60000;                          // local -> UTC
+      }
+      return ms;
+    }
+    return null;
   }
-  function icsDay(v){                                      // 20260824 -> {y,m,d}
-    var m=String(v).match(/^(\d{4})(\d{2})(\d{2})$/);
+  function icsDay(v){                                      // 20260824 or 2026-08-24 -> {y,m,d}
+    var m=String(v).trim().match(/^(\d{4})-?(\d{2})-?(\d{2})$/);
     return m? {y:+m[1], m:+m[2], d:+m[3]} : null;
   }
   /* What kind of activity is this, and is it flying? */
@@ -5030,6 +5148,114 @@
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
+/* CargoDecode — is it light outside? -----------------------------------------------------
+   Sunrise and sunset at a station, computed offline.
+
+   The Sleep Plan already shades your BODY night, which is the thing that decides whether
+   sleep will come. This is the other half of the picture and it answers a different
+   question: what will be going on outside the hotel window. That matters because light is
+   the only lever a crew member actually has over their body clock — the difference between
+   a walk at the right hour and a walk at the wrong one is the difference between shifting
+   toward the station and digging in deeper. It matters more the further north you go. In
+   Anchorage in December the sun is up for five and a half hours; in June it is up for
+   nineteen. "Daytime is 0600 to 1800" is a useful lie in Miami and a useless one in Alaska.
+
+   Method: the standard low-precision sunrise equation — solar declination and the hour
+   angle for a solar zenith of 90°50', which is the geometric horizon plus refraction and
+   the sun's semi-diameter. Good to a minute or two, which is far beyond what anybody plans
+   sleep to. Latitudes above the polar circles are handled explicitly: in midsummer and
+   midwinter there is no sunrise to compute, and the answer is "up all day" or "down all
+   day" rather than a number.
+
+   Coordinates are carried only for stations the fleet actually sees. An unknown station
+   returns nothing and the app simply does not draw the daylight band, which is honest —
+   better a missing stripe than a confidently wrong one. */
+(function(root){
+  'use strict';
+
+  /* [latitude, longitude] in degrees, north and east positive. Rounded to a tenth of a
+     degree: worth about a minute of sunrise time, which is well inside the error of the
+     method itself. */
+  var POS={
+    ANC:[61.2,-150.0], ATL:[33.6,-84.4],  AUH:[24.4,54.7],   BOS:[42.4,-71.0],
+    CAN:[23.4,113.3],  CVG:[39.0,-84.7],  DFW:[32.9,-97.0],  DOH:[25.3,51.6],
+    DUB:[53.4,-6.3],   DWC:[24.9,55.2],   EHU:[27.4,117.5],  FRA:[50.0,8.6],
+    GSO:[36.1,-79.9],  GUM:[13.5,144.8],  HAN:[21.2,105.8],  HGH:[30.2,120.4],
+    HKG:[22.3,113.9],  HNL:[21.3,-157.9], IAH:[30.0,-95.3],  ICN:[37.5,126.4],
+    IND:[39.7,-86.3],  JFK:[40.6,-73.8],  LAX:[33.9,-118.4], LCK:[39.8,-82.9],
+    LGG:[50.6,5.4],    LUX:[49.6,6.2],    MEX:[19.4,-99.1],  MFM:[22.1,113.6],
+    MIA:[25.8,-80.3],  MSP:[44.9,-93.2],  NLU:[19.8,-99.0],  NRT:[35.8,140.4],
+    ORD:[42.0,-87.9],  PVG:[31.1,121.8],  RFD:[42.2,-89.1],  SEA:[47.4,-122.3],
+    SHJ:[25.3,55.5],   SIN:[1.4,103.99],  SNN:[52.7,-8.9],   TLV:[32.0,34.9],
+    UIO:[-0.1,-78.4],  WUX:[31.5,120.4],  XMN:[24.5,118.1],  YYZ:[43.7,-79.6],
+    /* the rest of the network, and the commercial gateways a deadhead lands at */
+    AMS:[52.3,4.8],    BOG:[4.7,-74.1],   BRU:[50.9,4.5],    CGN:[50.9,7.1],
+    CMN:[33.4,-7.6],   CPH:[55.6,12.7],   DEL:[28.6,77.1],   DXB:[25.3,55.4],
+    EWR:[40.7,-74.2],  GRU:[-23.4,-46.5], GYE:[-2.2,-79.9],  HHN:[50.0,7.3],
+    IST:[41.3,28.7],   JNB:[-26.1,28.2],  KIX:[34.4,135.2],  KUL:[2.7,101.7],
+    LAS:[36.1,-115.2], LGB:[33.8,-118.2], LHR:[51.5,-0.5],   LIM:[-12.0,-77.1],
+    LIS:[38.8,-9.1],   MAD:[40.5,-3.6],   MCO:[28.4,-81.3],  MDE:[6.2,-75.4],
+    MEM:[35.0,-90.0],  MXP:[45.6,8.7],    NGO:[34.9,136.8],  OAK:[37.7,-122.2],
+    ONT:[34.1,-117.6], PDX:[45.6,-122.6], PEK:[40.1,116.6],  PHX:[33.4,-112.0],
+    PIT:[40.5,-80.2],  PTY:[9.1,-79.4],   SCL:[-33.4,-70.8], SDF:[38.2,-85.7],
+    SFO:[37.6,-122.4], SJU:[18.4,-66.0],  SLC:[40.8,-112.0], STL:[38.7,-90.4],
+    SVO:[56.0,37.4],   SYD:[-33.9,151.2], SZX:[22.6,113.8],  TPE:[25.1,121.2],
+    VCP:[-23.0,-47.1], YVR:[49.2,-123.2], ZRH:[47.5,8.5]
+  };
+
+  var RAD=Math.PI/180;
+  function dayOfYear(ms){
+    var d=new Date(ms);
+    return Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+                     - Date.UTC(d.getUTCFullYear(),0,0))/86400000);
+  }
+
+  /* Sunrise and sunset as UTC hours on the day containing atMs, or a flag when the sun does
+     not cross the horizon at all. Returns null for a station with no coordinates. */
+  function sun(code, atMs){
+    var p=POS[String(code||'').toUpperCase()];
+    if(!p) return null;
+    var lat=p[0], lon=p[1], N=dayOfYear(atMs);
+
+    // fractional year, then the two corrections that matter at this precision
+    var g=2*Math.PI/365*(N-1+0.5);
+    var eqTime=229.18*(0.000075 + 0.001868*Math.cos(g) - 0.032077*Math.sin(g)
+                      - 0.014615*Math.cos(2*g) - 0.040849*Math.sin(2*g));      // minutes
+    var decl=0.006918 - 0.399912*Math.cos(g) + 0.070257*Math.sin(g)
+           - 0.006758*Math.cos(2*g) + 0.000907*Math.sin(2*g)
+           - 0.002697*Math.cos(3*g) + 0.00148*Math.sin(3*g);                   // radians
+
+    var zen=90.833*RAD;                       // horizon, allowing for refraction and radius
+    var cosH=(Math.cos(zen) - Math.sin(lat*RAD)*Math.sin(decl))
+             /(Math.cos(lat*RAD)*Math.cos(decl));
+    if(cosH < -1) return { code:code, polar:'day' };      // the sun never sets here today
+    if(cosH >  1) return { code:code, polar:'night' };    // and never rises
+    var H=Math.acos(cosH)/RAD;                            // hour angle, degrees
+
+    var noonUtc=(720 - 4*lon - eqTime)/60;                // solar noon, UTC hours
+    return { code:code, riseUtc:noonUtc - H/15, setUtc:noonUtc + H/15, noonUtc:noonUtc };
+  }
+
+  /* Is the sun above the horizon at this instant? Answered on the local day, so a station
+     whose sunset falls after midnight UTC is not read as dark all afternoon. */
+  function isDaylight(code, atMs){
+    var s=sun(code, atMs);
+    if(!s) return null;
+    if(s.polar) return s.polar==='day';
+    var h=(atMs/3600000)%24; if(h<0) h+=24;
+    var a=s.riseUtc, b=s.setUtc;
+    // unwrap so the comparison works across the UTC date boundary
+    while(a<0){ a+=24; b+=24; }
+    while(a>=24){ a-=24; b-=24; }
+    if(b>24) return (h>=a && h<24) || (h < b-24);
+    return h>=a && h<b;
+  }
+  function has(code){ return !!POS[String(code||'').toUpperCase()]; }
+
+  var API={ sun:sun, isDaylight:isDaylight, has:has, POS:POS };
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.SUN=API;
+})(typeof window!=='undefined'?window:globalThis);
 /* CargoDecode — layover sleep planner --------------------------------------------------
    Where to put your sleep between one release and the next report.
 
@@ -5082,7 +5308,11 @@
     latencyMin: 20,       // time to fall asleep, added to every block
     inertiaMin: 30,       // groggy window after waking; never inside 30 min of report
     windDownMin: 45,      // release to actually being horizontal: transport, shower, food
-    prepMin: 75,          // wake-up to report: shower, dress, van, security
+    /* The wake-up call. Ninety minutes before report is what the operation actually runs
+       on, so the planner uses the same number rather than a tidier one of its own — the last
+       sleep block ends exactly when the phone rings, and the chart and the plan cannot
+       disagree about when you are getting up. */
+    prepMin: 90,          // wake-up call to report: shower, dress, van, security
     maxBlockH: 9.0,       // beyond this, sleep fragments and stops being restorative
     minBlockH: 1.0,
     cycleMin: 90,
@@ -5334,6 +5564,7 @@
       'Daylight or bright light if there is any to be had', 'Something to eat',
       'Coffee now is fine — it is the last thing before the van'] });
     out.inertiaClearanceBufferMinutes=Math.round((ctx.reportMs-last.end)/MIN);
+    out.wakeCallMs=ctx.reportMs - CFG.prepMin*MIN;
     return out;
   }
   function meanPropensity(startMs, endMs, bodyOff){
@@ -5441,7 +5672,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v13.0 · 2026-08-31';
+  var BUILD='v13.1 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -7465,7 +7696,17 @@
     var legs=parsed.rows.filter(function(r){ return r.from && r.utc && r.utc.blockOut!=null; });
     var tzBad=parsed.rows.filter(function(r){ return r.tzError; })
                          .map(function(r){ return r.tzError; });
-    if(!legs.length){ return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'}; }
+    if(!legs.length){
+      /* Two very different dead ends reach this line, and telling somebody to re-download a
+         schedule report when they pasted a calendar is a way of losing an hour of their day. */
+      if(parsed.source==='ics'){
+        var stamped=(parsed.rows||[]).length;
+        return {err:'Nothing importable in <b>'+esc(name)+'</b>.<br>'+
+          (stamped? 'Entries were found, but none of them carried usable times. Check that the date lines came out as <b>2026-08-26T13:48:00-05:00</b> or <b>20260826T184800Z</b>, and that <b>Location</b> was included — that is where the block times live.'
+                  : 'No entries carried the <b>AIMS eCrew</b> stamp, so everything was treated as a personal appointment and skipped. If this came from a Shortcut, make sure the <b>Notes</b> field of each event is being copied across — that is where the stamp is.')};
+      }
+      return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'};
+    }
     impSaveHotels(parsed.hotels);
     impSaveOffDays(parsed.rows);
     if(parsed.offDays) impSaveOffDaysList(parsed.offDays);
@@ -7571,6 +7812,241 @@
   /* Paste import. On a phone the file route means: log into eCrew, navigate, set a date
      range, print, save as XLS, find it in Files, then upload — twice, once per month.
      Text on the clipboard skips all of it. */
+  /* ---------- the schedule data, as read and as corrected ----------------------------
+     Every number the app shows is derived from this list, so when a duty period looks wrong
+     this is the place the answer is. It shows what came out of the import unaltered, and
+     lets any field be corrected by the one person who was actually there. */
+  var rawSel=null, rawQ='';
+
+  function rawZ(ms){ if(ms==null) return ''; var d=new Date(ms);
+    return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2); }
+  function rawDate(ms){ return ms==null? '' : new Date(ms).toISOString().slice(0,10); }
+  /* A time typed as HHMM belongs to a day. Keep the day the entry already had unless the
+     correction plainly crosses midnight relative to it, which the caller decides. */
+  function rawSetTime(baseMs, hhmm, dayShift){
+    var v=String(hhmm||'').replace(/\D/g,'');
+    if(v.length!==4) return null;
+    var hh=+v.slice(0,2), mm=+v.slice(2);
+    if(hh>23||mm>59) return null;
+    var d=new Date(baseMs==null? Date.now() : baseMs);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()+(dayShift||0), hh, mm);
+  }
+
+  function rawRender(){
+    var box=$('#rawList'), cnt=$('#rawCount');
+    if(!box) return;
+    var legs=dpRoster().slice().sort(function(a,b){ return (a.out||0)-(b.out||0); });
+    var q=rawQ.trim().toUpperCase();
+    var shown=legs.filter(function(l){
+      if(!q) return true;
+      return (l.flight+' '+l.from+' '+l.to+' '+rawDate(l.out)).toUpperCase().indexOf(q)>=0;
+    });
+    var nEd=0; legs.forEach(function(l){ if(l.edited) nEd++; });
+    var nDrop=0; try{ nDrop=Object.keys(dpDrop()).length; }catch(e){}
+    if(cnt) cnt.innerHTML='<b>'+legs.length+'</b> entries'+(q? ' · showing '+shown.length:'')+
+      (nEd? ' · <span style="color:var(--gold)">'+nEd+' corrected</span>':'')+
+      (nDrop? ' · '+nDrop+' set aside':'');
+    if(!legs.length){ box.innerHTML='<div class="rawhint">Nothing imported yet.</div>'; return; }
+    var h='';
+    shown.slice(0,400).forEach(function(l){
+      var on=(rawSel===l.k);
+      h+='<div class="rawrow'+(on?' on':'')+(l.edited?' edited':'')+'" data-raw="'+esc(l.k)+'">'+
+         '<div class="rawtop"><span class="d">'+esc(rawDate(l.out))+'</span>'+esc(l.flight)+' '+
+         esc(l.from)+'→'+esc(l.to)+
+         (l.gnd?'<span class="tag g">GROUND</span>':(l.dh?'<span class="tag">DH</span>':''))+
+         (l.edited?'<span class="tag e">CORRECTED</span>':'')+'</div>'+
+         '<div class="rawtimes">RPT '+(l.report!=null?rawZ(l.report)+'Z':'—')+
+         '  ·  OUT '+(l.out!=null?rawZ(l.out)+'Z':'—')+
+         '  ·  IN '+(l['in']!=null?rawZ(l['in'])+'Z':'—')+
+         '  ·  DEB '+(l.deb!=null?rawZ(l.deb)+'Z':'—')+
+         '  ·  BLK '+dpHM(l.blk)+'</div>';
+      if(on) h+=rawEditor(l);
+      h+='</div>';
+    });
+    if(shown.length>400) h+='<div class="rawhint">Showing the first 400. Use the filter to narrow it down.</div>';
+    box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll('[data-raw]'),function(el){
+      el.onclick=function(ev){
+        if(ev.target.closest('.rawedit')) return;      // do not collapse while editing
+        var k=el.getAttribute('data-raw');
+        rawSel=(rawSel===k)? null : k;
+        rawRender();
+      };
+    });
+    var sv=box.querySelector('#rawSave');
+    if(sv) sv.onclick=function(){ rawSave(); };
+    var rs=box.querySelector('#rawReset');
+    if(rs) rs.onclick=function(){
+      dpSetEdit(rawSel, null); rawRender();
+      try{ dpRender(); }catch(e){} try{ slpRender(); }catch(e){}
+    };
+  }
+
+  function rawEditor(l){
+    var f=function(id,lab,val,ph){
+      return '<div><div class="rawf">'+lab+'</div><input id="'+id+'" class="rawin" value="'+esc(val==null?'':val)+
+             '" placeholder="'+esc(ph||'')+'" autocapitalize="characters" spellcheck="false"></div>';
+    };
+    return '<div class="rawedit"><div class="rawgrid">'+
+      f('rawFl','Flight', l.flight,'')+
+      f('rawAc','Date (day of block out)', rawDate(l.out),'YYYY-MM-DD')+
+      f('rawFrom','From', l.from,'IATA')+
+      f('rawTo','To', l.to,'IATA')+
+      f('rawRpt','Report Z', rawZ(l.report),'HHMM')+
+      f('rawOut','Block out Z', rawZ(l.out),'HHMM')+
+      f('rawIn','Block in Z', rawZ(l['in']),'HHMM')+
+      f('rawDeb','Debrief Z', rawZ(l.deb),'HHMM')+
+      '</div>'+
+      '<div class="rawhint">Every time here is <b>Zulu</b>, the way the app stores it. Report may sit before block out on the previous day, and block in and debrief may run past midnight — the app works that out from the order, so type the clock time and nothing else. Leave a box empty to clear that time.</div>'+
+      '<div class="rawbtns"><button id="rawSave" class="rawsave">Save correction</button>'+
+      (l.edited? '<button id="rawReset" class="rawreset">Undo my changes</button>':'')+'</div></div>';
+  }
+
+  function rawSave(){
+    var k=rawSel; if(!k) return;
+    var legs=dpRoster(), l=null;
+    for(var i=0;i<legs.length;i++) if(legs[i].k===k){ l=legs[i]; break; }
+    if(!l) return;
+    var g=function(id){ var e=$('#'+id); return e? e.value.trim() : ''; };
+    var dstr=g('rawAc'), dm=dstr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    var base=dm? Date.UTC(+dm[1], +dm[2]-1, +dm[3]) : (l.out!=null? l.out : Date.now());
+    var patch={};
+    var fl=g('rawFl').toUpperCase(); if(fl) patch.flight=fl;
+    var fr=g('rawFrom').toUpperCase(); if(fr) patch.from=fr;
+    var to=g('rawTo').toUpperCase(); if(to) patch.to=to;
+
+    var out=rawSetTime(base, g('rawOut'), 0);
+    if(g('rawOut')==='') patch.out=null; else if(out!=null) patch.out=out;
+    var anchor=(patch.out!=null? patch.out : (l.out!=null? l.out : base));
+    /* Report comes before block out; block in and debrief come after. Rolling each one to
+       the nearest side of the anchor is what lets somebody type four clock times without
+       having to think about which of them fell on the next calendar day. */
+    var rp=rawSetTime(anchor, g('rawRpt'), 0);
+    if(g('rawRpt')==='') patch.report=null;
+    else if(rp!=null){ if(rp>anchor) rp-=86400000; patch.report=rp; }
+    var bi=rawSetTime(anchor, g('rawIn'), 0);
+    if(g('rawIn')==='') patch['in']=null;
+    else if(bi!=null){ while(bi<anchor) bi+=86400000; patch['in']=bi; }
+    var db=rawSetTime(patch['in']!=null? patch['in'] : anchor, g('rawDeb'), 0);
+    if(g('rawDeb')==='') patch.deb=null;
+    else if(db!=null){ var af=(patch['in']!=null? patch['in'] : anchor); while(db<af) db+=86400000; patch.deb=db; }
+
+    dpSetEdit(k, patch);
+    rawSel=null;
+    rawRender();
+    try{ dpRender(); }catch(e){}
+    try{ slpRender(); }catch(e){}
+    try{ impSpan(); }catch(e){}
+  }
+
+  (function(){
+    var rb=$('#impRawBtn'), rm=$('#rawModal'), rc=$('#rawC'), rf=$('#rawFind');
+    function open(){ rawSel=null; rawQ=''; if(rf) rf.value=''; rawRender(); if(rm) rm.classList.add('on'); }
+    if(rb) rb.onclick=open;
+    window.rawOpen=open;
+    if(rc) rc.onclick=function(){ rm.classList.remove('on'); };
+    if(rm) rm.addEventListener('click', function(e){ if(e.target===rm) rm.classList.remove('on'); });
+    if(rf) rf.oninput=function(){ rawQ=rf.value; rawRender(); };
+  })();
+
+  /* ---------- setup guide -----------------------------------------------------------
+     Written for somebody who has never built a Shortcut and does not want to. Every step
+     says what to tap and what should happen, the traps are called out where they happen
+     rather than in a list at the end, and the honest cost is stated up front instead of
+     being discovered halfway through. */
+  var SU_PHONE=[
+    {h:'Part 1 — Let eCrew put your trips in your calendar'},
+    {n:1, t:'Open <b>eCrew</b> on your phone and sign in the way you always do.'},
+    {n:2, t:'Go into eCrew\'s settings and look for <b>Calendar</b>, <b>Sync</b>, <b>Export</b> or <b>Add to Calendar</b>.',
+          s:'The wording moves around between versions of the app, so it may not be exactly one of those. It is in there. If you cannot find it, ask somebody on your crew who already has their trips on their phone.'},
+    {n:3, t:'Turn it on. Your phone will ask <b>"Allow eCrew to access your Calendar"</b> — tap <b>OK</b>.',
+          s:'That permission only lets eCrew write your trips into a calendar. It gives nobody access to anything else on your phone, and it has nothing to do with this app.'},
+    {n:4, t:'If it asks which calendar to write into, <b>either the iPhone\'s own Calendar or a Google one is fine</b>. This app reads both the same way.',
+          s:'If you are not sure, pick whichever calendar you actually look at.'},
+    {n:5, t:'Now check it worked. Open the iPhone <b>Calendar</b> app and look at the next week or two. Your trips should be sitting there, one entry per leg, with times on them.',
+          s:'Nothing showing? Tap <b>Calendars</b> at the bottom of the Calendar app and make sure the eCrew one has a tick next to it. If you told eCrew to use a Google calendar and it is not in that list at all, go to <b>Settings → Apps → Calendar → Accounts → Add Account → Google</b> and sign in — then it will be.'},
+    {h:'Part 2 — Getting it from the calendar into this app'},
+    {n:6, t:'First, check whether eCrew can just <b>email or export</b> your roster as a file. Some versions can.',
+          s:'If it can, email it to yourself, open the attachment on your phone, tap the share button, choose <b>Save to Files</b>, then come back here and use <b>Upload schedule</b>. That is the whole job and you can stop reading.'},
+    {n:7, t:'If it cannot, you build a <b>Shortcut</b> once. It takes about fifteen minutes and it is fiddly, but you only ever do it once — after that it is one tap, forever, and it always has your latest roster.',
+          s:'The next section walks through every action. Follow it in order and do not skip the warnings, because two of the steps have a trap in them.'},
+    {h:'Building the Shortcut'},
+    {n:8, t:'Open the <b>Shortcuts</b> app — it comes with every iPhone. Grey icon, two coloured squares.'},
+    {n:9, t:'Tap <b>+</b> at the top right. Tap the name at the top and call it <b>Schedule to CargoDecode</b>.'},
+    {n:10, t:'Add <b>Adjust Date</b>. Set it to <b>Subtract 30 Days</b>, and make sure the date it is adjusting says <b>Current Date</b>.'},
+    {n:11, t:'Add <b>Set Variable</b> and name the variable <code>From</code>.'},
+    {n:12, t:'Add <b>Adjust Date</b> again. Set it to <b>Add 90 Days</b>.',
+           s:'⚠ Here is the first trap. Shortcuts will have quietly filled this action\'s date with the <i>result of the last one</i>. Tap that field and change it back to <b>Current Date</b>, or your window will start in the wrong place.'},
+    {n:13, t:'Add <b>Set Variable</b> and name it <code>To</code>.'},
+    {n:14, t:'Add <b>Find Calendar Events</b>. Add a filter: <b>Start Date — is between — <code>From</code> and <code>To</code></b>. Add a second filter: <b>Is All Day — is off</b>. Sort by <b>Start Date</b>.'},
+    {n:15, t:'Add <b>Repeat with Each</b>. Everything from here until step 20 goes <i>inside</i> that loop.'},
+    {n:16, t:'Inside the loop, add <b>Format Date</b>. For the date, insert the <b>Repeat Item</b> variable, then <b>tap it</b> and choose <b>Start Date</b> from the list that appears. Set Format to <b>ISO 8601</b> and turn <b>Include Time on</b>. Then <b>Set Variable</b> → <code>S</code>.',
+           s:'Tapping an inserted variable to pick which part of it you want is the one Shortcuts trick worth learning. You will use it several more times below.'},
+    {n:17, t:'Same again for the end: <b>Format Date</b> on <b>Repeat Item → End Date</b>, <b>ISO 8601</b>, <b>Include Time on</b>. Then <b>Set Variable</b> → <code>E</code>.'},
+    {n:18, t:'Add a <b>Text</b> action and type exactly this, using the variables where shown:', code:
+      'BEGIN:VEVENT\nSUMMARY:[Repeat Item → Title]\nDTSTART:[S]\nDTEND:[E]\nLOCATION:[Repeat Item → Location]\nDESCRIPTION:[Repeat Item → Notes]\nEND:VEVENT',
+      s:'Everything in square brackets is a variable you insert, not text you type. <b>DESCRIPTION is the important one</b> — the Notes of each event are what tell this app the entry came from eCrew, and which flight it actually was. Leave it out and nothing will import.'},
+    {n:19, t:'Add <b>Add to Variable</b> and name it <code>Events</code>. That is the end of the loop.'},
+    {n:20, t:'Below the loop, add a second <b>Find Calendar Events</b>. Same <b>Start Date is between <code>From</code> and <code>To</code></b>, but this time <b>Is All Day — is on</b>.',
+           s:'This second pass picks up your X days and GDOs. They have no times on them, which is why they need their own loop — and they are what tells the app when one pattern of duty ends and the next begins.'},
+    {n:21, t:'Add another <b>Repeat with Each</b>. Inside it: <b>Format Date</b> on <b>Repeat Item → Start Date</b>, Format <b>Custom</b>, format string <code>yyyyMMdd</code>. Then <b>Set Variable</b> → <code>D</code>.'},
+    {n:22, t:'Still inside, add a <b>Text</b> action:', code:
+      'BEGIN:VEVENT\nSUMMARY:[Repeat Item → Title]\nDTSTART;VALUE=DATE:[D]\nDESCRIPTION:[Repeat Item → Notes]\nEND:VEVENT',
+      s:'⚠ Second trap: the semicolon in <code>DTSTART;VALUE=DATE:</code> is not a typo and neither is the colon after it. Type it exactly.'},
+    {n:23, t:'Add <b>Add to Variable</b> → <code>Events</code> again. End of the second loop.'},
+    {n:24, t:'Below everything, add <b>Combine Text</b>. Combine <code>Events</code> with <b>New Lines</b>.'},
+    {n:25, t:'Add a final <b>Text</b> action:', code:
+      'BEGIN:VCALENDAR\nVERSION:2.0\n[Combined Text]\nEND:VCALENDAR'},
+    {n:26, t:'Add <b>Copy to Clipboard</b>. Done — tap <b>Done</b> at the top right.'},
+    {h:'Using it, from now on'},
+    {n:27, t:'Run the Shortcut. The first time, your phone will ask whether it may read your calendar — say yes.'},
+    {n:28, t:'Come back here, tap <b>📋 Paste a schedule instead</b>, tap in the box, <b>Paste</b>, then <b>Import what I pasted</b>.',
+           s:'That is it. Do that whenever your roster changes. Nothing is replaced — new trips are added to what is already stored, and an updated version of a trip you already have overwrites the old one.'},
+    {n:29, t:'To make it genuinely one tap, press and hold the Shortcut and choose <b>Add to Home Screen</b>.'}
+  ];
+  var SU_COMP=[
+    {h:'If your trips are in a Google calendar'},
+    {n:1, t:'Do <b>Part 1</b> on the phone tab first — eCrew still has to be putting your trips into a calendar. Nothing here works until that is done.'},
+    {n:2, t:'On a computer, open <b>calendar.google.com</b> and sign in with the same Google account.'},
+    {n:3, t:'Click the <b>gear</b> at the top right, then <b>Settings</b>.'},
+    {n:4, t:'In the left-hand list click <b>Import &amp; export</b>, then under <b>Export</b> click <b>Export</b>.',
+          s:'It downloads a <b>.zip</b> file containing one <b>.ics</b> file per calendar.'},
+    {n:5, t:'You can upload that <b>.zip</b> here as it is — the app will find the right calendar inside it. Or unzip it first and upload just the <b>.ics</b>.'},
+    {n:6, t:'Come back here and use <b>Upload schedule</b>. That is the whole job.'},
+    {h:'If your trips are in the iPhone\'s own Calendar (iCloud)'},
+    {n:7, t:'Apple does not give you an export button, so there is no equivalent of the above.',
+          s:'Two ways round it. Either build the Shortcut on the phone tab — which is better anyway, because it needs no computer at all — or, in eCrew, point the calendar sync at a <b>Google</b> calendar instead of the iCloud one, and then follow the steps above.'},
+    {h:'A note on keeping it current'},
+    {n:8, t:'A file export is a snapshot of the moment you took it. Re-export and re-upload whenever your roster changes and the app will merge it in.',
+          s:'The Shortcut does not have this problem, which is the real reason it is worth the fifteen minutes.'}
+  ];
+  function suRender(which){
+    var list=(which==='computer')? SU_COMP : SU_PHONE, h='';
+    list.forEach(function(it){
+      if(it.h){ h+='<div class="suH">'+it.h+'</div>'; return; }
+      h+='<div class="suStep"><div class="suNum">'+it.n+'</div><div class="suBody">'+it.t+
+         (it.code? '<div class="suCode">'+esc(it.code)+'</div>':'')+
+         (it.s? '<div class="sub">'+it.s+'</div>':'')+'</div></div>';
+    });
+    h+='<div class="suNote">Stuck at any point, or your version of eCrew looks nothing like this? Nothing here can break anything — the worst that happens is the app says it could not read what you pasted, and tells you which bit was missing.</div>';
+    var b=$('#suBody'); if(b) b.innerHTML=h;
+  }
+  (function(){
+    var sb=$('#impSetupBtn'), sm=$('#setupModal'), sc=$('#setupC');
+    if(sb) sb.onclick=function(){ suRender('phone'); if(sm) sm.classList.add('on'); };
+    if(sc) sc.onclick=function(){ sm.classList.remove('on'); };
+    if(sm){
+      sm.addEventListener('click', function(e){ if(e.target===sm) sm.classList.remove('on'); });
+      Array.prototype.forEach.call(sm.querySelectorAll('[data-su]'), function(bt){
+        bt.onclick=function(){
+          Array.prototype.forEach.call(sm.querySelectorAll('[data-su]'), function(x){ x.classList.remove('on'); });
+          bt.classList.add('on');
+          suRender(bt.getAttribute('data-su'));
+        };
+      });
+    }
+  })();
+
   function impSniffText(t){
     if(/BEGIN:VCALENDAR/i.test(t)) return 'ics';
     if(/All times in (UTC|Local Station)/i.test(t)) return 'csv';
@@ -7762,14 +8238,25 @@
     var h='';
     brs.forEach(function(b,i){
       var on=(slpSel===('r'+i));
+      var legName=function(d){
+        if(!d||!d.legs||!d.legs.length) return '';
+        var f=d.legs[0], l=d.legs[d.legs.length-1];
+        return esc(f.flight)+' '+esc(f.from)+'→'+esc(l.to);
+      };
       h+='<button class="slpbrk'+(on?' on':'')+'" data-brk="'+i+'">'+
          '<b>'+esc(b.station||'Layover')+' — '+b.hours.toFixed(1)+' hours off</b>'+
          '<span class="sub">'+slpDayName(b.startMs,b.localOff)+' '+slpL(b.startMs,b.localOff)+' local'+
-         ' → '+slpDayName(b.reportMs,b.localOff)+' '+slpL(b.reportMs,b.localOff)+' local report</span></button>';
+         ' → '+slpDayName(b.reportMs,b.localOff)+' '+slpL(b.reportMs,b.localOff)+' local report</span>'+
+         '<span class="sub2">After '+legName(b.prev)+' · before '+legName(b.next)+'</span></button>';
     });
     h+='<button class="slpbrk'+(slpSel==='manual'?' on':'')+'" data-brk="manual"><b>Enter it myself</b>'+
        '<span class="sub">'+(brs.length? 'A break that is not in the roster yet':'Nothing imported yet — type the times in')+'</span></button>';
+    if(brs.length) h+='<div class="slpraw">These come straight from your imported schedule. '+
+      'If a release or a report time here is wrong, everything below it will be wrong too — '+
+      '<button type="button" id="slpRawLink">check the schedule data</button>.</div>';
     box.innerHTML=h;
+    var rl=$('#slpRawLink');
+    if(rl) rl.onclick=function(e){ e.stopPropagation(); try{ window.rawOpen(); }catch(err){} };
     if(slpSel==null) slpSel=brs.length? 'r0' : 'manual';
     Array.prototype.forEach.call(box.querySelectorAll('[data-brk]'),function(bt){
       bt.onclick=function(){
@@ -7811,10 +8298,12 @@
     /* Drawn in units that are close to CSS pixels on a phone, so the labels stay legible
        instead of being scaled down to nothing. The card caps the width, so on a laptop the
        whole strip scales up in proportion rather than stretching. */
-    var W=360, H=120, L=6, R=6, ruler=20, bandT=26, bandH=54, barY=36, barH=34, footY=H-5;
+    var W=360, H=148, L=6, R=6, dayY=10, hourY=25, sunY=30, sunH=5,
+        bandT=39, bandH=56, barY=49, barH=38, footY=H-5;
     var t0=inp.startMs, t1=inp.reportMs, span=t1-t0;
     var x=function(ms){ return L + (ms-t0)/span*(W-L-R); };
     var loc=(inp.localOff==null? 0 : inp.localOff), bod=(inp.bodyOff==null? 0 : inp.bodyOff);
+    var spanH=span/3600000;
     var g='<svg class="slptl" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="where the sleep goes across this break">';
     // the body's own night behind everything, with the circadian low picked out inside it
     var stepMs=10*60000;
@@ -7825,42 +8314,99 @@
       g+='<rect x="'+x(t).toFixed(1)+'" y="'+bandT+'" width="'+Math.max(0.5,(x(Math.min(t+stepMs,t1))-x(t))).toFixed(2)+
          '" height="'+bandH+'" fill="'+(wocl?'rgba(255,157,77,.26)':'rgba(110,150,220,.14)')+'"/>';
     }
-    // hour ruler, local hotel time; midnight carries the weekday so a long break stays readable
-    var stepH=(span/3600000>30)? 6 : (span/3600000>14? 3 : 2);
+    /* The hour ruler. Two rules, both learned the hard way from staring at it:
+       the numbers never break their rhythm - a weekday substituted for "00" makes the row
+       unreadable at a glance - and the step is always a divisor of 24, so the labels land on
+       the round hours a crew member already thinks in rather than on 01, 04, 07. The day
+       names get a row of their own above, centred over the day they belong to. */
+    var stepH = spanH<=8? 1 : spanH<=16? 2 : spanH<=30? 3 : spanH<=54? 6 : 12;
     var first=Math.ceil((t0+loc*3600000)/3600000)*3600000-loc*3600000;
     for(t=first; t<t1; t+=3600000){
       var lh=new Date(t+loc*3600000).getUTCHours();
       if(lh%stepH) continue;
       var mid=(lh===0);
       g+='<line x1="'+x(t).toFixed(1)+'" y1="'+bandT+'" x2="'+x(t).toFixed(1)+'" y2="'+(bandT+bandH)+
-         '" stroke="rgba(140,175,220,'+(mid?'.4':'.16')+')" stroke-width="'+(mid?1.2:0.8)+'"/>'+
-         '<text x="'+x(t).toFixed(1)+'" y="'+(ruler-4)+'" fill="'+(mid?'#9fb8d8':'#7f95b5')+
-         '" font-size="9" font-family="ui-monospace,monospace" text-anchor="middle">'+
-         (mid? slpDayName(t,loc) : ('0'+lh).slice(-2))+'</text>';
+         '" stroke="rgba(140,175,220,'+(mid?'.42':'.16')+')" stroke-width="'+(mid?1.2:0.8)+'"/>'+
+         '<text x="'+x(t).toFixed(1)+'" y="'+hourY+'" fill="'+(mid?'#9fb8d8':'#7f95b5')+
+         '" font-size="9" font-family="ui-monospace,monospace" text-anchor="middle">'+('0'+lh).slice(-2)+'</text>';
+    }
+    /* Is it light outside? Different question from the body-clock shading behind it, and
+       the answer is the only lever anybody has over their body clock. Real sunrise and
+       sunset at the station, because "daytime is 0600 to 1800" is a useful lie in Miami and
+       a useless one in Anchorage. Drawn only when the station is one the app has
+       coordinates for — a missing stripe beats a confidently wrong one. */
+    var stn=inp.station, hasSun=(typeof SUN!=='undefined' && stn && SUN.has(stn));
+    if(hasSun){
+      /* Drawn as whole runs of daylight rather than one rectangle per sample. Sampling and
+         painting each slice leaves a hairline seam between every pair of them, and a strip
+         of forty seams reads as a dashed line rather than as a day. */
+      var sStep=10*60000, runs=[], open=null;
+      for(t=t0; t<t1; t+=sStep){
+        var lit=SUN.isDaylight(stn, Math.min(t+sStep/2, t1));
+        if(lit && open==null) open=t;
+        if(!lit && open!=null){ runs.push([open,t]); open=null; }
+      }
+      if(open!=null) runs.push([open,t1]);
+      g+='<rect x="'+L+'" y="'+sunY+'" width="'+(W-L-R)+'" height="'+sunH+'" rx="2.5" fill="rgba(8,16,32,.9)"/>';
+      runs.forEach(function(rn){
+        var rx=x(rn[0]), rw=x(rn[1])-rx;
+        if(rw<0.6) return;
+        g+='<rect x="'+rx.toFixed(1)+'" y="'+sunY+'" width="'+rw.toFixed(1)+'" height="'+sunH+'" rx="2.5" fill="#ffd98a"/>';
+      });
+    }
+    // a weekday over the middle of each local day the break touches
+    var dayMs=86400000;
+    var d0=Math.floor((t0+loc*3600000)/dayMs)*dayMs-loc*3600000;
+    for(var dstart=d0; dstart<t1; dstart+=dayMs){
+      var a0=Math.max(dstart,t0), a1=Math.min(dstart+dayMs,t1);
+      if(x(a1)-x(a0) < 26) continue;
+      g+='<text x="'+((x(a0)+x(a1))/2).toFixed(1)+'" y="'+dayY+'" fill="#8ba4c4" font-size="9" font-weight="700" '+
+         'font-family="ui-monospace,monospace" text-anchor="middle" letter-spacing=".5">'+slpDayName(a0,loc).toUpperCase()+'</text>';
     }
     // the break itself, then the sleep laid on top of it
     g+='<rect x="'+L+'" y="'+barY+'" width="'+(W-L-R)+'" height="'+barH+'" rx="5" fill="rgba(120,160,220,.09)" stroke="rgba(120,160,220,.22)" stroke-width="0.8"/>';
     res.best.blocks.forEach(function(bk){
       var bx=x(bk.sleepStart), bw=Math.max(2,x(bk.sleepEnd)-x(bk.sleepStart));
       g+='<rect x="'+bx.toFixed(1)+'" y="'+barY+'" width="'+bw.toFixed(1)+'" height="'+barH+'" rx="5" fill="#4d76d8" opacity=".93"/>';
-      if(bw>=34) g+='<text x="'+(bx+bw/2).toFixed(1)+'" y="'+(barY+barH/2+4)+'" fill="#eaf2ff" font-size="11" font-weight="700" '+
-        'font-family="ui-monospace,monospace" text-anchor="middle">'+(bk.durationMinutes/60).toFixed(1)+'h</text>';
+      var cx=bx+bw/2;
+      /* The times go ON the block. Reading them off the ruler means counting gridlines and
+         then doing arithmetic, which is exactly the thing nobody wants to be doing at the
+         end of a duty day. */
+      if(bw>=58){
+        g+='<text x="'+cx.toFixed(1)+'" y="'+(barY+16)+'" fill="#f2f7ff" font-size="'+(bw>=86?'10.5':'9.5')+'" font-weight="700" '+
+           'font-family="ui-monospace,monospace" text-anchor="middle">'+slpL(bk.sleepStart,loc)+'–'+slpL(bk.sleepEnd,loc)+'</text>'+
+           '<text x="'+cx.toFixed(1)+'" y="'+(barY+29)+'" fill="#c6d8f5" font-size="9" '+
+           'font-family="ui-monospace,monospace" text-anchor="middle">'+slpHM(bk.durationMinutes)+'</text>';
+      }else if(bw>=34){
+        g+='<text x="'+cx.toFixed(1)+'" y="'+(barY+barH/2+4)+'" fill="#f2f7ff" font-size="10" font-weight="700" '+
+           'font-family="ui-monospace,monospace" text-anchor="middle">'+slpHM(bk.durationMinutes)+'</text>';
+      }
     });
     // caffeine cut-offs; the marker always shows, the words only when there is room for them
     var lastLab=-99;
     res.best.caffeine.forEach(function(c){
       if(c.cutoffMs<=t0||c.cutoffMs>=t1) return;
-      var cx=x(c.cutoffMs);
-      g+='<line x1="'+cx.toFixed(1)+'" y1="'+(barY-5)+'" x2="'+cx.toFixed(1)+'" y2="'+(barY+barH+5)+
+      var kx=x(c.cutoffMs);
+      g+='<line x1="'+kx.toFixed(1)+'" y1="'+(barY-5)+'" x2="'+kx.toFixed(1)+'" y2="'+(barY+barH+5)+
          '" stroke="#e0b53a" stroke-width="1.4" stroke-dasharray="3 2.5"/>';
-      if(cx-lastLab>78 && cx<W-58){
-        g+='<text x="'+cx.toFixed(1)+'" y="'+footY+'" fill="#e0b53a" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">Last coffee</text>';
-        lastLab=cx;
+      if(kx-lastLab>78 && kx<W-58){
+        g+='<text x="'+kx.toFixed(1)+'" y="'+footY+'" fill="#e0b53a" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">Last coffee</text>';
+        lastLab=kx;
       }
     });
+    /* The wake-up call. The same ninety minutes the plan is built around, so this line
+       always lands exactly where the last sleep block ends. */
+    var wk=res.best.wakeCallMs;
+    if(wk!=null && wk>t0 && wk<t1){
+      var wx=x(wk);
+      g+='<line x1="'+wx.toFixed(1)+'" y1="'+(barY-13)+'" x2="'+wx.toFixed(1)+'" y2="'+(barY+barH+6)+
+         '" stroke="#ff5252" stroke-width="2" stroke-dasharray="5 3"/>'+
+         '<text x="'+(wx-4).toFixed(1)+'" y="'+(barY-7)+'" fill="#ff8a8a" font-size="9.5" font-weight="700" '+
+         'font-family="ui-monospace,monospace" text-anchor="end">WAKE-UP '+slpL(wk,loc)+'</text>';
+    }
     g+='<line x1="'+(W-R).toFixed(1)+'" y1="'+(barY-8)+'" x2="'+(W-R).toFixed(1)+'" y2="'+(barY+barH+8)+'" stroke="#ff6b6b" stroke-width="2"/>'+
-       '<text x="'+(W-R).toFixed(1)+'" y="'+footY+'" fill="#ff6b6b" font-size="9" text-anchor="end" font-family="ui-monospace,monospace" font-weight="700">Report</text>'+
-       '<text x="'+L+'" y="'+footY+'" fill="#7f95b5" font-size="9" font-family="ui-monospace,monospace">Release</text>';
+       '<text x="'+(W-R).toFixed(1)+'" y="'+footY+'" fill="#ff6b6b" font-size="9" text-anchor="end" font-family="ui-monospace,monospace" font-weight="700">Report '+slpL(t1,loc)+'</text>'+
+       '<text x="'+L+'" y="'+footY+'" fill="#7f95b5" font-size="9" font-family="ui-monospace,monospace">Release '+slpL(t0,loc)+'</text>';
     /* Where you are on the plan right now. Drawn last so it sits over the sleep blocks, and
        given its own colour so it cannot be mistaken for a grid line or the coffee cut-off.
        Kept in the markup even when the break has not started, hidden rather than absent, so
@@ -7880,7 +8426,8 @@
        '<span><i style="background:rgba(255,157,77,.6)"></i>Circadian low (0200–0600 body time)</span>'+
        '<span><i style="background:#e0b53a"></i>Caffeine cut-off</span>'+
        ((Date.now()>=t0 && Date.now()<=t1)? '<span><i style="background:#5ee6ff"></i>Now</span>':'')+
-       '<div class="slpkeyfoot">Hours along the top are <b>local hotel time</b>. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div>'+
+       (hasSun? '<span><i style="background:#ffd98a"></i>Sun up at '+esc(stn)+'</span>':'')+
+       '<div class="slpkeyfoot">Every time on this chart is <b>local hotel time</b>, including the ones written on the sleep blocks. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div>'+
        '<div class="slpkeyfoot" id="slpNowCap">'+slpNowCaption(t0,t1,loc,bod)+'</div></div>';
     return g;
   }
@@ -7914,8 +8461,8 @@
          '<div class="s">What the model expects you to get</div></div>'+
        (eff!=null? '<div class="slpstat"><div class="k">At report</div><div class="v" style="color:'+effBand.color+'">'+eff+'%</div>'+
          '<div class="s">'+esc(effBand.label)+'</div></div>':'')+
-       '<div class="slpstat"><div class="k">Up before the van</div><div class="v" style="color:#ffd166">'+slpHM(res.best.inertiaClearanceBufferMinutes)+'</div>'+
-         '<div class="s">Time to shake off sleep inertia</div></div>'+
+       '<div class="slpstat"><div class="k">Wake-up call</div><div class="v" style="color:#ff8a8a">'+slpL(res.best.wakeCallMs,loc)+'</div>'+
+         '<div class="s">90 minutes before report, local</div></div>'+
        '</div>';
 
     h+='<div class="slpsteps">';
@@ -7924,9 +8471,19 @@
       seq.push({ t:b.sleepStart, cls:'sleep', title:'Lights out',
         d:'<b>'+slpHM(b.durationMinutes)+'</b> — about '+b.cycleCount+' sleep cycle'+(b.cycleCount>1?'s':'')+
           '. '+esc(b.easeLabel)+'.<br>'+esc(b.description) });
-      seq.push({ t:b.sleepEnd, cls:'up', title:(i<res.best.blocks.length-1?'Up':'Up for good'),
-        d:null, wake:res.best.wake[i] });
+      var lastOne=(i===res.best.blocks.length-1);
+      var isCall=lastOne && Math.abs(b.sleepEnd-res.best.wakeCallMs)<5*60000;
+      seq.push({ t:b.sleepEnd, cls:(isCall?'wake':'up'),
+        title:(isCall? 'WAKE-UP CALL' : (lastOne? 'Up for good' : 'Up')),
+        d:(isCall? 'Ninety minutes to report. Everything the plan does is built backwards from this moment.' : null),
+        wake:res.best.wake[i] });
     });
+    /* If the plan has you up before the phone call — a short break, or a single-block
+       preference that would not reach — the call is still the fixed point of the morning
+       and deserves its own line. */
+    if(!seq.some(function(x){ return x.cls==='wake'; }) && res.best.wakeCallMs>inp.startMs)
+      seq.push({ t:res.best.wakeCallMs, cls:'wake', title:'WAKE-UP CALL',
+        d:'Ninety minutes to report. You are already up by now under this plan.' });
     seq.sort(function(a,b){ return a.t-b.t; });
     seq.forEach(function(x){
       h+='<div class="slpstep '+x.cls+'"><div class="slptime">'+slpL(x.t,loc)+' local<span class="z">'+slpZ(x.t)+
@@ -8015,15 +8572,38 @@
      happened, so it shows both and lets one be removed. Nothing is deleted from the roster;
      the leg is simply set aside and can be brought back. */
   function dpDrop(){ try{ return JSON.parse(localStorage.getItem('ad_legdrop')||'{}'); }catch(e){ return {}; } }
+  /* Hand corrections to imported entries. An import is a reading of somebody else's data and
+     it is sometimes wrong — a stale calendar revision, a report time the feed never carried,
+     a station typed as the wrong one of a city's two airports. The crew member was there and
+     the feed was not, so they get the last word. Corrections are kept apart from the imported
+     roster rather than written over it, which means a re-import cannot silently undo them and
+     any single correction can be handed back. */
+  function dpEdits(){ try{ return JSON.parse(localStorage.getItem('ad_legedit')||'{}'); }catch(e){ return {}; } }
+  function dpSetEdit(k, patch){
+    var e=dpEdits();
+    if(patch==null) delete e[k];
+    else e[k]=Object.assign({}, e[k]||{}, patch);
+    try{ localStorage.setItem('ad_legedit', JSON.stringify(e)); }catch(err){}
+  }
   function dpSetDrop(k,on){ var d=dpDrop(); if(on) d[k]=1; else delete d[k]; try{ localStorage.setItem('ad_legdrop',JSON.stringify(d)); }catch(e){} }
   function dpSetDh(k,on){ var f=dpDhFix(); f[k]=on?1:0; try{ localStorage.setItem('ad_dhfix',JSON.stringify(f)); }catch(e){} }
   function dpRoster(){
     var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
-    var g=dpGw(), fx=dpDhFix(), dr=dpDrop();
+    var g=dpGw(), fx=dpDhFix(), dr=dpDrop(), ed=dpEdits();
     r=r.filter(function(l){ return !dr[l.k]; });
     r.forEach(function(l){
       l.gw=!!g[l.k];
       if(Object.prototype.hasOwnProperty.call(fx,l.k)){ l.dh=!!fx[l.k]; l.dhFix=true; }
+      var p=ed[l.k];
+      if(p){
+        ['flight','from','to','report','out','in','deb'].forEach(function(f){
+          if(p[f]!=null) l[f]=p[f];
+        });
+        /* Block time is derived, never stored by hand — otherwise a corrected block-in and
+           an uncorrected block figure end up disagreeing on the same card. */
+        if(l.out!=null && l['in']!=null && !l.gnd) l.blk=Math.round((l['in']-l.out)/60000);
+        l.edited=true;
+      }
     });
     return r;
   }
