@@ -784,6 +784,12 @@
   .wnok{margin-top:12px;width:100%;padding:10px;border-radius:10px;font-family:inherit;
     font-size:13px;font-weight:800;cursor:pointer;
     background:rgba(47,143,99,.32);border:1px solid rgba(78,227,154,.45);color:#a9f0cd}
+  .impbtn4{display:block;width:100%;margin-top:8px;padding:12px;border-radius:11px;font-family:inherit;
+    background:linear-gradient(180deg,#2f6fd8,#2456ad);border:1px solid rgba(140,180,240,.5);
+    color:#f2f7ff;font-size:13.5px;font-weight:800;cursor:pointer}
+  .linksteps{margin-top:4px}
+  .linkstep{font-size:12.5px;line-height:1.6;color:var(--dim);margin:6px 0}
+  .linkstep b{color:var(--ink)}
   .impbtn3{display:block;width:100%;margin-top:8px;padding:11px;border-radius:11px;font-family:inherit;
     background:rgba(20,58,42,.85);border:1px solid rgba(78,227,154,.42);color:#a9f0cd;font-size:13px;font-weight:800;cursor:pointer}
   /* ---- setup guide ---- */
@@ -798,8 +804,18 @@
   .suTab.on{border-color:#5b93e8;background:rgba(91,147,232,.16);color:#eaf2ff}
   .suStep{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid rgba(120,160,220,.12)}
   .suStep:last-child{border-bottom:0}
-  .suNum{flex:0 0 24px;height:24px;border-radius:50%;background:rgba(91,147,232,.22);border:1px solid rgba(120,160,220,.4);
-    color:#cfe0fb;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
+  .suNum{flex:0 0 26px;height:26px;border-radius:50%;background:rgba(91,147,232,.22);border:1px solid rgba(120,160,220,.4);
+    color:#cfe0fb;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);cursor:pointer;padding:0;-webkit-appearance:none;appearance:none}
+  .suNum.on{background:rgba(47,143,99,.5);border-color:rgba(78,227,154,.6);color:#eafff4;font-size:14px}
+  .suNum:active{transform:scale(.9)}
+  .suStep.done .suBody{opacity:.45}
+  .suProg{margin:2px 0 6px}
+  .suProgBar{height:5px;border-radius:3px;background:rgba(120,160,220,.16);overflow:hidden}
+  .suProgBar i{display:block;height:100%;background:#4ee39a;border-radius:3px;transition:width .25s}
+  .suProgTxt{font-size:11px;color:var(--faint);margin-top:5px}
+  .suProgTxt b{color:#8fd9b4}
+  .suProgTxt button{background:none;border:0;padding:0;font:inherit;color:#7fb0ff;text-decoration:underline;cursor:pointer}
   .suBody{flex:1;min-width:0;font-size:13px;line-height:1.6;color:var(--ink)}
   .suBody .sub{font-size:12px;color:var(--faint);margin-top:4px;line-height:1.6}
   .suBody code{font-family:var(--mono);font-size:11.5px;background:rgba(4,10,22,.7);border:1px solid rgba(120,160,220,.22);
@@ -1523,6 +1539,7 @@
           Upload schedule (calendar, CSV or XLS)
         </button>
         <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,text/csv,text/calendar,application/vnd.ms-excel,application/zip" multiple hidden>
+        <button id="impLinkBtn" class="impbtn4">🔗 Link my calendar — set up once, then it updates itself</button>
         <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
         <button id="impSetupBtn" class="impbtn3">🧭 First time? Step-by-step setup for your phone</button>
         <button id="impRawBtn" class="impbtn2">🔍 See and correct the schedule data</button>
@@ -1853,6 +1870,23 @@
 </div>
 
 <div class="tipModal" id="tipModal"><div class="tipBox"><div class="tipT" id="tipT"></div><div class="tipD" id="tipD"></div><button class="tipC" id="tipC">Close</button></div></div>
+<div class="tipModal" id="linkModal"><div class="tipBox">
+  <div class="whyT">Link your calendar</div>
+  <div class="whySub" style="color:var(--dim)">Paste one address, once. After that the app pulls your roster on its own.</div>
+  <div class="suPriv" style="margin-top:12px">
+    <b>What this address is.</b> Google calls it the <b>secret address in iCal format</b>. It is a private link to <i>your</i> calendar — anyone holding it can read that calendar, so treat it like a password and do not post it anywhere. It is stored on this phone and nowhere else.
+  </div>
+  <div class="linksteps" id="linkHow"></div>
+  <div class="ftk" style="margin-top:12px">Your calendar address</div>
+  <input id="linkUrl" class="rawin" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" spellcheck="false" autocapitalize="off">
+  <div id="linkMsg" class="impstat"></div>
+  <div class="rawbtns">
+    <button id="linkGo" class="rawsave">Fetch it now</button>
+    <button id="linkForget" class="rawreset">Forget this address</button>
+  </div>
+  <label class="slpchk" style="margin-top:11px"><input type="checkbox" id="linkAuto"> Refresh automatically when I open the app</label>
+  <button class="tipC" id="linkC">Close</button>
+</div></div>
 <div class="tipModal" id="rawModal"><div class="tipBox">
   <div class="whyT">Schedule data</div>
   <div class="whySub" style="color:var(--dim)">Everything the app is working from, exactly as it read it. Tap any line to correct it.</div>
@@ -5787,7 +5821,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v13.4 · 2026-08-31';
+  var BUILD='v13.8 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5809,7 +5843,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v13.4',
+    version:'v13.8',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -7950,6 +7984,103 @@
   /* eCrew hands out a CSV on desktop and a real BIFF8 .xls on mobile. Sniff the bytes
      rather than trusting the extension, and decode the CSV as ISO-8859-1 because that is
      what the export actually is - reading it as UTF-8 destroys the day markers. */
+  /* ---------- linked calendar ---------------------------------------------------------
+     The thirty-step Shortcut existed for one reason: a browser cannot fetch a calendar feed
+     directly. Google serves its iCal endpoint without an Access-Control-Allow-Origin header,
+     so the browser refuses to let the page read the response — tested from the live origin,
+     the request succeeds in no-cors mode and fails in cors mode, which is that header and
+     nothing else.
+
+     A relay of your own fixes it in four lines: it fetches the feed server-side, where the
+     browser's rules do not apply, and hands it back with the header attached. Set CAL_PROXY
+     to that relay and this whole feature switches on. Leave it empty and the button does not
+     appear at all.
+
+     The address itself never leaves the phone except to go to the relay, and the relay is
+     told to accept nothing but calendar hosts, so it cannot be turned into an open proxy for
+     anything else. */
+  var CAL_PROXY='';
+
+  function calCfg(){ try{ return JSON.parse(localStorage.getItem('ad_calurl')||'{}')||{}; }catch(e){ return {}; } }
+  function calSave(p){
+    var c=calCfg(); for(var k in p) if(p.hasOwnProperty(k)) c[k]=p[k];
+    try{ localStorage.setItem('ad_calurl', JSON.stringify(c)); }catch(e){}
+  }
+  function calOk(u){
+    return /^https:\/\/([a-z0-9-]+\.)*(google\.com|icloud\.com|apple\.com|office365\.com|outlook\.com|live\.com)\//i.test(String(u||''))
+        || /^webcal:\/\//i.test(String(u||''));
+  }
+  /* Fetch, parse and merge. Time-boxed like every other network call in this app, because a
+     roster refresh must never be the reason the app is slow to open on the ramp. */
+  function calFetch(url, quiet){
+    if(!CAL_PROXY) return Promise.resolve({err:'No relay configured.'});
+    var u=String(url||'').replace(/^webcal:/i,'https:');
+    var ctl=(typeof AbortController!=='undefined')? new AbortController():null;
+    var timer=ctl? setTimeout(function(){ try{ ctl.abort(); }catch(e){} }, 12000):null;
+    return fetch(CAL_PROXY+'?u='+encodeURIComponent(u), {signal:ctl?ctl.signal:undefined})
+      .then(function(r){ if(timer) clearTimeout(timer);
+        if(!r.ok) throw new Error('The relay answered '+r.status);
+        return r.text(); })
+      .then(function(txt){
+        if(!/BEGIN:VCALENDAR/i.test(txt)) throw new Error('That address did not return a calendar.');
+        var parsed=AIMSCSV.toUtc(AIMSCSV.parseIcs(txt), impOffsetFor);
+        var res=impHandle(parsed, 'linked calendar');
+        if(!res) throw new Error('Nothing readable in that calendar.');
+        if(res.err) throw new Error(res.err.replace(/<[^>]+>/g,''));
+        calSave({url:u, last:Date.now()});
+        if(!quiet) impReport([res],[]);
+        else { impSpan(); try{ dpRender(); }catch(e){} }
+        return {ok:true, legs:res.legs};
+      })
+      .catch(function(e){ if(timer) clearTimeout(timer); return {err:e.message||String(e)}; });
+  }
+  (function(){
+    var lb=$('#impLinkBtn'), lm=$('#linkModal'), lc=$('#linkC'),
+        lu=$('#linkUrl'), lg=$('#linkGo'), lf=$('#linkForget'), la=$('#linkAuto'), msg=$('#linkMsg');
+    if(!lb) return;
+    if(!CAL_PROXY){ lb.hidden=true; return; }        // feature is off until a relay exists
+    function say(h,c){ if(msg){ msg.className='impstat '+(c||''); msg.innerHTML=h||''; } }
+    function how(){
+      var e=$('#linkHow'); if(!e) return;
+      e.innerHTML='<div class="suH" style="margin-top:2px">Where to find it — Google Calendar</div>'+
+        '<div class="linkstep"><b>1.</b> On a computer, open <b>calendar.google.com</b>.</div>'+
+        '<div class="linkstep"><b>2.</b> Hover your work calendar in the left-hand list, tap the <b>⋮</b>, choose <b>Settings and sharing</b>.</div>'+
+        '<div class="linkstep"><b>3.</b> Scroll to <b>Integrate calendar</b>.</div>'+
+        '<div class="linkstep"><b>4.</b> Copy <b>Secret address in iCal format</b> — the long one ending <code>basic.ics</code>.</div>'+
+        '<div class="linkstep"><b>5.</b> Mail it to yourself, then paste it below on your phone. You only ever do this once.</div>'+
+        '<div class="suH">iPhone calendar (iCloud)</div>'+
+        '<div class="linkstep">Calendar app → <b>Calendars</b> → tap the <b>ⓘ</b> beside your work calendar → turn on <b>Public Calendar</b> → <b>Share Link</b>. That gives a <code>webcal://</code> address which works here too.</div>';
+    }
+    lb.onclick=function(){
+      how();
+      var c=calCfg();
+      if(lu) lu.value=c.url||'';
+      if(la) la.checked=!!c.auto;
+      say(c.last? '<span style="color:var(--faint)">Last pulled '+new Date(c.last).toISOString().slice(0,16).replace('T',' ')+'Z</span>':'');
+      lm.classList.add('on');
+    };
+    if(lc) lc.onclick=function(){ lm.classList.remove('on'); };
+    lm.addEventListener('click', function(e){ if(e.target===lm) lm.classList.remove('on'); });
+    if(la) la.onchange=function(){ calSave({auto:la.checked}); };
+    if(lf) lf.onclick=function(){ try{ localStorage.removeItem('ad_calurl'); }catch(e){}
+      if(lu) lu.value=''; if(la) la.checked=false; say('Address forgotten. Nothing else was removed.',''); };
+    if(lg) lg.onclick=function(){
+      var u=(lu&&lu.value||'').trim();
+      if(!u){ say('Paste the address first.','impbad'); return; }
+      if(!calOk(u)){ say('That does not look like a Google or Apple calendar address. It should start <b>https://calendar.google.com/</b> or <b>webcal://</b>.','impbad'); return; }
+      say('Fetching…','');
+      calFetch(u,false).then(function(r){
+        if(r.err){ say('Could not fetch it — '+esc(r.err),'impbad'); return; }
+        lm.classList.remove('on');
+      });
+    };
+    /* Quiet refresh on open, if they asked for one. Never blocks anything: it starts late,
+       it is time-boxed, and offline it simply fails and is forgotten until next time. */
+    var c0=calCfg();
+    if(c0.auto && c0.url && (Date.now()-(c0.last||0))>6*3600000)
+      setTimeout(function(){ calFetch(c0.url,true); }, 4000);
+  })();
+
   function impReadOne(file){
     return new Promise(function(resolve){
       var rd=new FileReader();
@@ -8142,36 +8273,56 @@
     {h:'Building the Shortcut'},
     {n:8, t:'Open the <b>Shortcuts</b> app — it comes with every iPhone. Grey icon, two coloured squares.'},
     {n:9, t:'Tap <b>+</b> at the top right. Tap the name at the top and call it <b>Schedule to CargoDecode</b>.'},
-    {n:10, t:'Add <b>Adjust Date</b>. Set it to <b>Subtract 30 Days</b>, and make sure the date it is adjusting says <b>Current Date</b>.'},
-    {n:11, t:'Add <b>Set Variable</b> and name the variable <code>From</code>.'},
-    {n:12, t:'Add <b>Adjust Date</b> again. Set it to <b>Add 90 Days</b>.',
-           s:'⚠ Here is the first trap. Shortcuts will have quietly filled this action\'s date with the <i>result of the last one</i>. Tap that field and change it back to <b>Current Date</b>, or your window will start in the wrong place.'},
-    {n:13, t:'Add <b>Set Variable</b> and name it <code>To</code>.'},
-    {n:14, t:'Add <b>Find Calendar Events</b>. Add a filter: <b>Start Date — is between — <code>From</code> and <code>To</code></b>. Add a second filter: <b>Is All Day — is off</b>. Sort by <b>Start Date</b>.'},
-    {n:15, t:'Add <b>Repeat with Each</b>. Everything from here until step 20 goes <i>inside</i> that loop.'},
-    {n:16, t:'Inside the loop, add <b>Format Date</b>. For the date, insert the <b>Repeat Item</b> variable, then <b>tap it</b> and choose <b>Start Date</b> from the list that appears. Set Format to <b>ISO 8601</b> and turn <b>Include Time on</b>. Then <b>Set Variable</b> → <code>S</code>.',
-           s:'Tapping an inserted variable to pick which part of it you want is the one Shortcuts trick worth learning. You will use it several more times below.'},
-    {n:17, t:'Same again for the end: <b>Format Date</b> on <b>Repeat Item → End Date</b>, <b>ISO 8601</b>, <b>Include Time on</b>. Then <b>Set Variable</b> → <code>E</code>.'},
-    {n:18, t:'Add a <b>Text</b> action and type exactly this, using the variables where shown:', code:
+    {n:10, t:'<b>Read this one before going any further — it is how every step below works.</b> You never scroll a list looking for these actions. There is a <b>grey search bar at the bottom of the screen</b>. Tap it, <b>type the name</b> of the action, and tap the result that comes up.',
+           s:'So when a step says "add <b>Set Variable</b>", what you actually do is tap the grey search bar, type <i>set variable</i>, and tap <b>Set Variable</b> in the results. Same for <b>Adjust Date</b>, <b>Find Calendar Events</b>, <b>Text</b>, all of them. Nothing below can be found by browsing.<br><br>⚠ <b>There are two grey bars and they do different jobs.</b> The one at the <b>bottom</b> is where you search for actions. A second one appears <b>just above the keyboard</b> when you tap into a field, and that one holds variables like <b>Current Date</b>. Steps below say which one they mean.'},
+    {n:11, t:'Search for <b>Adjust Date</b> and add it. Set it to <b>Subtract 30 Days</b>, and make sure the date it is adjusting says <b>Current Date</b>.',
+           s:'⚠ <b>Current Date is hidden until you go looking for it.</b> Tap the date field and the grey bar <b>just above the keyboard</b> fills with variables. <b>Current Date</b> is not the first thing on it — <b>swipe that bar to the left</b> and it comes into view. This catches everybody, including people who have built Shortcuts before.'},
+    {n:12, t:'In the <b>grey search bar at the bottom</b>, type <b>set variable</b> and add <b>Set Variable</b>. Name the variable <code>From</code>. Finished, it reads <b>Set variable <code>From</code> to Adjusted Date</b>.',
+           s:'<b>Yes, it needs <i>Adjusted Date</i> in it — and it will already be there.</b> Shortcuts fills every action you add with whatever the action above it produced, and the one above is your first <b>Adjust Date</b>, whose output is named <b>Adjusted Date</b>. Here that is exactly right, so leave it alone.<br><br>'+
+             'Worth understanding now, because it is the same behaviour that ruins step 13. Shortcuts <i>always</i> pre-fills. Sometimes what it grabs is what you want and you leave it; sometimes it is wrong and you have to swap it out. Every step from here says what the finished action should read, so you can check instead of guess.'},
+    {n:13, t:'Search for <b>Adjust Date</b> and add a second one. Set it to <b>Add 90 Days</b>. Then read the whole box below before touching anything else — this is the step people get wrong.',
+           s:'⚠ <b>The big trap.</b> This new action already has <code>From</code> sitting in its date field. Shortcuts fills every action it adds with whatever the previous one produced, and it does it silently. You do not want <code>From</code> here. You want <b>Current Date</b>. Two jobs: take the old one out, put the right one in.<br><br>'+
+             '<b>Taking <code>From</code> out</b><br>'+
+             '• Tap the date field so the cursor lands in it and the keyboard comes up.<br>'+
+             '• <code>From</code> is a <b>single coloured pill</b>, not four separate letters. Put the cursor <b>immediately to the right of it</b> and press <b>backspace ⌫ once</b> — the whole pill goes in one press.<br>'+
+             '• If backspace will not take it, <b>tap the pill itself</b>. A small menu appears with an option to remove it.<br>'+
+             '• The field should now be completely empty.<br><br>'+
+             '<b>Putting <code>Current Date</code> in</b><br>'+
+             '• Leave the cursor in that empty field. The <b>grey bar just above the keyboard</b> is full of variables.<br>'+
+             '• <b>Swipe that bar to the left.</b> <b>Current Date</b> sits further along it and is not visible until you scroll.<br>'+
+             '• Tap <b>Current Date</b>. It drops in as its own pill.<br><br>'+
+             'When you are done the action should read <b>Add 90 Days to Current Date</b>. If the word <code>From</code> is still showing anywhere in it, it is not right yet. Get this wrong and the Shortcut quietly pulls the wrong six weeks of your roster, with nothing on screen to tell you anything is off.'},
+    {n:14, t:'Grey search bar again: type <b>set variable</b>, add another <b>Set Variable</b>, and name this one <code>To</code>. Finished, it reads <b>Set variable <code>To</code> to Adjusted Date</b>.',
+           s:'Same as step 12 — <b>Adjusted Date</b> is pre-filled and is correct, because the action above it is the second <b>Adjust Date</b> you just fixed. Leave it. If it says <code>From</code> instead of <b>Adjusted Date</b>, go back and finish step 13 properly.'},
+    {n:15, t:'Search for <b>Find Calendar Events</b> and add it. Add a filter: <b>Start Date — is between — <code>From</code> and <code>To</code></b>. Add a second filter: <b>Is All Day — is off</b>. Sort by <b>Start Date</b>.'},
+    {n:16, t:'Search for <b>Repeat with Each</b> and add it. Everything from here until step 21 goes <i>inside</i> that loop.'},
+    {n:17, t:'Inside the loop, search for <b>Format Date</b> and add it. For the date, insert the <b>Repeat Item</b> variable, then <b>tap it</b> and choose <b>Start Date</b> from the list that appears. Set Format to <b>ISO 8601</b> and turn <b>Include Time on</b>. Then add a <b>Set Variable</b> named <code>S</code> — it should read <b>Set variable <code>S</code> to Formatted Date</b>.',
+           s:'Tapping an inserted variable to pick which part of it you want is the one Shortcuts trick worth learning. You will use it several more times below.<br><br>'+
+             'The <b>Set Variable</b> pre-fills with <b>Formatted Date</b>, which is the output of the Format Date above it. That is correct — leave it. If the date field of <b>Format Date</b> pre-filled itself with something, clear it the same way you did in step 13 and put <b>Repeat Item</b> in instead.'},
+    {n:18, t:'Same again for the end: another <b>Format Date</b>, this time on <b>Repeat Item → End Date</b>, <b>ISO 8601</b>, <b>Include Time on</b>. Then a <b>Set Variable</b> named <code>E</code>, reading <b>Set variable <code>E</code> to Formatted Date</b>.'},
+    {n:19, t:'Search for <b>Text</b>, add it, and type exactly this — using the variables where shown:', code:
       'BEGIN:VEVENT\nSUMMARY:[Repeat Item → Title]\nDTSTART:[S]\nDTEND:[E]\nLOCATION:[Repeat Item → Location]\nDESCRIPTION:[Repeat Item → Notes]\nEND:VEVENT',
       s:'Everything in square brackets is a variable you insert, not text you type. <b>DESCRIPTION is the important one</b> — the Notes of each event are what tell this app the entry came from eCrew, and which flight it actually was. Leave it out and nothing will import.'},
-    {n:19, t:'Add <b>Add to Variable</b> and name it <code>Events</code>. That is the end of the loop.'},
-    {n:20, t:'Below the loop, add a second <b>Find Calendar Events</b>. Same <b>Start Date is between <code>From</code> and <code>To</code></b>, but this time <b>Is All Day — is on</b>.',
+    {n:20, t:'Search for <b>Add to Variable</b> and add it. Name it <code>Events</code>. It should read <b>Add Text to variable <code>Events</code></b>. That is the end of the loop.',
+           s:'<b>Text</b> here is the pre-filled output of the Text action you just built, and it is correct — leave it.'},
+    {n:21, t:'Below the loop, search for <b>Find Calendar Events</b> and add a second one. Same <b>Start Date is between <code>From</code> and <code>To</code></b>, but this time <b>Is All Day — is on</b>.',
            s:'This second pass picks up your X days and GDOs. They have no times on them, which is why they need their own loop — and they are what tells the app when one pattern of duty ends and the next begins.'},
-    {n:21, t:'Add another <b>Repeat with Each</b>. Inside it: <b>Format Date</b> on <b>Repeat Item → Start Date</b>, Format <b>Custom</b>, format string <code>yyyyMMdd</code>. Then <b>Set Variable</b> → <code>D</code>.'},
-    {n:22, t:'Still inside, add a <b>Text</b> action:', code:
+    {n:22, t:'Add another <b>Repeat with Each</b>. Inside it, a <b>Format Date</b> on <b>Repeat Item → Start Date</b>, Format <b>Custom</b>, format string <code>yyyyMMdd</code>. Then a <b>Set Variable</b> named <code>D</code>, reading <b>Set variable <code>D</code> to Formatted Date</b>.',
+           s:'⚠ The <b>Repeat with Each</b> you just added will have grabbed the wrong thing for its input. It must run over the <b>second Find Calendar Events</b> — the all-day one from step 21. If it says anything else, clear it and put that in.'},
+    {n:23, t:'Still inside, add another <b>Text</b> action:', code:
       'BEGIN:VEVENT\nSUMMARY:[Repeat Item → Title]\nDTSTART;VALUE=DATE:[D]\nDESCRIPTION:[Repeat Item → Notes]\nEND:VEVENT',
       s:'⚠ Second trap: the semicolon in <code>DTSTART;VALUE=DATE:</code> is not a typo and neither is the colon after it. Type it exactly.'},
-    {n:23, t:'Add <b>Add to Variable</b> → <code>Events</code> again. End of the second loop.'},
-    {n:24, t:'Below everything, add <b>Combine Text</b>. Combine <code>Events</code> with <b>New Lines</b>.'},
-    {n:25, t:'Add a final <b>Text</b> action:', code:
+    {n:24, t:'Add another <b>Add to Variable</b> → <code>Events</code>, reading <b>Add Text to variable <code>Events</code></b>. End of the second loop.'},
+    {n:25, t:'Below everything, search for <b>Combine Text</b> and add it. It should read <b>Combine <code>Events</code> with New Lines</b>.',
+           s:'⚠ This one pre-fills with the previous action rather than <code>Events</code>. Clear it the same way as step 13, then put the <code>Events</code> variable in from the grey bar above the keyboard. Then set the separator to <b>New Lines</b>.'},
+    {n:26, t:'Add one final <b>Text</b> action:', code:
       'BEGIN:VCALENDAR\nVERSION:2.0\n[Combined Text]\nEND:VCALENDAR'},
-    {n:26, t:'Add <b>Copy to Clipboard</b>. Done — tap <b>Done</b> at the top right.'},
+    {n:27, t:'Search for <b>Copy to Clipboard</b> and add it. Done — tap <b>Done</b> at the top right.'},
     {h:'Using it, from now on'},
-    {n:27, t:'Run the Shortcut. The first time, your phone will ask whether it may read your calendar — say yes.'},
-    {n:28, t:'Come back here, tap <b>📋 Paste a schedule instead</b>, tap in the box, <b>Paste</b>, then <b>Import what I pasted</b>.',
+    {n:28, t:'Run the Shortcut. The first time, your phone will ask whether it may read your calendar — say yes.'},
+    {n:29, t:'Come back here, tap <b>📋 Paste a schedule instead</b>, tap in the box, <b>Paste</b>, then <b>Import what I pasted</b>.',
            s:'That is it. Do that whenever your roster changes. Nothing is replaced — new trips are added to what is already stored, and an updated version of a trip you already have overwrites the old one.'},
-    {n:29, t:'To make it genuinely one tap, press and hold the Shortcut and choose <b>Add to Home Screen</b>.'}
+    {n:30, t:'To make it genuinely one tap, press and hold the Shortcut and choose <b>Add to Home Screen</b>.'}
   ];
   var SU_COMP=[
     {h:'If your trips are in a Google calendar'},
@@ -8189,31 +8340,106 @@
     {n:8, t:'A file export is a snapshot of the moment you took it. Re-export and re-upload whenever your roster changes and the app will merge it in.',
           s:'The Shortcut does not have this problem, which is the real reason it is worth the fifteen minutes.'}
   ];
+  /* This guide sends you to three other apps and back. On iOS a web app that has been in the
+     background is routinely thrown away and started again from scratch, so leaving to open
+     eCrew and returning looks exactly like the app closing the instructions on you — the
+     page really has reloaded, and everything held in memory went with it.
+
+     So none of this is held in memory. Which tab you are on, how far you have scrolled and
+     which steps you have ticked all live in storage, and the guide reopens itself where you
+     left it. The ticks are the important half: on a twenty-nine step job that takes you out
+     of the app a dozen times, being able to see which ones are already done is the
+     difference between finishing and giving up. */
+  function suState(){ try{ return JSON.parse(localStorage.getItem('ad_setup')||'{}')||{}; }catch(e){ return {}; } }
+  function suSave(p){
+    var s=suState();
+    for(var k in p) if(p.hasOwnProperty(k)) s[k]=p[k];
+    try{ localStorage.setItem('ad_setup', JSON.stringify(s)); }catch(e){}
+  }
+  function suDone(tab){ var d=(suState().done||{}); return d[tab]||{}; }
+  function suToggle(tab, n){
+    var s=suState(), d=s.done||{};
+    var t=d[tab]||{};
+    if(t[n]) delete t[n]; else t[n]=1;
+    d[tab]=t; suSave({done:d});
+  }
   function suRender(which){
     var list=(which==='computer')? SU_COMP : SU_PHONE, h='';
+    var done=suDone(which), total=0, ticked=0;
+    list.forEach(function(it){ if(!it.h){ total++; if(done[it.n]) ticked++; } });
+    h+='<div class="suProg"><div class="suProgBar"><i style="width:'+(total? Math.round(ticked/total*100):0)+'%"></i></div>'+
+       '<div class="suProgTxt"><b>'+ticked+'</b> of '+total+' done'+
+       (ticked? ' · <button type="button" id="suReset">Start over</button>':'')+'</div></div>';
     list.forEach(function(it){
       if(it.h){ h+='<div class="suH">'+it.h+'</div>'; return; }
-      h+='<div class="suStep"><div class="suNum">'+it.n+'</div><div class="suBody">'+it.t+
+      var on=!!done[it.n];
+      h+='<div class="suStep'+(on?' done':'')+'" data-step="'+it.n+'">'+
+         '<button type="button" class="suNum'+(on?' on':'')+'" data-tick="'+it.n+'" '+
+         'aria-label="Mark step '+it.n+(on?' not done':' done')+'">'+(on? '✓' : it.n)+'</button>'+
+         '<div class="suBody">'+it.t+
          (it.code? '<div class="suCode">'+esc(it.code)+'</div>':'')+
          (it.s? '<div class="sub">'+it.s+'</div>':'')+'</div></div>';
     });
-    h+='<div class="suNote">Stuck at any point, or your version of eCrew looks nothing like this? Nothing here can break anything — the worst that happens is the app says it could not read what you pasted, and tells you which bit was missing.</div>';
-    var b=$('#suBody'); if(b) b.innerHTML=h;
+    h+='<div class="suNote">Tap a number to tick a step off. Your place is kept even if the app restarts while you are over in eCrew or Shortcuts.<br><br>'+
+       'Stuck at any point, or your version of eCrew looks nothing like this? Nothing here can break anything — the worst that happens is the app says it could not read what you pasted, and tells you which bit was missing.</div>';
+    var b=$('#suBody'); if(!b) return;
+    b.innerHTML=h;
+    Array.prototype.forEach.call(b.querySelectorAll('[data-tick]'), function(bt){
+      bt.onclick=function(e){
+        e.stopPropagation();
+        var box=$('#setupModal') && $('#setupModal').querySelector('.tipBox');
+        var keep=box? box.scrollTop : 0;
+        suToggle(which, bt.getAttribute('data-tick'));
+        suRender(which);
+        var box2=$('#setupModal') && $('#setupModal').querySelector('.tipBox');
+        if(box2) box2.scrollTop=keep;                  // ticking must not throw you to the top
+      };
+    });
+    var rs=b.querySelector('#suReset');
+    if(rs) rs.onclick=function(){
+      var s=suState(), d=s.done||{}; delete d[which]; suSave({done:d}); suRender(which);
+    };
   }
   (function(){
     var sb=$('#impSetupBtn'), sm=$('#setupModal'), sc=$('#setupC');
-    if(sb) sb.onclick=function(){ suRender('phone'); if(sm) sm.classList.add('on'); };
-    if(sc) sc.onclick=function(){ sm.classList.remove('on'); };
-    if(sm){
-      sm.addEventListener('click', function(e){ if(e.target===sm) sm.classList.remove('on'); });
-      Array.prototype.forEach.call(sm.querySelectorAll('[data-su]'), function(bt){
-        bt.onclick=function(){
-          Array.prototype.forEach.call(sm.querySelectorAll('[data-su]'), function(x){ x.classList.remove('on'); });
-          bt.classList.add('on');
-          suRender(bt.getAttribute('data-su'));
-        };
+    if(!sm) return;
+    var box=sm.querySelector('.tipBox');
+    function setTab(t){
+      Array.prototype.forEach.call(sm.querySelectorAll('[data-su]'), function(x){
+        x.classList.toggle('on', x.getAttribute('data-su')===t);
       });
+      suRender(t);
     }
+    function open(tab, scroll){
+      var t=tab||suState().tab||'phone';
+      setTab(t);
+      sm.classList.add('on');
+      suSave({open:1, tab:t});
+      if(box) setTimeout(function(){ box.scrollTop=scroll||0; }, 30);
+    }
+    function close(){ sm.classList.remove('on'); suSave({open:0, scroll:0}); }
+    if(sb) sb.onclick=function(){ open(suState().tab, suState().scroll); };
+    if(sc) sc.onclick=close;
+    sm.addEventListener('click', function(e){ if(e.target===sm) close(); });
+    Array.prototype.forEach.call(sm.querySelectorAll('[data-su]'), function(bt){
+      bt.onclick=function(){
+        var t=bt.getAttribute('data-su');
+        setTab(t); suSave({tab:t, scroll:0});
+        if(box) box.scrollTop=0;
+      };
+    });
+    /* Scroll position is written back as you read, throttled, so a reload that happens
+       while the app is in the background still lands you where you were. */
+    if(box){
+      var pending=null;
+      box.addEventListener('scroll', function(){
+        if(!sm.classList.contains('on') || pending) return;
+        pending=setTimeout(function(){ pending=null; suSave({scroll:box.scrollTop}); }, 400);
+      }, {passive:true});
+    }
+    // reopen where they left off, after the rest of the page has settled
+    var st=suState();
+    if(st.open) setTimeout(function(){ open(st.tab, st.scroll); }, 350);
   })();
 
   function impSniffText(t){
