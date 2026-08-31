@@ -914,6 +914,7 @@
   .ovheroT b{color:var(--ink)}
   .ovsec{margin-top:12px}
   .ovh{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:5px}
+  .ovwin{font-size:10px;font-weight:700;color:var(--faint);letter-spacing:.2px}
   .cvz{width:100%;height:auto;display:block;overflow:visible}
   .ovcap{font-size:10.5px;color:var(--faint);line-height:1.5;margin-top:4px}
   .ovwhy{color:#7fa9e8;font-weight:700;cursor:pointer;text-decoration:underline dotted;white-space:nowrap}
@@ -1237,7 +1238,7 @@
     <div class="zlocal" id="zLocal"></div>
   </div>
 
-  <div class="ofpbar">
+  <div class="ofpbar" id="ofpBar">
     <button id="ofpUpload" class="ofpbtn">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#241a05" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#241a05" stroke-width="2" stroke-linecap="round"/></svg>
       <span class="ofptxt"><b>OFP UPLOAD</b><span class="ofpsub">Import your flight-plan PDF — fills every tab automatically</span></span>
@@ -5863,7 +5864,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.3 · 2026-08-31';
+  var BUILD='v14.4 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5885,7 +5886,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.3',
+    version:'v14.4',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -6542,6 +6543,13 @@
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
       var vw=$('#view-wheel'); if(vw) vw.hidden=(v!=='wheel');
       var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
+      /* The OFP upload belongs on the tabs an OFP actually fills — the decode box, the
+         flight log, crew rest, LABT/LATT and catering. On the roster and reference tabs it
+         is a large gold button offering to do something irrelevant to what you are looking
+         at, and on the two fatigue tabs it sits directly above their own, different upload,
+         which is a genuinely confusing place to put it. */
+      var ofpTabs={decode:1, flightlog:1, crewrest:1, duty:1, catering:1};
+      var ob=$('#ofpBar'); if(ob) ob.hidden=!ofpTabs[v];
       if(v==='crewrest'){ crBuild(); }
       if(v==='duty'){ duCompute(); }
       if(v==='logbook'){ lgCompute(); }
@@ -9390,7 +9398,7 @@
     try{ if(DUTY.markConsecutive) DUTY.markConsecutive(duties, dpOff, offSet, dpCoverRanges()); }catch(e){}
     try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
 
-    h+=dpOverview(duties);
+    h+='__OVERVIEW__';        // filled once the display window below is known
     h+='<div class="dpcite" style="margin-top:14px"><b>Regime:</b> '+esc(L.regime)+' · '+L.crew+'-crew.<br>'+
        '<b>FAR max duty:</b> '+(L.maxDutyH? L.maxDutyH+':00 — '+esc(L.maxDutyCite) : esc(L.maxDutyCite))+'<br>'+
        '<b>FAR max flight time / 24h:</b> '+(L.maxFlightH? L.maxFlightH+':00 — '+esc(L.maxFlightCite) : esc(L.maxFlightCite))+'<br>'+
@@ -9430,6 +9438,17 @@
       if(!nShown){ show=null; dpScope='future'; }
     }
     if(dpScope==='future' && futureIdx>0){ startAt=Math.max(0,futureIdx-1); hidden=startAt; }
+    /* The overview describes what you are looking at, so it is built from the same window as
+       the cards below it. A "lowest alertness anywhere in this roster" drawn from two years
+       of history is not about the trip in front of you, and a bar chart with 160 bars on a
+       phone is a grey smear. The cumulative totals inside it are the exception and still see
+       everything — that is what makes the 30, 90 and 365-day checks worth anything. */
+    var visible=duties.filter(function(d,i){
+      if(i<startAt) return false;
+      if(show && !show[i]) return false;
+      return true;
+    });
+    h=h.split('__OVERVIEW__').join(dpOverview(visible, duties, dpScope, BACK_D, FWD_D));
     h+='<div class="scoperow"><span class="scopelab">Showing</span>'+
        '<button class="scopebtn'+(dpScope==='near'?' on':'')+'" data-scope="near">Around now</button>'+
        '<button class="scopebtn'+(dpScope==='future'?' on':'')+'" data-scope="future">From now on</button>'+
@@ -9977,9 +9996,17 @@
     g+='</svg>';
     return g;
   }
-  function dpOverview(duties){
+  /* `duties` is the window being displayed; `allDuties` is everything imported. The charts
+     and the headline figure describe the window. The cumulative block describes everything,
+     because a 90-day flight-time check that only counted the last fortnight would be worse
+     than not showing one at all. */
+  function dpOverview(duties, allDuties, scope, backD, fwdD){
+    allDuties = allDuties || duties;
     var real=duties.filter(function(d){ return !d.allGateway; });
     if(!real.length) return '';
+    var windowed = (scope==='near' || scope==='future') && allDuties.length>duties.length;
+    var windowWord = scope==='near' ? ('the last '+backD+' days and next '+fwdD)
+                   : scope==='future' ? 'the duty periods still ahead of you' : null;
     var worst=null;
     real.forEach(function(d){ if(d.effWorst!=null && (worst==null||d.effWorst<worst.effWorst)) worst=d; });
     /* Anchored at NOW when the roster reaches the present, so "last 7 days" means the
@@ -9992,18 +10019,19 @@
     else if(real[real.length-1].release!=null && real[real.length-1].release<anchorMs){
       anchorMs=real[real.length-1].release;                 // whole roster is in the past
     }
-    var cum=DUTY.cumulative? DUTY.cumulative(duties, anchorMs, dpBaseOff(anchorMs), dpRegime, dpCrew) : null;
+    var cum=DUTY.cumulative? DUTY.cumulative(allDuties, anchorMs, dpBaseOff(anchorMs), dpRegime, dpCrew) : null;
     var a=dpChartAlert(duties), c=dpChartCum(duties);
     var h='<div class="ovcard"><div class="ovtitle">Trip overview</div>';
     if(worst&&worst.effWorst!=null){
       var b=FATIGUE.band(worst.effWorst);
       h+='<div class="ovhero"><div><div class="ovheroN" style="color:'+b.color+'">'+worst.effWorst+'<span>%</span></div>'+
          '<div class="ovheroL" style="color:'+b.color+'">'+esc(b.label)+'</div></div>'+
-         '<div class="ovheroT">Lowest predicted alertness anywhere in this roster — <b>Duty Period '+worst.n+'</b>, '+
+         '<div class="ovheroT">Lowest predicted alertness in '+(windowed? esc(windowWord) : 'this roster')+' — <b>Duty Period '+worst.n+'</b>, '+
          esc(dpDay(worst.report))+', '+esc(worst.from)+'→'+esc(worst.to)+
          (worst.effWhereShort? ', at the '+esc(worst.effWhereShort) : '')+'.</div></div>';
     }
-    if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness, duty period by duty period</div>'+a+
+    if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness, duty period by duty period'+
+      (windowed? ' <span class="ovwin">'+esc(windowWord)+'</span>':'')+'</div>'+a+
       '<div class="ovcap">One bar per duty period, in order. Green above 90%, amber to 77%, orange to 65%, red below. '+
       'Only the 90% line comes from published research — the other two are model-vendor defaults, not rules. '+
       '<span class="ovwhy" data-ov="bands">Where the bands come from</span></div></div>';
