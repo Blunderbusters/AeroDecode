@@ -5672,7 +5672,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v13.2 · 2026-08-31';
+  var BUILD='v13.3 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -8294,26 +8294,68 @@
     if(n>t1) return 'This break is in the past, so there is no <b style="color:#5ee6ff">Now</b> line on it.';
     return '<b style="color:#5ee6ff">Now</b> is '+slpL(n,loc)+' local · '+slpZ(n)+' · '+slpL(n,bod)+' on your body clock.';
   }
+  /* Two glyphs drawn small enough to sit inside the daylight strip. The moon is carved out
+     of a disc by a second disc in the strip's own background colour, which is why that
+     colour is a constant rather than something translucent — a crescent cut with a
+     see-through shape shows whatever is behind it. */
+  var NIGHT_BG='#0a1220';
+  function sunGlyph(cx, cy){
+    var c='#8a6008', g='<circle cx="'+cx.toFixed(1)+'" cy="'+cy+'" r="2.1" fill="'+c+'"/>';
+    for(var i=0;i<8;i++){
+      var a=i*Math.PI/4, x1=cx+Math.cos(a)*3.2, y1=cy+Math.sin(a)*3.2,
+          x2=cx+Math.cos(a)*4.3, y2=cy+Math.sin(a)*4.3;
+      g+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+
+         '" stroke="'+c+'" stroke-width="0.9" stroke-linecap="round"/>';
+    }
+    return g;
+  }
+  function moonGlyph(cx, cy){
+    return '<circle cx="'+cx.toFixed(1)+'" cy="'+cy+'" r="3.4" fill="#cfe0fb"/>'+
+           '<circle cx="'+(cx+1.9).toFixed(1)+'" cy="'+(cy-1.1)+'" r="3.0" fill="'+NIGHT_BG+'"/>';
+  }
   function slpChart(res, inp){
     /* Drawn in units that are close to CSS pixels on a phone, so the labels stay legible
        instead of being scaled down to nothing. The card caps the width, so on a laptop the
        whole strip scales up in proportion rather than stretching. */
-    var W=360, H=148, L=6, R=6, dayY=10, hourY=25, sunY=30, sunH=5,
-        bandT=39, bandH=56, barY=49, barH=38, footY=H-5;
+    /* The daylight strip sits along the bottom rather than under the hour numbers. Up there
+       it pushed the timeline itself down the card for no reason; down here it reads as a
+       base rail under the whole break and the chart stays compact. A station the app has no
+       coordinates for gets no strip and no empty gap where one would have been. */
+    var stn=inp.station, hasSun=(typeof SUN!=='undefined' && stn && SUN.has(stn));
+    var W=360, L=6, R=6, dayY=10, hourY=25,
+        bandT=31, bandH=56, barY=41, barH=38, footY=115, sunY=122, sunH=12;
+    var H=hasSun? 138 : 122;
     var t0=inp.startMs, t1=inp.reportMs, span=t1-t0;
     var x=function(ms){ return L + (ms-t0)/span*(W-L-R); };
     var loc=(inp.localOff==null? 0 : inp.localOff), bod=(inp.bodyOff==null? 0 : inp.bodyOff);
     var spanH=span/3600000;
     var g='<svg class="slptl" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="where the sleep goes across this break">';
-    // the body's own night behind everything, with the circadian low picked out inside it
-    var stepMs=10*60000;
-    for(var t=t0; t<t1; t+=stepMs){
-      var bh=SLEEP.norm24(t/3600000+bod);
-      if(!(bh>=22||bh<7)) continue;
-      var wocl=(bh>=2&&bh<6);
-      g+='<rect x="'+x(t).toFixed(1)+'" y="'+bandT+'" width="'+Math.max(0.5,(x(Math.min(t+stepMs,t1))-x(t))).toFixed(2)+
-         '" height="'+bandH+'" fill="'+(wocl?'rgba(255,157,77,.26)':'rgba(110,150,220,.14)')+'"/>';
+    /* The body's own night, which is the single most important thing on this chart and was
+       also the hardest to see. A wash behind the timeline disappears exactly where it
+       matters most, because that is where an opaque sleep block sits on top of it. So it is
+       drawn twice: a stronger wash behind everything, and a solid rail along the top edge
+       that nothing ever covers. Read the rail to see where your body thinks night is; read
+       the wash to see how the sleep sits inside it. */
+    var stepMs=10*60000, nRuns=[], nOpen=null, nKind=null;
+    for(var t=t0; t<=t1; t+=stepMs){
+      var bh=SLEEP.norm24(Math.min(t+stepMs/2,t1)/3600000+bod);
+      var kind = (bh>=2&&bh<6)? 'wocl' : ((bh>=22||bh<7)? 'night' : null);
+      if(t>=t1) kind=null;
+      if(kind!==nKind){
+        if(nKind && nOpen!=null) nRuns.push([nOpen, Math.min(t,t1), nKind]);
+        nOpen=t; nKind=kind;
+      }
     }
+    if(nKind && nOpen!=null) nRuns.push([nOpen, t1, nKind]);
+    nRuns.forEach(function(rn){
+      var rx=x(rn[0]), rw=x(rn[1])-rx;
+      if(rw<0.4) return;
+      var wocl=(rn[2]==='wocl');
+      g+='<rect x="'+rx.toFixed(1)+'" y="'+bandT+'" width="'+rw.toFixed(1)+'" height="'+bandH+
+         '" fill="'+(wocl?'rgba(255,157,77,.34)':'rgba(120,160,225,.22)')+'"/>'+
+         '<rect x="'+rx.toFixed(1)+'" y="'+bandT+'" width="'+rw.toFixed(1)+
+         '" height="4" fill="'+(wocl?'#ff9d4d':'#6f93d6')+'"/>';
+    });
     /* The hour ruler. Two rules, both learned the hard way from staring at it:
        the numbers never break their rhythm - a weekday substituted for "00" makes the row
        unreadable at a glance - and the step is always a divisor of 24, so the labels land on
@@ -8335,23 +8377,27 @@
        sunset at the station, because "daytime is 0600 to 1800" is a useful lie in Miami and
        a useless one in Anchorage. Drawn only when the station is one the app has
        coordinates for — a missing stripe beats a confidently wrong one. */
-    var stn=inp.station, hasSun=(typeof SUN!=='undefined' && stn && SUN.has(stn));
     if(hasSun){
-      /* Drawn as whole runs of daylight rather than one rectangle per sample. Sampling and
-         painting each slice leaves a hairline seam between every pair of them, and a strip
-         of forty seams reads as a dashed line rather than as a day. */
-      var sStep=10*60000, runs=[], open=null;
+      /* Drawn as whole runs rather than one rectangle per sample. Sampling and painting each
+         slice leaves a hairline seam between every pair of them, and a strip of forty seams
+         reads as a dashed line rather than as a day. */
+      var sStep=10*60000, runs=[], open=null, lastLit=null;
       for(t=t0; t<t1; t+=sStep){
         var lit=SUN.isDaylight(stn, Math.min(t+sStep/2, t1));
-        if(lit && open==null) open=t;
-        if(!lit && open!=null){ runs.push([open,t]); open=null; }
+        if(lastLit===null){ open=t; lastLit=lit; continue; }
+        if(lit!==lastLit){ runs.push([open,t,lastLit]); open=t; lastLit=lit; }
       }
-      if(open!=null) runs.push([open,t1]);
-      g+='<rect x="'+L+'" y="'+sunY+'" width="'+(W-L-R)+'" height="'+sunH+'" rx="2.5" fill="rgba(8,16,32,.9)"/>';
+      if(open!=null && lastLit!==null) runs.push([open,t1,lastLit]);
+      g+='<rect x="'+L+'" y="'+sunY+'" width="'+(W-L-R)+'" height="'+sunH+'" rx="3" fill="'+NIGHT_BG+'"/>';
       runs.forEach(function(rn){
         var rx=x(rn[0]), rw=x(rn[1])-rx;
         if(rw<0.6) return;
-        g+='<rect x="'+rx.toFixed(1)+'" y="'+sunY+'" width="'+rw.toFixed(1)+'" height="'+sunH+'" rx="2.5" fill="#ffd98a"/>';
+        if(rn[2]) g+='<rect x="'+rx.toFixed(1)+'" y="'+sunY+'" width="'+rw.toFixed(1)+'" height="'+sunH+'" rx="3" fill="#ffd98a"/>';
+        /* A sun over the light stretch and a moon over the dark one. Two glyphs everybody
+           already knows beat a line of legend text, and the legend is worth reserving for the
+           things that genuinely cannot be guessed from looking. */
+        if(rw>=15) g+= rn[2]? sunGlyph(rx+rw/2, sunY+sunH/2)
+                            : moonGlyph(rx+rw/2, sunY+sunH/2);
       });
     }
     // a weekday over the middle of each local day the break touches
@@ -8415,18 +8461,19 @@
     g+='<g id="slpNow"'+(nowIn?'':' style="display:none"')+'>'+
        '<line x1="'+nx.toFixed(1)+'" y1="'+(bandT-2)+'" x2="'+nx.toFixed(1)+'" y2="'+(bandT+bandH+4)+'" stroke="#5ee6ff" stroke-width="1.6"/>'+
        '<path d="M'+(nx-4).toFixed(1)+' '+(bandT-8)+' L'+(nx+4).toFixed(1)+' '+(bandT-8)+' L'+nx.toFixed(1)+' '+(bandT-2)+' Z" fill="#5ee6ff"/>'+
-       '<text x="'+nx.toFixed(1)+'" y="'+(bandT+bandH+15)+'" fill="#5ee6ff" font-size="9" font-weight="700" '+
+       '<text x="'+nx.toFixed(1)+'" y="'+(bandT+bandH+13)+'" fill="#5ee6ff" font-size="9" font-weight="700" '+
        'text-anchor="'+(nx>W-58?'end':(nx<58?'start':'middle'))+'" font-family="ui-monospace,monospace">Now '+
        slpL(Date.now(),loc)+'L</text></g>';
     slpNowGeom={ t0:t0, t1:t1, L:L, R:R, W:W, bandT:bandT, bandH:bandH, loc:loc, bod:bod };
     g+='</svg>';
+    /* The legend carries only what cannot be worked out by looking. The sleep blocks show
+       their own times, the wake-up call and the "Now" line are labelled where they stand,
+       and the sun and moon speak for themselves. What is left is the two kinds of shading
+       behind everything, which nobody could be expected to guess. */
     g+='<div class="slpkey">'+
        '<span><i style="background:#4d76d8"></i>Asleep</span>'+
-       '<span><i style="background:rgba(110,150,220,.4)"></i>Your body’s night</span>'+
-       '<span><i style="background:rgba(255,157,77,.6)"></i>Circadian low (0200–0600 body time)</span>'+
-       '<span><i style="background:#e0b53a"></i>Caffeine cut-off</span>'+
-       ((Date.now()>=t0 && Date.now()<=t1)? '<span><i style="background:#5ee6ff"></i>Now</span>':'')+
-       (hasSun? '<span><i style="background:#ffd98a"></i>Sun up at '+esc(stn)+'</span>':'')+
+       '<span><i style="background:#6f93d6"></i>Your body’s night</span>'+
+       '<span><i style="background:#ff9d4d"></i>Circadian low (0200–0600 body time)</span>'+
        '<div class="slpkeyfoot">Every time on this chart is <b>local hotel time</b>, including the ones written on the sleep blocks. The shading behind them is <b>your body clock</b>, which on a layover is usually somewhere else entirely.</div>'+
        '<div class="slpkeyfoot" id="slpNowCap">'+slpNowCaption(t0,t1,loc,bod)+'</div></div>';
     return g;
