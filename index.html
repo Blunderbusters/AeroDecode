@@ -4337,6 +4337,12 @@
     });
     if(cur) out.push(cur);
     out.forEach(function(d,i){
+      /* A running index across everything imported. It is NOT a duty period number anybody
+         would recognise: it counts from the oldest entry in the roster, so linking a calendar
+         with two years of history made today's duty "153", and importing one more month would
+         renumber every duty period underneath it. Nothing user-facing shows it any more — a
+         duty period is identified by its DATE and route, which never change and which are
+         what a scheduler looks it up by. Kept only as an internal ordinal. */
       d.n=i+1;
       d.from=d.legs[0].from; d.to=d.legs[d.legs.length-1].to;
       d.blockMin=d.legs.reduce(function(t,l){return t+(l.blk||0);},0);
@@ -5849,7 +5855,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.6 · 2026-08-31';
+  var BUILD='v14.7 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5871,7 +5877,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.6',
+    version:'v14.7',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -9213,7 +9219,7 @@
     var x=dpWhy[n]; if(!x) return;
     var hm=function(m){ if(m==null) return '—'; var g=m<0?'-':''; m=Math.abs(m);
       return g+Math.floor(m/60)+':'+('0'+(m%60)).slice(-2); };
-    $('#fprepSub').innerHTML='<span style="color:var(--dim)">Duty Period '+x.n+' · '+esc(x.day)+' · '+esc(x.route)+'</span>';
+    $('#fprepSub').innerHTML='<span style="color:var(--dim)">'+esc(x.day)+' · '+esc(x.route)+'</span>';
     var h='';
     function sec(t){ h+='<div class="rptsec"><div class="rpth">'+t+'</div>'; }
     function row(k,v,free){ h+='<div class="rptrow"><div class="rptk">'+k+'</div><div class="rptv'+(free?' free':'')+'">'+v+'</div></div>'; }
@@ -9482,8 +9488,8 @@
       h+='<div class="dpcard'+(isNow?' dpnow':(isNext?' dpnext':''))+'"'+(d.allGateway?' style="opacity:.62"':'')+
          (isNow||isNext? ' id="dpAnchor"':'')+'><div class="dphead">'+
          (isNow? '<div class="nowrow"><span class="nowtag">In progress now</span></div>'
-               : (isNext? '<div class="nowrow"><span class="nowtag next">Next duty period</span></div>':''))+'<div class="dpmain"><div class="dpn">Duty Period '+d.n+
-         '<span class="dpdate">'+dpDay(d.report)+(d.consecN>1? ' · day '+d.consecN+' of this pattern':' · pattern starts')+'</span></div>'+
+               : (isNext? '<div class="nowrow"><span class="nowtag next">Next duty period</span></div>':''))+'<div class="dpmain"><div class="dpn">'+esc(dpDay(d.report))+
+         '<span class="dpdate">'+(d.consecN>1? 'Day '+d.consecN+' of this pattern':'First duty of this pattern')+'</span></div>'+
          '<div class="dproute">'+dpAirport(d.from)+' → '+dpAirport(d.to)+'</div></div>'+
          (function(){
             if(d.allGateway) return '<div class="dpscore"><div class="dpscoreval" style="color:'+bc.c+'">—</div>'+
@@ -9962,8 +9968,7 @@
       var b=FATIGUE.band(worst.effWorst);
       h+='<div class="ovhero"><div><div class="ovheroN" style="color:'+b.color+'">'+worst.effWorst+'<span>%</span></div>'+
          '<div class="ovheroL" style="color:'+b.color+'">'+esc(b.label)+'</div></div>'+
-         '<div class="ovheroT">Lowest predicted alertness in '+(windowed? esc(windowWord) : 'this roster')+' — <b>Duty Period '+worst.n+'</b>, '+
-         esc(dpDay(worst.report))+', '+esc(worst.from)+'→'+esc(worst.to)+
+         '<div class="ovheroT">Lowest predicted alertness in '+(windowed? esc(windowWord) : 'this roster')+' — <b>'+esc(dpDay(worst.report))+'</b>, '+esc(worst.from)+'→'+esc(worst.to)+
          (worst.effWhereShort? ', at the '+esc(worst.effWhereShort) : '')+'.</div></div>';
     }
     if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness, duty period by duty period'+
@@ -10005,7 +10010,7 @@
   function dpWhyShow(n){
     var x=dpWhy[n]; if(!x||typeof DUTY==='undefined'||!DUTY.explain) return;
     var r=DUTY.explain(x);
-    var title='Duty Period '+x.n+' · '+x.route;
+    var title=x.day+' · '+x.route;
     $('#whyT').textContent=title;
     var sev=r.lines.length? r.lines[0].sev : 0;
     var col=sev>=3?'#ff6b6b':(sev>=2?'#ff9d4d':(sev>=1?'#ffd166':'#4ee39a'));
@@ -10033,7 +10038,7 @@
     // plain text for the clipboard: no markup, numbered, ready to read or paste
     var strip=function(t){ var d=document.createElement('div'); d.innerHTML=String(t);
       return (d.textContent||'').replace(/\s+/g,' ').trim(); };
-    var lines=['Fatigue — Duty Period '+x.n+', '+x.day+', '+x.route];
+    var lines=['Fatigue — duty period of '+x.day+', '+x.route];
     if(x.eff!=null) lines.push('Predicted alertness: '+x.eff+'%'+(x.effLabel? ' ('+x.effLabel.toLowerCase()+')':''));
     lines.push('');
     r.lines.forEach(function(l,k){ lines.push((k+1)+'. '+strip(l.text)); });
