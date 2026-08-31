@@ -3273,7 +3273,12 @@
     shortSleepPenalty: 5.0,  // points lost per hour of sleep short of ideal
     reservoirFloor:    30,   // a bad night does not put you at zero on waking
     circadianAmp:      12,   // +/- effectiveness points from body clock alone
-    nadirBodyHour:      5,   // circadian trough ~0500 BODY time
+    /* The circadian trough, and the single source of truth for it across the whole app.
+       0400, because that is the centre of the 0200-0600 window everything else here already
+       uses: the WOCL shading on the sleep chart, woclOverlapSpan, and the critical-period
+       landing count. It sat at 0500 for a while, which put the low point of the alertness
+       curve an hour away from the low point the same app was drawing on its own charts. */
+    nadirBodyHour:      4,   // circadian trough 0400 BODY time = centre of the WOCL
     eastRatePerDay:   1.0,   // eastbound = phase ADVANCE, adapts ~1.0 h/day
     westRatePerDay:   1.5    // westbound = phase DELAY,   adapts ~1.5 h/day
   };
@@ -5350,7 +5355,12 @@
     tauSleep: 4.2,        // h, fall constant during sleep
     sBeforeBed: 0.92,     // pressure a normally-rested person carries at habitual bedtime
     bedBodyHour: 23,      // habitual lights-out, body clock
-    nadirBodyHour: 4,     // peak sleep propensity / centre of the WOCL
+    /* Peak sleep propensity, which is the same instant as the alertness trough — you are
+       most able to sleep exactly when you are least able to stay awake. It is therefore not
+       a second opinion, and it is taken from FATIGUE below rather than kept here, so the two
+       models cannot quietly drift apart again. The value here is only the fallback for
+       running this module on its own. */
+    nadirBodyHour: 4,     // overwritten from FATIGUE.CFG when the app is assembled
     dipBodyHour: 15,      // afternoon secondary peak in propensity
     /* The 12-hour term has to be big enough to do its job. Too small and the curve has a
        single smooth trough in the late afternoon, which loses both of the features that
@@ -5644,6 +5654,12 @@
   }
   function hhmm(ms){ var d=new Date(ms); return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2); }
 
+  /* One clock, one trough. FATIGUE owns the number; this module borrows it whenever the two
+     are loaded together, which is always in the built app. Standalone — a node test, say —
+     the fallback above applies. */
+  if(root.FATIGUE && root.FATIGUE.CFG && typeof root.FATIGUE.CFG.nadirBodyHour==='number')
+    CFG.nadirBodyHour=root.FATIGUE.CFG.nadirBodyHour;
+
   var API={ CFG:CFG, plan:plan, propensity:propensity, sleepEfficiency:sleepEfficiency,
             riseS:riseS, fallS:fallS, simulate:simulate, quantise:quantise, norm24:norm24 };
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
@@ -5823,7 +5839,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v13.9 · 2026-08-31';
+  var BUILD='v14.0 · 2026-08-31';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -5845,7 +5861,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v13.9',
+    version:'v14.0',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
