@@ -6198,13 +6198,32 @@
   root.AEROGATE=API;
 })(typeof window!=='undefined'?window:globalThis);
 
+
+/* Sign in from a link, FIRST - before anything else in this file runs.
+
+   This has to happen here rather than down in the gate block, because the self-updater
+   sits between the two and reloads the page with location.replace(pathname + '?v=' + now).
+   That call rebuilds the query string from nothing, so a ?k= in the address was thrown away
+   before the gate ever looked for it: the link appeared to do nothing at all, and the owner
+   was locked out of his own app with no way to see why. Credentials go into storage, which
+   survives the reload, so getting in early is all that is needed. */
+(function(){
+  try{
+    var G=window.AEROGATE; if(!G) return;
+    var m=/[?&]k=([^&#]+)/.exec(location.search||'');
+    if(!m) return;
+    var r=G.validate(decodeURIComponent(m[1]));
+    if(r) localStorage.setItem('ad_unlock', JSON.stringify(r.owner? {owner:true} : {id:r.id}));
+    history.replaceState(null,'',location.pathname+location.hash);
+  }catch(e){}
+})();
 </script>
 <script>
 (function(){
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v15.0 · 2026-09-01';
+  var BUILD='v15.1 · 2026-09-01';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6226,7 +6245,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v15.0',
+    version:'v15.1',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -6394,7 +6413,10 @@
   async function applyUpdate(){
     try{ if('caches' in window){ var ks=await caches.keys(); await Promise.all(ks.map(function(k){return caches.delete(k);})); } }catch(e){}
     try{ if('serviceWorker' in navigator){ var rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function(r){return r.unregister();})); } }catch(e){}
-    location.replace(location.pathname+'?v='+Date.now());   // reload fully fresh
+    /* Carry a sign-in link through the reload. Rebuilding the query from scratch silently
+       dropped it, which is the bug above seen from the other side. */
+    var keep=/[?&](k=[^&#]+)/.exec(location.search||'');
+    location.replace(location.pathname+'?v='+Date.now()+(keep? '&'+keep[1] : ''));
   }
   // Auto-updates install once per app open, then stop (prevents reload loops if the server is briefly
   // stale). A manual tap ALWAYS installs, no matter what. This counter replaces the old ?v= URL guard,
@@ -6604,21 +6626,6 @@
     function clear(){ try{localStorage.removeItem('ad_unlock');}catch(e){} }
     function showLock(){ overlay.style.display='flex'; if(G.stillAllowed(stored())) lockClose.style.display='inline'; }
     function hideLock(){ overlay.style.display='none'; }
-    /* Sign in from a link, so nothing has to be typed on a phone keyboard.
-       ?k=<code> in the address signs you in and is then stripped straight back out of the
-       URL, so it does not sit in the address bar or in history. This exists because typing
-       a passphrase on a phone is genuinely hostile: the keyboard rewrote the owner's own
-       code into a near neighbour and locked him out of his own app, and he had no way to
-       see that was what had happened. A bookmark cannot be autocorrected. */
-    (function(){
-      var m=/[?&]k=([^&#]+)/.exec(location.search||'');
-      if(!m) return;
-      var r=null;
-      try{ r=G.validate(decodeURIComponent(m[1])); }catch(e){}
-      if(r) save(r.owner? {owner:true} : {id:r.id});
-      try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
-    })();
-
     // re-check the current allowlist on every load so revoked numbers are locked out
     if(!G.GATE.enabled || G.stillAllowed(stored())) hideLock(); else { clear(); showLock(); }
     /* The owner card and the release notes draw earlier in the file than this gate runs, so
@@ -6630,7 +6637,16 @@
 
     function tryUnlock(){
       var r=G.validate(pinInput.value);
-      if(!r){ pinErr.textContent='Not authorized. Check your number or contact the owner.'; return; }
+      if(!r){
+        /* Show what actually arrived. A keyboard that quietly rewrites what you typed is
+           invisible otherwise - you check the box, it looks right to you, and the app keeps
+           saying no. Printing the value it judged makes that obvious in one glance. */
+        var got=G.norm(pinInput.value);
+        pinErr.textContent = got
+          ? 'Not authorized. The app received "'+got+'" — check that is what you meant.'
+          : 'Enter your employee number.';
+        return;
+      }
       save(r.owner? {owner:true} : {id:r.id});
       pinErr.textContent=''; hideLock();
       try{ if(window.ftApplyOwner) window.ftApplyOwner(); }catch(e){}
