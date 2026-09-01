@@ -87,8 +87,14 @@ export default {
     /* ---- reading it back --------------------------------------------------------- */
     if (url.pathname === '/who') {
       const k = url.searchParams.get('k') || '';
-      if (!env.VIEW_KEY || k !== env.VIEW_KEY) return new Response('', { status: 404 });
-      if (!env.SIGNINS) return new Response('No storage bound yet.', { status: 200 });
+      /* The CORS header belongs on THESE responses too. Without it the report could be read
+         by opening the URL in the address bar - a top-level navigation, which no origin
+         check applies to - but NOT by the app's own owner card, which reads it with fetch
+         from the GitHub Pages origin. That failed as a bare "Failed to fetch" with nothing
+         to say why. */
+      const rep = Object.assign({}, cors, { 'Content-Type': 'text/plain; charset=utf-8' });
+      if (!env.VIEW_KEY || k !== env.VIEW_KEY) return new Response('', { status: 404, headers: cors });
+      if (!env.SIGNINS) return new Response('No storage bound yet.', { status: 200, headers: rep });
 
       /* Paginated. A single list({limit:1000}) silently truncated: at one key per person
          per day, thirty people reach the cap in five weeks and the report would have gone
@@ -178,9 +184,9 @@ export default {
           opens: totalOpens, versions: versions,
           byDay: days.map(d => ({ day: d, people: byDay[d].people.size, opens: byDay[d].opens })),
           byPerson: Array.from(people.entries()).map(([u, p]) => ({ u, ...p }))
-        }, null, 1), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+        }, null, 1), { headers: Object.assign({}, cors, { 'Content-Type': 'application/json; charset=utf-8' }) });
       }
-      return new Response(out, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      return new Response(out, { headers: rep });
     }
 
     return new Response('', { status: 404 });
