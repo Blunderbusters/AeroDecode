@@ -1656,48 +1656,20 @@
         <p>If you are fatigued, use the channel the contract already gives you: the <b>fatigue call</b> and the <b>Fatigue Event Report</b> in the <b>Fatigue Risk Management Letter of Agreement</b> — Article 35, CBA <b>p. 318</b>, with the call process at <b>Paragraph F</b>, p. 324. That is a contractual route with protections attached, and it is what actually changes a pairing. This app is for making up your own mind beforehand — nothing more. <span class="ovwhy" data-ov="para">What is Paragraph F?</span></p>
         <p class="privrule">The first rule of the CargoDecode fatigue tool is: we do not talk about the CargoDecode fatigue tool.</p>
       </div>
-      <div class="impcard">
-        <button id="impBtn" class="impbtn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-          Upload schedule (calendar, CSV or XLS)
-        </button>
-        <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,text/csv,text/calendar,application/vnd.ms-excel,application/zip" multiple hidden>
-        <button id="impLinkBtn" class="impbtn4">🔗 Link my calendar — set up once, then it updates itself</button>
-        <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
-        <button id="impSetupBtn" class="impbtn3">🧭 First time? Step-by-step setup for your phone</button>
-        <button id="impRawBtn" class="impbtn2">🔍 See and correct the schedule data</button>
-        <div id="impStat" class="impstat"></div>
-        <div id="impSpan" class="impspan"></div>
-        <details class="imphow">
-          <summary>Where do I get this file? (step by step)</summary>
-          <ol>
-            <li>On a computer or phone browser, go to <b>aims.atlasair.com/eCrew</b> and log in with your normal eCrew credentials.</li>
-            <li>Open <b>My Schedule</b>.</li>
-            <li>Set the <b>date range</b> you want — one month at a time is easiest.</li>
-            <li>Choose <b>UTC</b> for the times. Local Station also works, but UTC is unambiguous — see the note below.</li>
-            <li>Click <b>PRINT</b>.</li>
-            <li>Save the file as <b>CSV</b> or <b>XLS</b> — both are read. On a phone eCrew usually only offers <b>XLS</b>, and that is fine: the XLS is actually the <i>better</i> file (see below).</li>
-            <li>Come back here and tap <b>Upload schedule</b> above. You can select <b>several files at once</b>, or add them one at a time.</li>
-          </ol>
-          <p><b>Covering more than one month:</b> every upload <b>adds to</b> what is already stored — nothing is replaced. Export each month, upload them all, and the fatigue model runs continuously across the whole span, carrying your sleep debt and body clock from one month into the next. Re-uploading a month you already have just refreshes it rather than duplicating it. The stored span is shown under the button, with a Clear control if you want to start over.</p>
-          <p><b>Why XLS is better:</b> the CSV export is written in a character set that cannot hold the superscript <b>+1</b> / <b>−1</b> day markers, so both come out as the same character and a westbound date-line arrival is indistinguishable from an eastbound one. The XLS keeps the sign. The app resolves the CSV case by picking the reading that yields a believable block time, but the XLS never has to guess. The XLS also carries your <b>hotels</b>, which the CSV omits entirely.</p>
-          <p><b>UTC or Local Station?</b> Both are supported — the export writes which one it used on line 2 of the file, so the app reads it and never has to guess. <b>UTC is recommended:</b> on duties that cross midnight or the date line, the Local export dates the row in a way that can be ambiguous, and UTC removes that entirely.</p>
-          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically. From an XLS the app also reads the <b>hotel</b> for each layover and shows it on the matching rest period.</p>
-          <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
-        </details>
-      </div>
-      <div class="secthead">
-        <div class="secthead-t">Which rules apply to you</div>
-        <div class="secthead-s">These four settings drive the <b>limits</b> — the FAR regime, the CBA duty ceiling, the required rest and the cumulative caps. They do <b>not</b> feed the alertness percentage, which is built only from your report and block times, the sleep the model thinks each rest allowed, and where your body clock is. <span class="ovwhy" data-ov="split">Why is crew complement here at all?</span></div>
-      </div>
-      <div class="ftgrid" style="margin-top:10px">
-        <!-- Regime, Article 33, reserve and crew complement used to be selected here. They
-             existed only to choose duty limits, and duty limits have gone from this tab: every
-             one of them turns on a crew complement that changes flight by flight, which no
-             single setting can represent. Nothing on this tab reads them any more, so asking
-             for them was asking the crew member to answer a question that changed nothing. -->
-      </div>
-      <div id="dpOut"></div>
+      <!-- ORDER, deliberately.
+
+           What you do on this tab every time you fly - say how you feel, check the numbers -
+           now comes first. What you do once - import a roster, read where the file comes
+           from - is below it.
+
+           It used to be the other way round: "How do you feel right now?" sat 7,600 pixels
+           down the page, behind the whole eCrew walkthrough, so the two scales that are the
+           only MEASUREMENT on this tab were the hardest thing on it to reach. Everything
+           else here is a prediction; these are the part that is actually about you.
+
+           And they sit ABOVE the model's output on purpose. Rate yourself first, then read
+           what the model thinks. A number on screen before you answer is an anchor, and a
+           self-report taken after seeing a prediction is partly a reading of the prediction. -->
       <div class="sccard">
         <div class="sctitle">How do you feel right now?</div>
         <p class="scintro">The model only sees your schedule. These two scales are what aviation fatigue programmes actually collect from crews, and IATA lists them among the indicators operators are expected to track. Answer honestly — there is no right answer, and nothing leaves your phone.</p>
@@ -1764,6 +1736,48 @@
       </div>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
       <div id="ftOut"></div>
+      <div class="impcard">
+        <button id="impBtn" class="impbtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Upload schedule (calendar, CSV or XLS)
+        </button>
+        <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,text/csv,text/calendar,application/vnd.ms-excel,application/zip" multiple hidden>
+        <button id="impLinkBtn" class="impbtn4">🔗 Link my calendar — set up once, then it updates itself</button>
+        <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
+        <button id="impSetupBtn" class="impbtn3">🧭 First time? Step-by-step setup for your phone</button>
+        <button id="impRawBtn" class="impbtn2">🔍 See and correct the schedule data</button>
+        <div id="impStat" class="impstat"></div>
+        <div id="impSpan" class="impspan"></div>
+        <details class="imphow">
+          <summary>Where do I get this file? (step by step)</summary>
+          <ol>
+            <li>On a computer or phone browser, go to <b>aims.atlasair.com/eCrew</b> and log in with your normal eCrew credentials.</li>
+            <li>Open <b>My Schedule</b>.</li>
+            <li>Set the <b>date range</b> you want — one month at a time is easiest.</li>
+            <li>Choose <b>UTC</b> for the times. Local Station also works, but UTC is unambiguous — see the note below.</li>
+            <li>Click <b>PRINT</b>.</li>
+            <li>Save the file as <b>CSV</b> or <b>XLS</b> — both are read. On a phone eCrew usually only offers <b>XLS</b>, and that is fine: the XLS is actually the <i>better</i> file (see below).</li>
+            <li>Come back here and tap <b>Upload schedule</b> above. You can select <b>several files at once</b>, or add them one at a time.</li>
+          </ol>
+          <p><b>Covering more than one month:</b> every upload <b>adds to</b> what is already stored — nothing is replaced. Export each month, upload them all, and the fatigue model runs continuously across the whole span, carrying your sleep debt and body clock from one month into the next. Re-uploading a month you already have just refreshes it rather than duplicating it. The stored span is shown under the button, with a Clear control if you want to start over.</p>
+          <p><b>Why XLS is better:</b> the CSV export is written in a character set that cannot hold the superscript <b>+1</b> / <b>−1</b> day markers, so both come out as the same character and a westbound date-line arrival is indistinguishable from an eastbound one. The XLS keeps the sign. The app resolves the CSV case by picking the reading that yields a believable block time, but the XLS never has to guess. The XLS also carries your <b>hotels</b>, which the CSV omits entirely.</p>
+          <p><b>UTC or Local Station?</b> Both are supported — the export writes which one it used on line 2 of the file, so the app reads it and never has to guess. <b>UTC is recommended:</b> on duties that cross midnight or the date line, the Local export dates the row in a way that can be ambiguous, and UTC removes that entirely.</p>
+          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically. From an XLS the app also reads the <b>hotel</b> for each layover and shows it on the matching rest period.</p>
+          <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
+        </details>
+      </div>
+      <div class="secthead">
+        <div class="secthead-t">Which rules apply to you</div>
+        <div class="secthead-s">These four settings drive the <b>limits</b> — the FAR regime, the CBA duty ceiling, the required rest and the cumulative caps. They do <b>not</b> feed the alertness percentage, which is built only from your report and block times, the sleep the model thinks each rest allowed, and where your body clock is. <span class="ovwhy" data-ov="split">Why is crew complement here at all?</span></div>
+      </div>
+      <div class="ftgrid" style="margin-top:10px">
+        <!-- Regime, Article 33, reserve and crew complement used to be selected here. They
+             existed only to choose duty limits, and duty limits have gone from this tab: every
+             one of them turns on a crew complement that changes flight by flight, which no
+             single setting can represent. Nothing on this tab reads them any more, so asking
+             for them was asking the crew member to answer a question that changed nothing. -->
+      </div>
+      <div id="dpOut"></div>
     </div>
   </div>
 
@@ -6599,7 +6613,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v16.3 · 2026-09-01';
+  var BUILD='v16.4 · 2026-09-01';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -6625,7 +6639,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v16.3',
+    version:'v16.4',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
