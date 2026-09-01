@@ -772,6 +772,25 @@
   /* ---- what's new ---- */
   .wnbox{background:linear-gradient(180deg,rgba(30,58,44,.9),rgba(14,32,26,.9));
     border:1px solid rgba(78,227,154,.32);border-radius:15px;padding:14px 15px;margin-bottom:12px}
+  .usgbox{background:linear-gradient(180deg,rgba(20,34,60,.92),rgba(11,20,38,.92));
+    border:1px solid rgba(120,160,230,.28);border-radius:12px;padding:12px 13px;margin:10px 0 4px}
+  .usghead{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;color:#cfe0ff;margin-bottom:2px}
+  .usgtag{font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#0b1426;
+    background:#8fb4ff;border-radius:4px;padding:2px 6px}
+  .usgsub{font-size:11px;color:#8fa3c4;margin-bottom:9px}
+  .usgbtn{appearance:none;border:1px solid rgba(120,160,230,.4);background:rgba(120,160,230,.12);
+    color:#cfe0ff;font:600 12px/1 inherit;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .usgbtn:active{background:rgba(120,160,230,.26)}
+  .usgrow{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .usgnums{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:7px;margin:10px 0 2px}
+  .usgn{background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.18);border-radius:9px;padding:8px 9px}
+  .usgn .k{font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:#8fa3c4}
+  .usgn .v{font-size:20px;font-weight:800;color:#8fb4ff;line-height:1.15}
+  .usgpre{white-space:pre;overflow-x:auto;background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.18);
+    border-radius:9px;padding:10px;margin-top:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9cbe8}
+  .usgerr{font-size:11px;color:#ff9d9d;margin-top:8px}
+  .usgin{width:100%;box-sizing:border-box;margin-top:8px;padding:9px;border-radius:8px;
+    border:1px solid rgba(120,160,230,.35);background:rgba(8,16,32,.7);color:#e6eefc;font:12px/1 inherit}
   .wnprev{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#ffd166;
     background:rgba(255,209,102,.13);border:1px solid rgba(255,209,102,.35);border-radius:6px;
     padding:4px 8px;display:inline-block;margin-bottom:9px}
@@ -1249,6 +1268,7 @@
 
   <div id="view-decode">
   <div id="wnCard"></div>
+  <div id="usageCard"></div>
   <div class="card">
     <label class="fld" for="input">Coded report</label>
     <div class="sub-codes">METAR · TAF · SIGMET · AIRMET · PIREP · NOTAM — worldwide</div>
@@ -6179,7 +6199,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v14.8 · 2026-09-01';
+  var BUILD='v14.9 · 2026-09-01';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6201,7 +6221,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v14.8',
+    version:'v14.9',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -6233,6 +6253,93 @@
     };
   }
   window.wnRender=wnRender;
+
+  /* ---------- usage, for the person who maintains this ----------------------------------
+     The sign-in counts, in the app, so there is no URL to remember and no key to keep in a
+     note somewhere.
+
+     The view key is NOT shipped in this file. It is the only thing standing between the
+     report and anybody who opens the page source, and this file is public. So it is pasted
+     once and kept on this device, and it never travels with a release.
+
+     Everything here is owner-only, network-optional and wrapped: a crew member never sees
+     it, and it cannot break the app if the relay is down or the phone is offline. */
+  var USG_URL='https://cargodecode.aeroscribe.workers.dev/who';
+  function usgKey(){ try{ return localStorage.getItem('ad_usgkey')||''; }catch(e){ return ''; } }
+  function usgIsOwner(){
+    try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); return !!(c&&c.owner); }catch(e){ return false; }
+  }
+  function usgRender(state){
+    var box=document.getElementById('usageCard'); if(!box) return;
+    if(!usgIsOwner()){ box.innerHTML=''; return; }        // crew never see this card
+    var k=usgKey();
+    var h='<div class="usgbox"><div class="usghead"><span class="usgtag">Owner</span>Usage</div>'+
+          '<div class="usgsub">How many people are signing in. Only you can see this card.</div>';
+    if(!k){
+      h+='<div class="usgsub">Paste your view key once and it stays on this device.</div>'+
+         '<input class="usgin" id="usgKeyIn" placeholder="view key" autocomplete="off" spellcheck="false">'+
+         '<div class="usgrow" style="margin-top:8px"><button class="usgbtn" id="usgSave">Save key</button></div>';
+    }else{
+      h+='<div class="usgrow"><button class="usgbtn" id="usgGo">'+
+         (state&&state.loading? 'Checking…' : 'Show the numbers')+'</button>'+
+         '<button class="usgbtn" id="usgForget">Forget key</button></div>';
+      if(state&&state.err) h+='<div class="usgerr">'+esc(state.err)+'</div>';
+      if(state&&state.nums) h+=state.nums;
+      if(state&&state.text) h+='<div class="usgpre">'+esc(state.text)+'</div>';
+    }
+    box.innerHTML=h+'</div>';
+    var si=document.getElementById('usgSave');
+    if(si) si.onclick=function(){
+      var v=(document.getElementById('usgKeyIn')||{}).value||'';
+      v=v.trim();
+      if(!v) return;
+      try{ localStorage.setItem('ad_usgkey', v); }catch(e){}
+      usgLoad();
+    };
+    var fb=document.getElementById('usgForget');
+    if(fb) fb.onclick=function(){
+      try{ localStorage.removeItem('ad_usgkey'); }catch(e){}
+      usgRender();
+    };
+    var gb=document.getElementById('usgGo');
+    if(gb) gb.onclick=usgLoad;
+  }
+  function usgLoad(){
+    var k=usgKey(); if(!k) return usgRender();
+    usgRender({loading:true});
+    /* netFetch, so this obeys the same hard deadline as everything else here. A phone with
+       a radio on and no route does not fail a fetch, it hangs. */
+    netFetch(USG_URL+'?k='+encodeURIComponent(k)+'&t='+Date.now(), 8000)
+      .then(function(r){
+        if(r.status===404) throw new Error('That key was not accepted.');
+        if(!r.ok) throw new Error('The relay answered '+r.status+'.');
+        return r.text();
+      })
+      .then(function(t){
+        /* Pull the headline figures out for a glanceable row, and show the full report
+           underneath. Written against BOTH report formats - the older one says "Distinct
+           people ever:" with a colon - so updating the Worker later cannot blank this. */
+        function num(re){ var m=t.match(re); return m? m[1] : null; }
+        var people =num(/Distinct people ever:?\s+(\d+)/i);
+        var act7   =num(/Active in the last 7 days:?\s+(\d+)/i);
+        var opens  =num(/App opens recorded:?\s+(\d+)/i);
+        var days   =num(/Days (?:recorded|with any activity):?\s+(\d+)/i);
+        var cells=[];
+        if(people!=null) cells.push(['People',people]);
+        if(act7  !=null) cells.push(['Last 7 days',act7]);
+        if(opens !=null) cells.push(['Opens',opens]);
+        if(days  !=null) cells.push(['Active days',days]);
+        var nums=cells.length? '<div class="usgnums">'+cells.map(function(c){
+          return '<div class="usgn"><div class="k">'+c[0]+'</div><div class="v">'+c[1]+'</div></div>';
+        }).join('')+'</div>' : '';
+        usgRender({nums:nums, text:t.replace(/\s+$/,'')});
+      })
+      .catch(function(e){
+        usgRender({err:(e&&e.message)? e.message : 'Could not reach the relay. This needs a connection.'});
+      });
+  }
+  window.usgRender=usgRender;
+  usgRender();
   window.WHATSNEW=WHATSNEW;      // so the notes can be previewed as a crew member would see them
   wnRender();
 
@@ -6493,6 +6600,7 @@
       try{ if(window.ftApplyOwner) window.ftApplyOwner(); }catch(e){}
       try{ if(window.BEACON) BEACON.ping(BUILD, true); }catch(e){}
       try{ if(window.wnRender) window.wnRender(); }catch(e){}
+      try{ if(window.usgRender) window.usgRender(); }catch(e){}   // owner card appears on sign-in
     }
     if(pinBtn) pinBtn.onclick=tryUnlock;
     if(pinInput) pinInput.addEventListener('keydown',function(e){ if(e.key==='Enter') tryUnlock(); });

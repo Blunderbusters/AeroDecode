@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v26';
+var V='cargodecode-v27';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
