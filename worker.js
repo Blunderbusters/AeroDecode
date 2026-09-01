@@ -70,10 +70,16 @@ export default {
         if (!ev || !/^([0-9a-f]{16}|owner)$/.test(String(ev.u))) continue;
         const day = String(ev.t || '').slice(0, 10);
         if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+        const n = Math.max(1, Math.min(500, parseInt(ev.n, 10) || 1));
+        const first = /^\d{4}-\d{2}-\d{2}$/.test(String(ev.f || '')) ? String(ev.f) : day;
         /* Keyed by day and user, so one person opening the app nine times on Tuesday is
-           one record, and unique users per day falls straight out of the key list. */
+           one record, and unique users per day falls straight out of the key list. The
+           count of opens rides inside the value, so engagement costs no extra writes.
+           Written into the key METADATA as well: list() returns metadata inline, so the
+           whole report below is built from key listings without a single read. */
         await env.SIGNINS.put(day + '|' + ev.u,
-          JSON.stringify({ u: ev.u, v: String(ev.v || ''), t: ev.t }));
+          JSON.stringify({ u: ev.u, v: String(ev.v || ''), t: ev.t, n: n, f: first }),
+          { metadata: { v: String(ev.v || '').slice(0, 16), n: n, f: first } });
       }
       return new Response('ok', { headers: cors });
     }
@@ -83,25 +89,98 @@ export default {
       const k = url.searchParams.get('k') || '';
       if (!env.VIEW_KEY || k !== env.VIEW_KEY) return new Response('', { status: 404 });
       if (!env.SIGNINS) return new Response('No storage bound yet.', { status: 200 });
-      const list = await env.SIGNINS.list({ limit: 1000 });
-      const byDay = {}, everyone = new Set();
-      for (const key of list.keys) {
+
+      /* Paginated. A single list({limit:1000}) silently truncated: at one key per person
+         per day, thirty people reach the cap in five weeks and the report would have gone
+         quietly wrong - undercounting, with nothing on screen to say so. */
+      const keys = [];
+      let cursor = null, guard = 0;
+      do {
+        const page = await env.SIGNINS.list(cursor ? { limit: 1000, cursor } : { limit: 1000 });
+        for (const k of page.keys) keys.push(k);
+        cursor = page.list_complete ? null : page.cursor;
+      } while (cursor && ++guard < 50);
+
+      const byDay = {}, people = new Map();
+      let totalOpens = 0;
+      for (const key of keys) {
         const bits = key.name.split('|');
         const day = bits[0], who = bits[1];
-        if (!byDay[day]) byDay[day] = new Set();
-        byDay[day].add(who);
-        everyone.add(who);
+        if (!day || !who) continue;
+        const md = key.metadata || {};
+        const opens = Math.max(1, parseInt(md.n, 10) || 1);
+        totalOpens += opens;
+        if (!byDay[day]) byDay[day] = { people: new Set(), opens: 0 };
+        byDay[day].people.add(who);
+        byDay[day].opens += opens;
+        let p = people.get(who);
+        if (!p) { p = { days: 0, opens: 0, first: md.f || day, last: day, v: md.v || '' }; people.set(who, p); }
+        p.days++; p.opens += opens;
+        if (day < p.first) p.first = day;
+        if (day > p.last) p.last = day;
+        if (md.v) p.v = md.v;
+        if (md.f && md.f < p.first) p.first = md.f;
       }
+
       const days = Object.keys(byDay).sort().reverse();
-      const lines = days.map(d => d + '   ' + byDay[d].size);
-      return new Response(
-        'CargoDecode sign-ins\n' +
-        '====================\n' +
-        'Distinct people ever: ' + everyone.size + '\n' +
-        'Days recorded:        ' + days.length + '\n\n' +
-        'DATE         PEOPLE\n' + lines.join('\n') + '\n\n' +
-        'Hashes seen:\n' + Array.from(everyone).sort().join('\n') + '\n',
-        { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      const today = new Date().toISOString().slice(0, 10);
+      const ago = n => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+      const uniqueSince = since => {
+        const s = new Set();
+        for (const d of days) if (d >= since) for (const w of byDay[d].people) s.add(w);
+        return s.size;
+      };
+      const newSince = since => {
+        let n = 0;
+        for (const p of people.values()) if (p.first >= since) n++;
+        return n;
+      };
+      const versions = {};
+      for (const p of people.values()) versions[p.v || '(unknown)'] = (versions[p.v || '(unknown)'] || 0) + 1;
+
+      const pad = (s, n) => String(s).padEnd(n);
+      const roster = Array.from(people.entries())
+        .sort((a, b) => (b[1].last.localeCompare(a[1].last)) || (b[1].opens - a[1].opens))
+        .map(([who, p]) => pad(who, 18) + pad(p.first, 12) + pad(p.last, 12) +
+                           pad(p.days, 7) + pad(p.opens, 7) + (p.v || ''));
+
+      const out =
+        'CargoDecode  ·  sign-in report\n' +
+        'generated ' + new Date().toISOString().replace('T', ' ').slice(0, 16) + 'Z\n' +
+        '==================================================================\n\n' +
+        'PEOPLE\n' +
+        '  Distinct people ever      ' + people.size + '\n' +
+        '  Active in the last 7 days ' + uniqueSince(ago(7)) + '\n' +
+        '  Active in the last 30 days ' + uniqueSince(ago(30)) + '\n' +
+        '  New in the last 7 days    ' + newSince(ago(7)) + '\n' +
+        '  New in the last 30 days   ' + newSince(ago(30)) + '\n' +
+        '  Active today (' + today + ')  ' + (byDay[today] ? byDay[today].people.size : 0) + '\n\n' +
+        'USE\n' +
+        '  App opens recorded        ' + totalOpens + '\n' +
+        '  Days with any activity    ' + days.length + '\n' +
+        '  Records held              ' + keys.length + (guard >= 50 ? '  (listing hit its page guard — counts are a floor)' : '') + '\n\n' +
+        'BUILD IN USE\n' +
+        Object.keys(versions).sort().map(v => '  ' + pad(v, 12) + versions[v] + ' people').join('\n') + '\n\n' +
+        'BY DAY   (most recent first)\n' +
+        '  DATE         PEOPLE   OPENS\n' +
+        days.slice(0, 60).map(d => '  ' + pad(d, 13) + pad(byDay[d].people.size, 9) + byDay[d].opens).join('\n') +
+        (days.length > 60 ? '\n  ... ' + (days.length - 60) + ' earlier days not listed' : '') + '\n\n' +
+        'BY PERSON   (hash matches allow.json; no employee number is ever sent or stored)\n' +
+        '  ' + pad('HASH', 18) + pad('FIRST', 12) + pad('LAST', 12) + pad('DAYS', 7) + pad('OPENS', 7) + 'BUILD\n' +
+        roster.map(r => '  ' + r).join('\n') + '\n';
+
+      if (url.searchParams.get('f') === 'json') {
+        return new Response(JSON.stringify({
+          generated: new Date().toISOString(),
+          people: people.size,
+          active7: uniqueSince(ago(7)), active30: uniqueSince(ago(30)),
+          new7: newSince(ago(7)), new30: newSince(ago(30)),
+          opens: totalOpens, versions: versions,
+          byDay: days.map(d => ({ day: d, people: byDay[d].people.size, opens: byDay[d].opens })),
+          byPerson: Array.from(people.entries()).map(([u, p]) => ({ u, ...p }))
+        }, null, 1), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+      }
+      return new Response(out, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     }
 
     return new Response('', { status: 404 });
