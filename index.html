@@ -1243,11 +1243,9 @@
        moment it is needed. */
     function line(k,v){ L.push((k+'                    ').slice(0,20)+v); }
     try{
-      /* Read the live variable first. Scraping the page for it matches this file's own
-         regex literal before it matches the real value. */
-      var bv=(typeof window.BUILD==='string')? window.BUILD
-           : (document.documentElement.outerHTML.match(/var BUILD='(v[^']*)'/)||[])[1];
-      line('Build', bv||'unknown (main script did not run)');
+      /* The live variable only. Searching the page text for it is what broke the updater:
+         any pattern written to find that text is itself found by it. */
+      line('Build', (typeof window.BUILD==='string')? window.BUILD : 'unknown (main script did not run)');
     }catch(e){ line('Build','unreadable'); }
     try{ line('Security module', (window.AEROGATE? 'loaded' : 'DID NOT LOAD')); }
     catch(e){ line('Security module','ERROR: '+e.message); }
@@ -3580,8 +3578,10 @@
   }
   /* Best bunk break for landing alertness: the one whose sleep buys most effectiveness at TOD. */
   function rankBreaks(breaks,r0,wakeUtc,todUtc,bOff,facility){
+    if(!breaks || typeof breaks.map!=='function') return [];
     return breaks.map(function(b,i){
-      var hrs=b.dur/60, night=sleepInBodyNight(b.startUtc,hrs,bOff);
+      b=b||{};
+      var hrs=(+b.dur||0)/60, night=sleepInBodyNight(b.startUtc,hrs,bOff);
       var q=sleepQuality(night,facility);
       var gained=Math.min(60, hrs*q*CFG.shortSleepPenalty*1.6);   // partial top-up from an in-flight break
       var endUtc=norm24(b.startUtc+hrs);
@@ -3983,7 +3983,15 @@
       // A duty day may hold SEVERAL legs, newline-separated inside the quoted cells.
       // Report belongs to the first leg, debrief to the last.
       var duties=(c[1]||'').split('\n'), details=(c[2]||'').split('\n'), blocks=(c[4]||'').split('\n');
-      var legs=Math.max(duties.length, details.length, blocks.length);
+      /* Count only lines that carry something. A single trailing newline inside any one of
+         these quoted cells used to add a phantom leg, and because the debrief was pinned to
+         index legs-1 it landed on that phantom - which the loop then skipped, so the duty
+         period lost its end time entirely. buildDuties fell back to block-in, which shortens
+         the duty and lengthens the rest that follows: the direction that makes an illegal
+         rest look legal. */
+      var tail=function(a){ var n=a.length; while(n>0 && !String(a[n-1]||'').trim()) n--; return n; };
+      var legs=Math.max(tail(duties), tail(details), tail(blocks));
+      var rowRecs=[];
       for(var L=0;L<legs;L++){
         var duty=(duties[L]!=null?duties[L]:'').trim();
         var detail=(details[L]!=null?details[L]:'').trim();
@@ -4015,9 +4023,16 @@
         else if(!st) rec.type='OTHER';
         else rec.type = rec.deadhead? 'DEADHEAD' : 'FLIGHT';
         if(st && blk){ var bm=blk.split('-'); rec.blockOut=parseTime(bm[0]); rec.blockIn=parseTime(bm[1]); }
-        rec.report  = (L===0)?       parseTime(c[3]) : null;
-        rec.debrief = (L===legs-1)?  parseTime(c[6]) : null;
+        rec.report=null; rec.debrief=null;   // pinned below, to legs that actually exist
         out.push(rec);
+        rowRecs.push(rec);
+      }
+      /* Attached to the first and last legs this row REALLY produced, rather than to index
+         0 and index legs-1. Those indices are only the same thing when every line in the
+         cell turned into a leg, and a blank or unparseable line is enough to break that. */
+      if(rowRecs.length){
+        rowRecs[0].report = parseTime(c[3]);
+        rowRecs[rowRecs.length-1].debrief = parseTime(c[6]);
       }
     }
     return { mode:mode, period:period, crew:who, rows:out };
@@ -4461,7 +4476,11 @@
                         name:(addr[0]||'').trim(), address:addr.slice(1).join(', ').replace(/,\s*\.$/,'').trim(),
                         phone:String(hr[hmap.phone]||'').split('\n')[0].trim() });
         });
-        if(!locs.length||!hotels.length) hotels.push({port:first,date:null,locator:null,
+        /* Was `!hotels.length` - the GLOBAL list, which already had entries from earlier
+           rows. So the first hotel row with no parseable locator got a fallback entry and
+           every later one was silently dropped. What matters is whether THIS row produced
+           anything. */
+        if(!locs.length) hotels.push({port:first,date:null,locator:null,
           name:(addr[0]||'').trim(), address:addr.slice(1).join(', ').trim(),
           phone:String(hr[hmap.phone]||'').split('\n')[0].trim()});
       }
@@ -4511,7 +4530,12 @@
       restCite:'14 CFR 121.523(c) — 10 h ground rest breaks continuous duty; 16 h rest if continuous duty exceeded 24 h' }
   };
   function limitsFor(regimeKey, crew){
-    var R=REGIMES[regimeKey]||REGIMES.FLAG, c=Math.max(2,Math.min(4,crew||2));
+    /* hasOwnProperty, not a bare lookup. REGIMES['constructor'] resolves up the prototype
+       chain to a function, which is truthy, so it sailed past the ||FLAG fallback and then
+       threw on R.flight[c]. regimeKey comes from stored settings, so corrupt storage was
+       enough to take the tab down. */
+    var R=Object.prototype.hasOwnProperty.call(REGIMES, regimeKey)? REGIMES[regimeKey] : REGIMES.FLAG;
+    var c=Math.max(2,Math.min(4,crew||2));
     var md = R.maxDuty? R.maxDuty[c] : null;
     var mdc = R.maxDuty? (typeof R.maxDutyCite==='string'? R.maxDutyCite : R.maxDutyCite[c]) : R.maxDutyCite;
     var fl = R.flight[c]||{h:null,cite:'—'};
@@ -4667,7 +4691,7 @@
   /* Required rest under the selected regime: 2x hours flown since preceding rest,
      floor 8 h; 18 h (flag) / 16 h (supplemental) if more than 8 h were flown in 24. */
   function requiredRestMin(regimeKey, blockMinPrev, crew, ctx){
-    var R=REGIMES[regimeKey]||REGIMES.FLAG;
+    var R=Object.prototype.hasOwnProperty.call(REGIMES, regimeKey)? REGIMES[regimeKey] : REGIMES.FLAG;
     var c=Math.max(2,Math.min(4,crew||2));
     ctx=ctx||{};
     /* §121.481 is expressly "one or two pilot crews". With a third or fourth pilot the
@@ -4761,7 +4785,14 @@
     if(score<75) return {c:'#ff9d4d',l:'High'};
     return {c:'#ff6b6b',l:'Severe'};
   }
-  function pct(v,lo,hi){ return Math.max(0,Math.min(100, (v-lo)/(hi-lo)*100)); }
+  /* A zero-width range divides by zero and yields NaN, which every downstream comparison
+     reads as false - and bandColor then paints it as the worst band. An empty range means
+     "no information", so say 0 rather than inventing an alarm. */
+  function pct(v,lo,hi){
+    if(!(hi>lo)) return 0;
+    var r=(v-lo)/(hi-lo)*100;
+    return isFinite(r)? Math.max(0,Math.min(100,r)) : 0;
+  }
 
 
   /* ---- Trip-level simulation ----------------------------------------------------
@@ -6313,7 +6344,11 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v15.4 · 2026-09-01';
+  var BUILD='v15.6 · 2026-09-01';
+  /* Published deliberately. The rescue panel needs to report the running version even when
+     the rest of the app has fallen over, and reading it back out of the page text is what
+     broke the updater. */
+  try{ window.BUILD=BUILD; }catch(e){}
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6335,7 +6370,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v15.4',
+    version:'v15.6',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -6496,6 +6531,35 @@
   /* ---------- self-update (beats iOS PWA cache staleness) ---------- */
   var updStatus=document.getElementById('updStatus');
   function setUpd(msg){ if(updStatus) updStatus.textContent=msg||''; }
+  /* Finding the version inside a copy of this page.
+
+     This is deliberately NOT a regular expression. The needle is assembled at runtime from
+     two halves so that this very line cannot be found by itself - and that is not
+     paranoia, it is the bug this replaced. The old version searched for the literal
+     var-BUILD-equals with a regex, took the FIRST hit, and this file contains that text
+     more than once: once for real, and once inside each regex written to look for it. So a
+     phone read its own version as "(v[^", which never equals the running build. The app
+     announced an update on every check, installing it wiped the cache and reloaded, and the
+     reloaded copy said exactly the same thing. An endless update prompt, and a page
+     reloading itself out from under whatever you were typing.
+
+     Every candidate is scanned and only one that actually looks like a version is kept, so
+     no future occurrence of that text can restart this. */
+  var _needle='var BUI'+'LD=';
+  function buildStringIn(t){
+    var found=null, i=0, n=_needle.length;
+    while((i=t.indexOf(_needle, i))>-1){
+      if(t.charAt(i+n)==="'"){
+        var end=t.indexOf("'", i+n+1);
+        if(end>-1){
+          var v=t.slice(i+n+1, end);
+          if(/^v\d/.test(v)) found=v;          // a real version starts v then a digit
+        }
+      }
+      i+=n;
+    }
+    return found;
+  }
   async function getLatestBuild(){
     try{
       if(navigator.onLine===false) return null;            // definitely offline: skip it
@@ -6503,8 +6567,7 @@
       var r=await netFetch(u, 4000);                        // and never wait longer than this
       if(!r.ok) return null;
       var t=await r.text();
-      var m=t.match(/var BUILD='([^']+)'/);
-      return m? m[1] : null;
+      return buildStringIn(t);
     }catch(e){ return null; }                              // any network error (offline) → no-op, app keeps running
   }
   async function applyUpdate(){
@@ -6540,6 +6603,14 @@
     if(manual) setUpd('Checking…');
     var latest=await getLatestBuild();
     if(latest===null){ setUpd(manual?'Can’t check — you appear to be offline. The app still works fully offline.':''); return; }
+    /* A last line of defence. If what came back does not look like a version, or is the one
+       already running, there is nothing to install - and saying otherwise costs the user a
+       cache wipe and a reload for nothing. */
+    if(!/^v\d/.test(latest)){
+      clearUpdReady();
+      setUpd(manual? '✓ You’re on the latest ('+BUILD.split(' ')[0]+')' : '');
+      return;
+    }
     if(latest!==BUILD){
       var canApply = apply && (manual || _updReloads()<1);   // manual = always; auto = once per open
       if(canApply){
