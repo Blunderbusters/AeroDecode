@@ -791,6 +791,18 @@
   .usgerr{font-size:11px;color:#ff9d9d;margin-top:8px}
   .usgin{width:100%;box-sizing:border-box;margin-top:8px;padding:9px;border-radius:8px;
     border:1px solid rgba(120,160,230,.35);background:rgba(8,16,32,.7);color:#e6eefc;font:12px/1 inherit}
+  .rptbox{margin-top:14px;border-radius:12px;padding:13px 14px;
+    background:linear-gradient(180deg,rgba(20,34,60,.95),rgba(11,20,38,.95));border:1px solid rgba(120,160,230,.32)}
+  .rpthead{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#8fb4ff;margin-bottom:3px}
+  .rptq{font-size:15px;font-weight:800;color:#e6eefc;margin-bottom:9px}
+  .rptline{display:flex;gap:9px;align-items:flex-start;padding:6px 0;border-top:1px solid rgba(120,160,230,.14);font-size:12.5px;line-height:1.45}
+  .rptline:first-of-type{border-top:none}
+  .rptmark{flex:0 0 15px;font-weight:800;text-align:center}
+  .rptval{color:#e6eefc;font-weight:700}
+  .rptwhy{color:#8fa3c4}
+  .rptfoot{margin-top:11px;padding-top:10px;border-top:1px solid rgba(120,160,230,.2);font-size:12px;color:#c8d8f0;line-height:1.55}
+  .rptbtn{appearance:none;width:100%;margin-top:10px;border:1px solid rgba(120,160,230,.4);background:rgba(120,160,230,.12);
+    color:#cfe0ff;font:700 12.5px/1 inherit;padding:10px;border-radius:9px;cursor:pointer}
   .wnprev{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#ffd166;
     background:rgba(255,209,102,.13);border:1px solid rgba(255,209,102,.35);border-radius:6px;
     padding:4px 8px;display:inline-block;margin-bottom:9px}
@@ -1710,6 +1722,7 @@
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px"><b style="color:var(--ink)">Quality and recency</b> of my sleep?</li>
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long will my <b style="color:var(--ink)">duty</b> continue?</li>
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How much <b style="color:var(--ink)">longer will I be awake</b>?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b>? (maintenance, weather, an unfamiliar field)</li>
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b> — maintenance, weather, delays?</li>
         </ol>
         <div class="warnbox" style="margin-top:12px">
@@ -1737,6 +1750,7 @@
             <button class="segbtn" data-ftday="1" style="flex:1">Yesterday</button>
           </span></div>
         <div><div class="ftk">Sleep obtained (h)</div><input id="ftSleep" class="ftin" inputmode="decimal" placeholder="7.5"></div>
+        <div><div class="ftk">Total sleep in the last 48 h</div><input id="ftSleep48" class="ftin" inputmode="decimal" placeholder="14"></div>
         <div><div class="ftk">Slept in a…</div>
           <span class="seg" style="display:flex;gap:5px">
             <button class="segbtn on" data-ftfac="bed" style="flex:1">Bed</button>
@@ -1744,6 +1758,8 @@
             <button class="segbtn" data-ftfac="seat" style="flex:1">Seat</button>
           </span>
         </div>
+        <div><div class="ftk">Report time <span id="ftRepU">(Zulu)</span></div><input id="ftReport" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div><div class="ftk">Expected workload</div><span class="seg"><button class="segbtn on" data-ftwl="normal">Normal</button><button class="segbtn" data-ftwl="high">Elevated</button></span></div>
         <div class="full"><div class="ftk">Top of descent <span id="ftTodU">(Zulu)</span> — when alertness actually matters</div><input id="ftTod" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
       </div>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
@@ -3380,7 +3396,17 @@
   'use strict';
 
   var CFG={
-    depletionPerHour:1.75,   // effectiveness points lost per hour awake
+    /* Depletion. Straight from the SAFTE specification in US Patent 6,579,233, now expired
+       and therefore citable and free to implement: reservoir capacity Rc = 2880 sleep
+       units, performance use rate K = 0.5 units per MINUTE, and effectiveness
+       E = 100 x (Rt/Rc). Thirty units an hour out of 2880 is 1.042 points of effectiveness.
+       The patent's own sanity check agrees: 2880/30 = 96 hours = the "four days of
+       continuous wakefulness" it describes.
+
+       This was 1.75 - chosen, not derived - which is 1.68x the published rate. At the
+       seventeen hours awake a CVG-ICN sector was charging, that alone was twelve points of
+       error, and it is the single biggest reason every long sector read as severe. */
+    depletionPerHour:1.042,  // SAFTE: K=0.5 units/min over Rc=2880, as E=100(Rt/Rc)
     idealSleepH:      8.0,   // sleep that fully restores the reservoir
     shortSleepPenalty: 5.0,  // points lost per hour of sleep short of ideal
     reservoirFloor:    30,   // a bad night does not put you at zero on waking
@@ -3391,8 +3417,25 @@
        landing count. It sat at 0500 for a while, which put the low point of the alertness
        curve an hour away from the low point the same app was drawing on its own charts. */
     nadirBodyHour:      4,   // circadian trough 0400 BODY time = centre of the WOCL
-    eastRatePerDay:   1.0,   // eastbound = phase ADVANCE, adapts ~1.0 h/day
-    westRatePerDay:   1.5    // westbound = phase DELAY,   adapts ~1.5 h/day
+    /* Re-entrainment, from the same patent: a phase DELAY (westward) takes "about one day
+       per hour of shift" and a phase ADVANCE (eastward) "about 1.5 days per hour". Both
+       were ~50% faster here, which had the app believing you catch up on a layover quicker
+       than the model it cites. Note this pulls in the OPPOSITE direction to the depletion
+       fix above - it makes long trips look worse, not better. Both are the published
+       numbers; neither was chosen for the answer it gives. */
+    eastRatePerDay:   0.667, // SAFTE: advance ~1.5 days per hour of shift
+    westRatePerDay:   1.0,   // SAFTE: delay   ~1   day  per hour of shift
+    /* In-flight rest. */
+    recoveryPerHour:  5.0,   // reservoir points restored per EFFECTIVE hour slept
+    climbDescentH:    2.0,   // of a sector, unavailable to anyone for rest
+    maxInflightRestH: 5.0,   // one pilot's break is not longer than this in practice
+    minUsefulRestH:   1.0,   // shorter than this is not modelled as sleep at all
+    /* Time on task - defined but NOT applied. See timeOnTask() for why. */
+    inertiaMaxPct:    5.0,   // SAFTE: sleep inertia maximum, 5 percent
+    inertiaTau:       0.6,   // h; chosen so it is spent by the patent's stated 2 hours
+    taskFreeH:        8.0,
+    taskMaxPenalty:  12.0,
+    taskTau:          6.0
   };
 
   function norm24(h){ h=h%24; return h<0? h+24 : h; }
@@ -3469,6 +3512,87 @@
     var r=100 - Math.max(0, CFG.idealSleepH-eff)*CFG.shortSleepPenalty - (carryDebt||0);
     return Math.max(CFG.reservoirFloor, Math.min(100, r));
   }
+  /* Recovery from a sleep period, applied INCREMENTALLY to where you already are.
+
+     reservoirAtWake answers a different question: where a whole night of that length leaves
+     you, regardless of what came before. Using it for a four-hour bunk break gives nothing
+     at all whenever the reservoir already sits above the level a four-hour night would
+     support - which on a long-haul departure it usually does. In the cruise a crew is
+     topping up, not starting a new day.
+
+     The rate is the same currency the short-sleep penalty uses, so the two cannot drift:
+     each effective hour of sleep is worth what an hour short of ideal costs. Effective
+     hours are real hours multiplied by quality, so a bunk at 0.9 and out of the body night
+     at 0.7 gives 0.63 - a four-and-a-half hour break returns about fourteen points, not the
+     thirty-five a naive full-credit model would hand back. */
+  function reservoirAfterSleep(r0, sleepHours, quality){
+    var q=(quality==null? 1 : quality);
+    var eff=Math.max(0, sleepHours||0) * q;
+    /* Out-of-phase sleep asymptotes BELOW fully rested: a bunk at altitude restores sleep
+       pressure but does not return you to where a night in a bed does.
+
+       The ceiling is the SAME expression duty.js already applied to layover sleep long
+       before tonight - 55 + 45*quality - rather than a constant chosen to make this case
+       come out nicely. If this number is ever quoted to anyone, every term in it has to be
+       traceable to something already in the model or to the published literature, not to a
+       parameter invented to fix a symptom. */
+    var ceil=55 + 45*q;
+    var r=(r0||0) + eff*CFG.recoveryPerHour;
+    return Math.max(0, Math.min(Math.max(r0||0, ceil), r));   // sleep never makes you worse
+  }
+
+  /* Time on task: REMOVED FROM THE NUMBER, deliberately.
+
+     SAFTE-FAST does carry a time-on-task term, and adding one here briefly fixed a real
+     symptom - an augmented crew with a good bunk break scoring 100/100 at the end of a
+     fifteen-hour duty. But the parameters were chosen by me to make that case behave, and
+     no published source backs them. A figure that gets quoted in a fatigue report cannot
+     contain a term somebody invented, because the moment anyone asks where it came from
+     the honest answer discredits the rest of the output with it.
+
+     It is kept, unused, so the shape is on record if it is ever calibrated against a
+     published implementation - the SAFTE originators publish an open-source R version.
+     Until then it contributes nothing, and effectiveness() is what the app reports. */
+  function timeOnTask(dutyHours){
+    var h=Math.max(0, (dutyHours||0) - CFG.taskFreeH);
+    if(!isFinite(h)) return 0;
+    return CFG.taskMaxPenalty * (1 - Math.exp(-h/CFG.taskTau));
+  }
+  function effectivenessOnDuty(r0, hoursAwake, utcHour, bOff, dutyHours){
+    return effectiveness(r0,hoursAwake,utcHour,bOff);   // time on task NOT applied
+  }
+
+  /* How much in-flight rest one pilot actually gets, and how good it is.
+
+     Climb and descent are not available to anybody, and the remainder is shared: with three
+     pilots one is out of the seat at a time, with four it is two. This is the piece the app
+     was missing entirely - an augmented crew's bunk break was invisible, so a 14-hour sector
+     was charged as 17 hours of continuous wakefulness at the landing. */
+  function inflightRest(blockHours, crew, facility){
+    var b=+blockHours;
+    if(!isFinite(b) || b<=0) return null;
+    var c=Math.floor(Number(crew));
+    if(!isFinite(c) || c<3) return null;                 // an unaugmented crew has no rest
+    var usable=Math.max(0, b - CFG.climbDescentH);       // nobody rests through climb or descent
+    var share = (c>=4)? 0.5 : (1/3);
+    var h=Math.min(CFG.maxInflightRestH, usable*share);
+    if(h < CFG.minUsefulRestH) return null;              // too short to be worth modelling
+    return { hours:h, quality:sleepQuality(false, facility||'bunk'), facility:facility||'bunk' };
+  }
+
+  /* Sleep inertia: the grogginess in the first minutes after waking, which matters here
+     because report time is anchored to the wake-up call and is therefore exactly when it
+     bites. The patent sets the maximum at 5 percent and its duration at "at most 2 hours";
+     its full form scales the decay by sleep intensity, which this model does not track, so
+     the MAGNITUDE is the published one and the decay constant is chosen only to satisfy the
+     stated two-hour duration. That approximation is noted rather than buried. */
+  function inertia(hoursSinceWake){
+    var h=+hoursSinceWake;
+    if(!isFinite(h) || h<0) return 0;
+    if(h>2) return 0;                                  // patent: at most two hours
+    return CFG.inertiaMaxPct * Math.exp(-h/CFG.inertiaTau);
+  }
+
   function reservoirAt(r0, hoursAwake){
     return Math.max(0, r0 - Math.max(0,hoursAwake)*CFG.depletionPerHour);
   }
@@ -3648,7 +3772,7 @@
   var API={CFG:CFG,SAMN_PERELLI:SAMN_PERELLI,KSS:KSS,scaleColor:scaleColor,norm24:norm24,hhmmToH:hhmmToH,hToHHMM:hToHHMM,fmtSigned:fmtSigned,
     shortestShift:shortestShift,adaptation:adaptation,bodyOffset:bodyOffset,bodyHourAt:bodyHourAt,
     circadian:circadian,woclOverlapSpan:woclOverlapSpan,sleepQuality:sleepQuality,sleepInBodyNight:sleepInBodyNight,
-    reservoirAtWake:reservoirAtWake,reservoirAt:reservoirAt,effectiveness:effectiveness,
+    reservoirAtWake:reservoirAtWake,reservoirAt:reservoirAt,reservoirAfterSleep:reservoirAfterSleep,inflightRest:inflightRest,timeOnTask:timeOnTask,inertia:inertia,effectivenessOnDuty:effectivenessOnDuty,effectiveness:effectiveness,
     band:band,BANDS:BANDS,BANDUNKNOWN:BANDUNKNOWN,BANDCITE:BANDCITE,bacEquivalent:bacEquivalent,riskIndex:riskIndex,wocl:wocl,inWocl:inWocl,woclOverlapHours:woclOverlapHours,
     curve:curve,rankBreaks:rankBreaks};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
@@ -4662,6 +4786,8 @@
       d.consecN=run; d.patternN=pat; d.patternReset=reset && prevLast!=null;
       prevLast = last!=null? last : first;
     });
+    /* Link each duty to the rest that FOLLOWS it, so the curve can draw the gap between
+       duties using the sleep the next duty's rest actually planned. */
     return duties;
   }
   function offDaySet(list){
@@ -4812,6 +4938,71 @@
     }
     return Math.round(t*10)/10;
   }
+  /* Crew complement, when the roster does not say. A freighter sector long enough to need
+     augmentation almost always has it, and guessing 2 on a fourteen-hour leg overstates
+     fatigue badly - but guessing 4 on a leg actually flown by 2 understates it, which is
+     the more dangerous error. So this is a stated ASSUMPTION the screen shows and the user
+     can correct, not a silent fact. */
+  function inferCrew(blockH){
+    if(!(blockH>0)) return 2;
+    return blockH>=12? 4 : blockH>=8? 3 : 2;
+  }
+  /* The pairing curve.
+
+     Effectiveness across a whole trip, sampled, so the shape of a pattern is visible rather
+     than only its per-duty low points. It is built from the values simulateTrip has already
+     stored - the reservoir entering each duty, the sleep blocks it chose, the in-flight
+     rests it modelled - so the curve and the headline numbers cannot disagree.
+
+     Between breakpoints the reservoir moves linearly while awake, which is exactly what
+     reservoirAt does, so straight-line interpolation between them is not an approximation.
+     The circadian term is evaluated at every sample, because that part is not linear. */
+  function alertnessCurve(duties, F, stepMin){
+    if(!F || !duties || !duties.length) return [];
+    stepMin=stepMin||15;
+    var pts=[], step=stepMin*60000;
+    duties.forEach(function(d, di){
+      if(d.report==null || d.release==null || d.wakeMs==null) return;
+      var bOff=(d.bodyOffset!=null? d.bodyOffset : 0);
+      /* Breakpoints: reservoir level at each state change through this duty. */
+      var bp=[{t:d.wakeMs, r:(d.resAfterRest!=null? d.resAfterRest : 100)}];
+      var cur=bp[0].r, last=d.wakeMs;
+      d.legs.forEach(function(l){
+        if(l.restH && l['in']!=null){
+          var end=l['in']-1.5*3600000, st=end-l.restH*3600000;
+          if(st>last){
+            cur=F.reservoirAt(cur,(st-last)/3600000); bp.push({t:st,r:cur,sleep:true});
+            cur=F.reservoirAfterSleep(cur,l.restH,l.restQ||0.63); bp.push({t:end,r:cur});
+            last=end;
+          }
+        }
+      });
+      if(d.release>last){ cur=F.reservoirAt(cur,(d.release-last)/3600000); bp.push({t:d.release,r:cur}); }
+      // sample the duty
+      for(var t=d.wakeMs; t<=d.release; t+=step) pts.push(sample(t,bp,bOff,F,'duty'));
+      /* The rest that follows, but ONLY when the next duty is inside the window being
+         drawn. Reading it off a link set against the whole roster ran the time axis out
+         past the last duty and left the chart trailing into empty space. */
+      var nxt=duties[di+1];
+      if(nxt && nxt.wakeMs!=null && nxt.wakeMs>d.release){
+        var blocks=nxt.restBlocks||[];
+        for(var u=d.release; u<=nxt.wakeMs; u+=step){
+          var asleep=blocks.some(function(b){ return u>=b.start && u<b.end; });
+          pts.push({ t:u, e:null, sleep:asleep, phase:'rest' });
+        }
+      }
+    });
+    return pts;
+    function sample(t, bp, bOff, F, phase){
+      var i=0; while(i<bp.length-1 && bp[i+1].t<t) i++;
+      var a=bp[i], b=bp[Math.min(i+1,bp.length-1)];
+      var r=(b.t>a.t)? a.r+(b.r-a.r)*((t-a.t)/(b.t-a.t)) : a.r;
+      if(a.sleep) r=a.r;                              // asleep: hold, the jump is at the far end
+      var tH=(new Date(t)).getUTCHours()+(new Date(t)).getUTCMinutes()/60;
+      return { t:t, e:Math.round(F.effectiveness(r,0,F.norm24(tH),bOff)), sleep:!!a.sleep, phase:phase };
+    }
+  }
+
   function simulateTrip(duties, rests, homeOffH, offsetForFn, F){
     if(!F) return duties;
     var OVERHEAD=1.5;              // hotel transit, meals, winding down, sleep latency
@@ -4930,11 +5121,20 @@
            sleep and take only the one before the call. Evaluating both and keeping the
            better one is what stops more rest from ever scoring worse than less. */
         var startRes = restedStart? 100 : res;
+        var bestPlan=plan;
         var best=runPlan(plan, startRes, !restedStart, restedStart);
         if(plan.length>1){
-          var alt=runPlan(plan.slice(-1), startRes, !restedStart, restedStart);
-          if(alt.res>best.res) best=alt;
+          var altPlan=plan.slice(-1);
+          var alt=runPlan(altPlan, startRes, !restedStart, restedStart);
+          if(alt.res>best.res){ best=alt; bestPlan=altPlan; }
         }
+        /* The winning plan, in absolute time, so the pairing curve can be drawn from the
+           same sleep the headline number was computed from rather than a second guess at
+           it. Recording the plan is not recomputing it. */
+        d.restBlocks=bestPlan.map(function(sp){
+          return { start:r.from+sp.st*3600000, end:r.from+(sp.st+sp.h)*3600000 };
+        });
+        d.restFromMs=r.from; d.restToMs=r.from+restH*3600000;
         driftBy(restH);                            // the body clock moves across the whole rest
         res=best.res;
         var sleepH=best.sleepH, nightH=best.nightH, q=best.q;
@@ -4953,15 +5153,64 @@
          times scored a green 100% "Optimal" - the single most dangerous possible output,
          because the headline number is exactly what a tired crew would glance at. */
       var worst=null, worstAt=null;
+      /* Walked leg by leg, carrying a reservoir and a "last awake since" marker, so an
+         augmented sector's bunk break actually interrupts the wakefulness rather than being
+         invisible.
+
+         Before this, hours awake ran unbroken from the company call to every block-in. A
+         14-hour CVG-ICN was therefore charged as 17 hours continuously awake at the
+         landing - about 30 reservoir points - and came out "Severely impaired" on a sector
+         the crew had slept four hours in the middle of. A model that flags every ordinary
+         long-haul teaches you to ignore it, which is worse than not having it.
+
+         The break is assumed to be the LAST one before descent, which is how the landing
+         pilot's rest is normally assigned, and to end 1.5 hours before block-in so the
+         seat is occupied for the arrival. Both are assumptions and both are stated on
+         screen; d.restSlot can select the early break instead, which on a long sector is
+         several hours of extra wakefulness by the time the wheels touch. */
+      var segRes=res, segWake=wakeRef;
       if(wakeRef!=null) d.legs.forEach(function(l){
         if(l['in']==null) return;
+        var blockH=(l.out!=null)? (l['in']-l.out)/3600000 : null;
+        var crew=(l.crew!=null? l.crew : inferCrew(blockH));
+        l.crewAssumed=(l.crew==null);
+        l.crewUsed=crew;
+        var rest=(blockH!=null)? F.inflightRest(blockH, crew, l.restFacility||'bunk') : null;
+        if(rest){
+          var endMs, startMs;
+          if(d.restSlot==='early'){ startMs=l.out+1*3600000; endMs=startMs+rest.hours*3600000; }
+          else { endMs=l['in']-1.5*3600000; startMs=endMs-rest.hours*3600000; }
+          if(startMs>l.out && endMs<l['in'] && endMs>segWake){
+            var awakeToRest=(startMs-segWake)/3600000;
+            if(isFinite(awakeToRest) && awakeToRest>=0){
+              segRes=F.reservoirAfterSleep(F.reservoirAt(segRes, awakeToRest), rest.hours, rest.quality);
+              segWake=endMs;
+              l.restH=Math.round(rest.hours*10)/10;
+              l.restQ=Math.round(rest.quality*100)/100;
+              l.restFac=rest.facility;
+            }
+          }
+        }
         var tH=(new Date(l['in'])).getUTCHours()+(new Date(l['in'])).getUTCMinutes()/60;
-        var awake=(l['in']-wakeRef)/3600000;
+        var awake=(l['in']-segWake)/3600000;
         if(!isFinite(awake)) return;
-        var e=F.effectiveness(res, awake, F.norm24(tH), bodyOff);
+        l.awakeAtIn=Math.round(awake*10)/10;
+        /* Including time on task: how long this duty period has been running by now. */
+        var dutyH=(d.report!=null)? (l['in']-d.report)/3600000 : null;
+        var e=(F.effectivenessOnDuty && dutyH!=null)
+              ? F.effectivenessOnDuty(segRes, awake, F.norm24(tH), bodyOff, dutyH)
+              : F.effectiveness(segRes, awake, F.norm24(tH), bodyOff);
+        l.dutyHAtIn = dutyH==null? null : Math.round(dutyH*10)/10;
         l.effAtIn=Math.round(e);
         if(worst==null || e<worst){ worst=e; worstAt=l; }
       });
+      /* NO depletion here. The end of this loop already charges the whole wake span from
+         the call to release (see awakeSpanH below), and a second charge at this point
+         double-counted every duty period in the pattern. I added it after reading a rising
+         reservoir across five minimum-rest days as evidence that debt was not accumulating
+         - it was; the rise came from sleep drifting into and out of the body night, which
+         is a real effect and not a bug. Diagnosing a symptom without reading the code that
+         already handled it is how a model ends up counting the same hours twice. */
       d.effWorst = worst==null? null : Math.round(worst);
       d.effWorstLeg=worstAt? (worstAt.flight+' '+worstAt.from+'→'+worstAt.to) : null;
       /* Said in plain words. "Worst on 750 ORD→ANC" means nothing on a single-leg duty —
@@ -4989,6 +5238,12 @@
       res=F.reservoirAt(res, Math.max(0,awakeSpanH));
       d.resAfterDuty=Math.round(res);
     });
+    /* Link each duty to the rest that FOLLOWS it, so the pairing curve can draw the gap
+       between duties from the sleep the next duty's rest actually planned. */
+    for(var q=0;q<duties.length-1;q++){
+      var nxt=duties[q+1];
+      if(nxt.wakeMs!=null && nxt.restBlocks) duties[q]._nextRest={ wakeMs:nxt.wakeMs, blocks:nxt.restBlocks };
+    }
     return duties;
   }
 
@@ -5326,7 +5581,7 @@
 
   var API={REGIMES:REGIMES,simulateTrip:simulateTrip,markConsecutive:markConsecutive,offDaySet:offDaySet,explain:explain,
            controllingRest:controllingRest,cumulative:cumulative,windowTotals:windowTotals,
-           hardCaps:hardCaps,HARDCAPS:HARDCAPS,duty24:duty24,worstDuty24:worstDuty24,
+           inferCrew:inferCrew,alertnessCurve:alertnessCurve,hardCaps:hardCaps,HARDCAPS:HARDCAPS,duty24:duty24,worstDuty24:worstDuty24,
            longestFreeSpan:longestFreeSpan,CUMREF:CUMREF,limitsFor:limitsFor,buildDuties:buildDuties,restPeriods:restPeriods,
            requiredRestMin:requiredRestMin,FACTORS:FACTORS,bandColor:bandColor,pct:pct};
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
@@ -6344,7 +6599,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v15.6 · 2026-09-01';
+  var BUILD='v16.2 · 2026-09-01';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -6370,7 +6625,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v15.6',
+    version:'v16.2',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -8299,7 +8554,9 @@
   function ftSave(){
     try{ localStorage.setItem('ad_fatigue', JSON.stringify({
       home:$('#ftHome').value, stn:$('#ftStn').value, days:$('#ftDays').value,
-      wake:$('#ftWake').value, sleep:$('#ftSleep').value, tod:$('#ftTod').value, fac:ftFacility, wakeDay:ftWakeDay })); }catch(e){}
+      wake:$('#ftWake').value, sleep:$('#ftSleep').value, tod:$('#ftTod').value,
+      sleep48:$('#ftSleep48').value, report:$('#ftReport').value,
+      fac:ftFacility, wakeDay:ftWakeDay, workload:ftWorkload })); }catch(e){}
   }
   function ftLoadFromOfp(){
     var n=[];
@@ -8321,7 +8578,34 @@
     return F.hToHHMM(utcH)+'Z · '+F.hToHHMM(utcH+sOff)+' LCL · '+F.hToHHMM(utcH+bOff)+' body';
   }
   function ftBar(pct,color){ return '<div class="ftmeter"><i style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+'"></i></div>'; }
+  var ftRptNotes=null, ftWorkload='normal';
+
+  /* The duty this assessment is about: the one you are about to report for.
+     Falls back to the one in progress, because a crew member checking mid-pattern wants the
+     duty they are living in, not the next one after it. */
+  function ftNextDuty(){
+    if(typeof DUTY==='undefined' || typeof FATIGUE==='undefined') return null;
+    var legs; try{ legs=dpRoster(); }catch(e){ return null; }
+    if(!legs || !legs.length) return null;
+    var duties=DUTY.buildDuties(legs), rests=DUTY.restPeriods(duties);
+    var homeOff=dpBaseOff(Date.now());
+    try{ DUTY.simulateTrip(duties, rests, homeOff, dpOff, FATIGUE); }catch(e){ return null; }
+    var now=Date.now(), cur=null, next=null;
+    for(var i=0;i<duties.length;i++){
+      var d=duties[i];
+      if(d.report==null) continue;
+      if(d.release!=null && d.report<=now && now<=d.release){ cur=d; cur._i=i; break; }
+      if(d.report>now && next==null){ next=d; next._i=i; }
+    }
+    var pick=cur||next;
+    if(!pick) return null;
+    pick._rest=(pick._i>0)? rests[pick._i-1] : null;
+    pick._n=duties.length; pick._inProgress=(pick===cur);
+    return pick;
+  }
+
   function ftCompute(){
+    ftRptNotes=null;
     var out=$('#ftOut'); if(!out||typeof FATIGUE==='undefined') return;
     ftSave();
     var F=FATIGUE;
@@ -8352,6 +8636,217 @@
     var w=F.wocl(bOff);
 
     var h='';
+
+    /* ---- REPORT CHECK -------------------------------------------------------------
+       The question this tab is actually opened to answer is not "how tired will I be at
+       the top of descent" - that is a planning question, answered further down. It is
+       "should I be reporting for this duty at all", and that is a different calculation:
+       anchored at REPORT rather than at landing, and built from the sleep you actually
+       got rather than the sleep the model thinks a rest opportunity would have given you.
+
+       It deliberately does NOT return a verdict. It cannot: it knows only what you typed,
+       and a tool that told you that you were fit would be wrong on the night you lay awake
+       and a tool that told you that you were not would be making a call that is yours to
+       make. What it does is turn a feeling into the specific figures - hours awake, sleep
+       in 24 and 48 hours, where report falls against your body clock - which is exactly
+       what you have to be able to state if you do make that call.
+
+       The thresholds are the ones commonly used as flags in airline FRMS programmes. They
+       are INDICATORS, not limits, and none of them is regulatory. */
+    /* ---- WHAT THIS DUTY WILL DO TO YOU ---------------------------------------------
+       The assessment the tab exists for, and it is a product of three things rather than
+       one: what you are carrying in from the pattern behind you, what the rest you just
+       had was worth, and what the duty ahead actually demands.
+
+       None of the three answers it alone. Four days on minimum rest is not a reason to stop
+       if the next duty is a four-hour hop; the same four days in front of an eighteen-hour
+       duty is a different proposition entirely. Anchoring on report time alone misses that,
+       and anchoring on the landing alone ignores the debt you brought with you. */
+    var nd=ftNextDuty();
+    if(nd){
+      var carry=nd.resAfterRest, worst=nd.effWorst, wband=(worst==null)?null:F.band(worst);
+      var restH=nd._rest? nd._rest.min/60 : null;
+      var dutyH=(nd.report!=null&&nd.release!=null)? (nd.release-nd.report)/3600000 : null;
+      var blockH=0, aug=null, augRest=0;
+      nd.legs.forEach(function(l){
+        if(l.out!=null&&l['in']!=null) blockH+=(l['in']-l.out)/3600000;
+        if(l.restH){ augRest+=l.restH; aug=l.crewUsed; }
+      });
+      var pat=nd.consecN||null;
+      function row(k,v,sub){
+        return '<div class="rptline"><div class="rptmark" style="color:#8fb4ff">•</div><div>'+
+               '<span class="rptval">'+k+' — '+v+'</span>'+(sub?'<br><span class="rptwhy">'+sub+'</span>':'')+'</div></div>';
+      }
+      h+='<div class="rptbox">'+
+         '<div class="rpthead">'+(nd._inProgress?'The duty you are in':'The duty you are about to report for')+'</div>'+
+         '<div class="rptq">'+(worst==null? 'Not enough times in the roster to project this duty.'
+            : 'Projected low point: <span style="color:'+wband.color+'">'+worst+'/100, '+esc(wband.label)+'</span>')+'</div>';
+      h+=row('Carrying in', (carry!=null? carry+'/100 reservoir':'unknown')+
+             (pat? ', day '+pat+' of this pattern':''),
+             'What the days behind you left, after the rest you just had. This is modelled from your roster, not from what you actually slept.');
+      if(restH!=null) row;
+      if(restH!=null) h+=row('Rest just taken', restH.toFixed(1)+' h'+(nd.restSleepH!=null? ', about '+nd.restSleepH+' h of sleep in it':''),
+             restH<11? 'At or near minimum. Short rest is where debt accumulates fastest.' : null);
+      h+=row('This duty asks for', (dutyH!=null? dutyH.toFixed(1)+' h duty':'unknown duty length')+
+             (blockH>0? ', '+blockH.toFixed(1)+' h block':'')+
+             (nd.legs.length>1? ', '+nd.legs.length+' legs':'')+
+             (augRest>0? ' · '+aug+' pilots, about '+augRest.toFixed(1)+' h bunk rest assumed' : ''),
+             augRest>0? 'Crew complement is assumed from sector length unless your roster states it. If you are actually flying it unaugmented, this is optimistic.' : null);
+      if(nd.effWhere) h+=row('Low point falls', esc(String(nd.effWhere).replace(/<[^>]*>/g,'')), null);
+      h+='<div class="rptfoot"><b>This is a projection, and the decision is yours alone.</b> '+
+         'It is built from your roster and a published model, not from the sleep you actually got — '+
+         'fill in the check below with your real sleep to see how much that changes it.</div></div>';
+    }
+
+    /* ---- THE PAIRING CURVE ---------------------------------------------------------
+       The shape of a whole trip rather than a number per duty period. A pattern that looks
+       acceptable duty-by-duty can still be a staircase downward, and that is only visible
+       drawn. Built from the values simulateTrip already stored, so the curve and the
+       headline figures come from the same arithmetic. */
+    if(nd){
+      try{
+        var legsAll=dpRoster(), allD=DUTY.buildDuties(legsAll), allR=DUTY.restPeriods(allD);
+        DUTY.simulateTrip(allD, allR, dpBaseOff(Date.now()), dpOff, F);
+        /* Only the pattern around the duty in question: the whole roster is not a trip. */
+        var here=-1;
+        for(var z=0;z<allD.length;z++) if(allD[z].report===nd.report){ here=z; break; }
+        var lo=Math.max(0, here-3), hi=Math.min(allD.length, here+4);
+        var win=allD.slice(lo,hi);
+        var pts=DUTY.alertnessCurve(win, F, 20);
+        if(pts.length>4){
+          var W=Math.max(320, Math.min(1100, pts.length*3)), H=128, PADL=26, PADB=16, PADT=8;
+          var t0=pts[0].t, t1=pts[pts.length-1].t, span=Math.max(1,t1-t0);
+          var X=function(t){ return PADL+(t-t0)/span*(W-PADL-6); };
+          var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
+          var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block">';
+          // band lines
+          [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
+            g+='<line x1="'+PADL+'" y1="'+Y(b[0]).toFixed(1)+'" x2="'+(W-6)+'" y2="'+Y(b[0]).toFixed(1)+
+               '" stroke="'+b[1]+'" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 3"/>'+
+               '<text x="2" y="'+(Y(b[0])+3).toFixed(1)+'" fill="'+b[1]+'" fill-opacity=".65" font-size="8">'+b[0]+'</text>';
+          });
+          // sleep and duty shading
+          var runStart=null, runKind=null;
+          function flush(endT){
+            if(runStart==null) return;
+            var x0=X(runStart), x1=X(endT);
+            if(runKind==='sleep') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#4d76d8" fill-opacity=".22"/>';
+            else if(runKind==='duty') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#ffffff" fill-opacity=".045"/>';
+            runStart=null;
+          }
+          pts.forEach(function(pt){
+            var kind=pt.sleep? 'sleep' : (pt.phase==='duty'? 'duty' : 'awake');
+            if(kind!==runKind){ flush(pt.t); runKind=kind; runStart=pt.t; }
+          });
+          flush(t1);
+          // the curve itself, only where there is a value (rest has none)
+          var seg=[], paths=[];
+          pts.forEach(function(pt){
+            if(pt.e==null){ if(seg.length>1) paths.push(seg); seg=[]; return; }
+            seg.push(X(pt.t).toFixed(1)+','+Y(pt.e).toFixed(1));
+          });
+          if(seg.length>1) paths.push(seg);
+          paths.forEach(function(sg){
+            g+='<polyline points="'+sg.join(' ')+'" fill="none" stroke="#8fb4ff" stroke-width="1.8" stroke-linejoin="round"/>';
+          });
+          // the low point of each duty in the window
+          win.forEach(function(dd){
+            if(dd.effWorst==null||dd.report==null) return;
+            var lp=null;
+            pts.forEach(function(pt){ if(pt.phase==='duty'&&pt.e!=null&&(lp==null||pt.e<lp.e)&&pt.t>=dd.report&&pt.t<=dd.release) lp=pt; });
+            if(!lp) return;
+            var col=F.band(lp.e).color;
+            g+='<circle cx="'+X(lp.t).toFixed(1)+'" cy="'+Y(lp.e).toFixed(1)+'" r="2.6" fill="'+col+'"/>';
+          });
+          // day marks
+          for(var dm=Math.ceil(t0/86400000)*86400000; dm<t1; dm+=86400000){
+            g+='<line x1="'+X(dm).toFixed(1)+'" y1="'+PADT+'" x2="'+X(dm).toFixed(1)+'" y2="'+(H-PADB)+'" stroke="#8fa3c4" stroke-opacity=".18"/>'+
+               '<text x="'+(X(dm)+2).toFixed(1)+'" y="'+(H-5)+'" fill="#8fa3c4" font-size="8">'+new Date(dm).toISOString().slice(5,10)+'</text>';
+          }
+          g+='</svg>';
+          h+='<div class="rptbox"><div class="rpthead">This pattern, start to finish</div>'+
+             '<div class="rptq" style="font-size:13px">Predicted alertness across the days either side of this duty.</div>'+
+             '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'+g+'</div>'+
+             '<div class="rptwhy" style="margin-top:8px;font-size:11.5px">'+
+             'Blue shading is modelled sleep, lighter shading is duty. Dots mark the low point of each duty period. '+
+             'Dashed lines are the 90 / 77 / 65 bands — vendor defaults, not regulatory limits. '+
+             'A pattern can be acceptable on any single day and still be a staircase downward.</div></div>';
+        }
+      }catch(e){}
+    }
+
+    var rep=F.hhmmToH($('#ftReport').value);
+    if(ftTimeMode==='L' && rep!=null) rep=F.norm24(rep-sOff);
+    var s48=ftNum($('#ftSleep48'));
+    if(rep!=null){
+      var awakeRep=F.norm24(rep-wake)+24*ftWakeDay;
+      var eRep=F.effectiveness(r0,awakeRep,rep,bOff), bRep=F.band(eRep);
+      var bodyRep=F.bodyHourAt(rep,bOff);
+      var flags=[], notes=[];
+      function factor(bad, label, value, why){
+        flags.push({bad:!!bad, label:label, value:value, why:why});
+        if(bad) notes.push(label+': '+value);
+      }
+      /* Two thresholds, both published, both named. The FedEx/ALPA self-assessment states
+         one number and one only - "if that number is less than 4 consider yourself
+         susceptible to fatigue" - while 6 h is the figure most FRMS programmes use. They
+         disagree, so both are shown rather than one being picked silently. */
+      factor(sleep<6, 'Sleep in the last 24 h', sleep.toFixed(1)+' h'+
+               (sleep<4? ' — below the FedEx/ALPA line of 4 h' :
+                sleep<6? ' — below the 6 h FRMS flag, above the FedEx/ALPA line of 4 h' :
+                         ' — above both the 4 h and 6 h lines'),
+             'FedEx/ALPA publishes 4 h in the previous 24 as the point to consider yourself susceptible. 6 h is the more common FRMS flag.');
+      if(s48!=null) factor(s48<12, 'Sleep in the last 48 h', s48.toFixed(1)+' h',
+             'Under about 12 h in 48 means a deficit that one short night did not create and one short night will not clear.');
+      factor(awakeRep>16, 'Awake at report', awakeRep.toFixed(1)+' h',
+             'Past roughly 16 h awake, measured performance falls off regardless of how you feel.');
+      /* Named as the neutral fact it is. "Report falls in your circadian low" beside a
+         green tick reads as a contradiction - the label asserts the thing the tick is
+         denying. */
+      var inLow=F.inWocl(rep,bOff);
+      factor(inLow, 'Body time at report', F.hToHHMM(bodyRep)+(inLow? ' — inside your circadian low' : ' — outside your circadian low'),
+             'Reporting inside 0200–0600 body time is the hardest start there is, and it is when your own judgement of your own state is least reliable.');
+      if(tod!=null){
+        var awakeEnd=F.norm24(tod-wake)+24*ftWakeDay; if(awakeEnd<awakeRep) awakeEnd+=24;
+        factor(awakeEnd>20, 'Awake by top of descent', awakeEnd.toFixed(1)+' h',
+               'Beyond 20 h awake the published alcohol comparison is around 0.08%.');
+      }
+      /* The fifth question from the FedEx/ALPA self-assessment, which this app carried four
+         of and not this one. It is the factor that separates an eighteen-hour duty from a
+         four-hour one in a way no model constant does, and it is deliberately a judgement
+         rather than a computation - which is how the source treats it too. */
+      factor(ftWorkload==='high', 'Expected workload', ftWorkload==='high'? 'Elevated' : 'Normal',
+             'Maintenance, weather, an unfamiliar field or a known-difficult arrival all raise what the duty costs you, independently of how much you slept.');
+      if(scSP!=null) factor(scSP>=5, 'Samn-Perelli, right now', scSP+'/7',
+             '5 or worse is how you have just described yourself, and it is the only input here that is a measurement rather than a model.');
+      var nBad=flags.filter(function(f){ return f.bad; }).length;
+      /* The headline has to account for BOTH halves. "Nothing here is flagged" printed
+         directly above "Severely impaired" is the kind of contradiction that makes a person
+         stop believing the whole screen. */
+      var headline;
+      if(nBad===0 && eRep>=77) headline='Nothing here is flagged.';
+      else if(nBad===0) headline='No single factor is flagged, but the model still puts you at '+Math.round(eRep)+'.';
+      else headline=nBad+' factor'+(nBad>1?'s are':' is')+' elevated for this report.';
+      h+='<div class="rptbox">'+
+         '<div class="rpthead">Report check · '+F.hToHHMM(rep)+'Z</div>'+
+         '<div class="rptq">'+headline+'</div>';
+      flags.forEach(function(f){
+        h+='<div class="rptline"><div class="rptmark" style="color:'+(f.bad?'#ff9d4d':'#4ee39a')+'">'+(f.bad?'!':'✓')+'</div>'+
+           '<div><span class="rptval">'+esc(f.label)+' — '+esc(f.value)+'</span>'+
+           (f.bad? '<br><span class="rptwhy">'+f.why+'</span>' : '')+'</div></div>';
+      });
+      h+='<div class="rptline"><div class="rptmark" style="color:'+bRep.color+'">•</div>'+
+         '<div><span class="rptval">Modelled alertness at report — '+Math.round(eRep)+'/100, '+esc(bRep.label)+'</span>'+
+         '<br><span class="rptwhy">A prediction from what you typed, on a scale whose thresholds are a vendor\'s defaults, not a regulator\'s.</span></div></div>';
+      h+='<div class="rptfoot"><b>This does not tell you whether to fly, and it cannot.</b> '+
+         'It only knows what you typed, and the decision is yours alone to make. What it gives you is the '+
+         'specifics — which is what you need to be able to state, either to justify a call or to satisfy yourself that you are good to go.'+
+         '</div>'+
+         '<button class="rptbtn" id="rptCopy">Copy these figures</button>'+
+         '</div>';
+      ftRptNotes={ rep:rep, awakeRep:awakeRep, eRep:eRep, band:bRep.label, flags:flags, body:bodyRep, s48:s48 };
+    }
+
     // headline: body-clock misalignment
     var mis=ad.remaining;
     h+='<div class="ftbig"><div class="ftbiglab">Body clock vs local time at '+esc(stn)+'</div>'+
@@ -8412,6 +8907,21 @@
     h+='<button id="ftCopy" class="minibtn" style="margin-top:14px;width:100%;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Copy factual summary</button>';
     out.innerHTML=h;
 
+    var rc=document.getElementById('rptCopy');
+    if(rc) rc.onclick=function(){
+      var n=ftRptNotes; if(!n) return;
+      var L=['REPORT CHECK — '+FATIGUE.hToHHMM(n.rep)+'Z (predicted, not a measurement)',
+             'Body time at report: '+FATIGUE.hToHHMM(n.body),
+             'Hours awake at report: '+n.awakeRep.toFixed(1),
+             'Modelled alertness at report: '+Math.round(n.eRep)+'/100 ('+n.band+')',''];
+      n.flags.forEach(function(f){ L.push((f.bad?'[FLAGGED] ':'[ok]      ')+f.label+': '+f.value); });
+      L.push('');
+      L.push('Thresholds are indicators commonly used in FRMS programmes. None is a regulatory limit.');
+      L.push('This is a prediction from self-reported sleep. It is not a fitness-for-duty determination.');
+      var txt=L.join('\n');
+      try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(e){}
+      this.textContent='Copied ✓'; var b=this; setTimeout(function(){b.textContent='Copy these figures';},1400);
+    };
     var cb=document.getElementById('ftCopy');
     if(cb) cb.onclick=function(){
       var L=['FATIGUE SNAPSHOT (predicted — planning aid, not a measurement)',
@@ -8443,13 +8953,22 @@
     ['ftHome','ftStn','ftDays','ftWake','ftSleep','ftTod'].forEach(function(id){
       var e=document.getElementById(id); if(e) e.addEventListener('input',ftCompute);
     });
+    ['ftSleep48','ftReport'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.addEventListener('input', function(){ ftSave(); ftCompute(); });
+    });
     Array.prototype.forEach.call(document.querySelectorAll('[data-fttm]'),function(b){
       b.onclick=function(){ document.querySelectorAll('[data-fttm]').forEach(function(x){x.classList.remove('on');});
         b.classList.add('on'); ftTimeMode=b.getAttribute('data-fttm');
         var lab=(ftTimeMode==='Z')?'(Zulu)':'(local at '+(($('#ftStn').value||'station').toUpperCase())+')';
-        var a=document.getElementById('ftWakeU'), c=document.getElementById('ftTodU');
-        if(a)a.textContent=lab; if(c)c.textContent=lab;
+        var a=document.getElementById('ftWakeU'), c=document.getElementById('ftTodU'),
+            rp=document.getElementById('ftRepU');
+        if(a)a.textContent=lab; if(c)c.textContent=lab; if(rp)rp.textContent=lab;
         ftCompute(); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ftwl]'),function(b){
+      b.onclick=function(){ document.querySelectorAll('[data-ftwl]').forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on'); ftWorkload=b.getAttribute('data-ftwl'); ftSave(); ftCompute(); };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-ftfac]'),function(b){
       b.onclick=function(){ document.querySelectorAll('[data-ftfac]').forEach(function(x){x.classList.remove('on');});
@@ -8464,6 +8983,8 @@
       if(st.home)$('#ftHome').value=st.home; if(st.stn)$('#ftStn').value=st.stn;
       if(st.days!=null)$('#ftDays').value=st.days; if(st.wake)$('#ftWake').value=st.wake;
       if(st.sleep!=null)$('#ftSleep').value=st.sleep; if(st.tod)$('#ftTod').value=st.tod;
+      if(st.sleep48!=null)$('#ftSleep48').value=st.sleep48; if(st.report)$('#ftReport').value=st.report;
+      if(st.workload){ ftWorkload=st.workload; document.querySelectorAll('[data-ftwl]').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-ftwl')===ftWorkload); }); }
       if(st.fac){ ftFacility=st.fac; document.querySelectorAll('[data-ftfac]').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-ftfac')===ftFacility); }); }
       if(st.wakeDay!=null){ ftWakeDay=+st.wakeDay; document.querySelectorAll('[data-ftday]').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-ftday')===ftWakeDay); }); }
     }
