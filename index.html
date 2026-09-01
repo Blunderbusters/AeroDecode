@@ -6599,7 +6599,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v16.2 · 2026-09-01';
+  var BUILD='v16.3 · 2026-09-01';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -6625,7 +6625,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v16.2',
+    version:'v16.3',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -8578,81 +8578,16 @@
     return F.hToHHMM(utcH)+'Z · '+F.hToHHMM(utcH+sOff)+' LCL · '+F.hToHHMM(utcH+bOff)+' body';
   }
   function ftBar(pct,color){ return '<div class="ftmeter"><i style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+'"></i></div>'; }
-  var ftRptNotes=null, ftWorkload='normal';
+  /* The two roster-driven cards: what this duty will do to you, and the shape of the
+     pattern around it. Both are built ENTIRELY from the imported roster - they need no
+     home base, no station, no wake time and no sleep figure.
 
-  /* The duty this assessment is about: the one you are about to report for.
-     Falls back to the one in progress, because a crew member checking mid-pattern wants the
-     duty they are living in, not the next one after it. */
-  function ftNextDuty(){
-    if(typeof DUTY==='undefined' || typeof FATIGUE==='undefined') return null;
-    var legs; try{ legs=dpRoster(); }catch(e){ return null; }
-    if(!legs || !legs.length) return null;
-    var duties=DUTY.buildDuties(legs), rests=DUTY.restPeriods(duties);
-    var homeOff=dpBaseOff(Date.now());
-    try{ DUTY.simulateTrip(duties, rests, homeOff, dpOff, FATIGUE); }catch(e){ return null; }
-    var now=Date.now(), cur=null, next=null;
-    for(var i=0;i<duties.length;i++){
-      var d=duties[i];
-      if(d.report==null) continue;
-      if(d.release!=null && d.report<=now && now<=d.release){ cur=d; cur._i=i; break; }
-      if(d.report>now && next==null){ next=d; next._i=i; }
-    }
-    var pick=cur||next;
-    if(!pick) return null;
-    pick._rest=(pick._i>0)? rests[pick._i-1] : null;
-    pick._n=duties.length; pick._inProgress=(pick===cur);
-    return pick;
-  }
-
-  function ftCompute(){
-    ftRptNotes=null;
-    var out=$('#ftOut'); if(!out||typeof FATIGUE==='undefined') return;
-    ftSave();
-    var F=FATIGUE;
-    var home=($('#ftHome').value||'').toUpperCase().trim(), stn=($('#ftStn').value||'').toUpperCase().trim();
-    var days=ftNum($('#ftDays'))||0, sleep=ftNum($('#ftSleep'));
-    var wake=F.hhmmToH($('#ftWake').value), tod=F.hhmmToH($('#ftTod').value);
-    if(!home||!stn||wake==null||sleep==null){
-      out.innerHTML='<div class="hint" style="padding:0 4px;margin-top:12px">Enter your home base, where you are now, when you woke and how much sleep you got.</div>';
-      return;
-    }
-    var hOff=ftOffH(home), sOff=ftOffH(stn);
-    if(hOff==null||sOff==null){
-      out.innerHTML='<div class="warnbox" style="margin-top:12px"><div class="wtitle">Unknown airport</div><p>I don’t have a time zone for <b>'+esc(hOff==null?home:stn)+'</b>. Open the Zulu strip at the top with a flight plan loaded and tap that airport to set its UTC offset manually — I will not guess one.</p></div>';
-      return;
-    }
-    var ad=F.adaptation(hOff,sOff,days), bOff=F.bodyOffset(hOff,sOff,days);
-    // Typed times may be Zulu or station-local. Everything downstream is UTC.
-    if(ftTimeMode==='L'){ wake=F.norm24(wake-sOff); if(tod!=null) tod=F.norm24(tod-sOff); }
-    var sleepStart=F.norm24(wake-sleep);
-    var night=F.sleepInBodyNight(sleepStart,sleep,bOff), q=F.sleepQuality(night,ftFacility);
-    var r0=F.reservoirAtWake(sleep,q,0);
-    var now=new Date(); var nowH=now.getUTCHours()+now.getUTCMinutes()/60;
-    /* Hours awake must be able to exceed 24. Wrapping it into 0-24 silently reset a
-       26-hour duty to "2 hours awake" — and suppressed the alcohol-equivalence line that
-       exists precisely for the far end of that range. */
-    var awakeNow=F.norm24(nowH-wake)+24*ftWakeDay;
-    var eNow=F.effectiveness(r0,awakeNow,nowH,bOff), bNow=F.band(eNow);
-    var w=F.wocl(bOff);
-
+     They used to sit halfway down ftCompute, BELOW the guard that returns early when those
+     four fields are blank. So a pilot who had imported a roster and not yet typed his
+     personal details saw "Enter your home base..." and nothing else - and the two things
+     that needed nothing from him were the two he could not reach. */
+  function ftRosterCards(F){
     var h='';
-
-    /* ---- REPORT CHECK -------------------------------------------------------------
-       The question this tab is actually opened to answer is not "how tired will I be at
-       the top of descent" - that is a planning question, answered further down. It is
-       "should I be reporting for this duty at all", and that is a different calculation:
-       anchored at REPORT rather than at landing, and built from the sleep you actually
-       got rather than the sleep the model thinks a rest opportunity would have given you.
-
-       It deliberately does NOT return a verdict. It cannot: it knows only what you typed,
-       and a tool that told you that you were fit would be wrong on the night you lay awake
-       and a tool that told you that you were not would be making a call that is yours to
-       make. What it does is turn a feeling into the specific figures - hours awake, sleep
-       in 24 and 48 hours, where report falls against your body clock - which is exactly
-       what you have to be able to state if you do make that call.
-
-       The thresholds are the ones commonly used as flags in airline FRMS programmes. They
-       are INDICATORS, not limits, and none of them is regulatory. */
     /* ---- WHAT THIS DUTY WILL DO TO YOU ---------------------------------------------
        The assessment the tab exists for, and it is a product of three things rather than
        one: what you are carrying in from the pattern behind you, what the rest you just
@@ -8775,6 +8710,87 @@
       }catch(e){}
     }
 
+    return h;
+  }
+
+  var ftRptNotes=null, ftWorkload='normal';
+
+  /* The duty this assessment is about: the one you are about to report for.
+     Falls back to the one in progress, because a crew member checking mid-pattern wants the
+     duty they are living in, not the next one after it. */
+  function ftNextDuty(){
+    if(typeof DUTY==='undefined' || typeof FATIGUE==='undefined') return null;
+    var legs; try{ legs=dpRoster(); }catch(e){ return null; }
+    if(!legs || !legs.length) return null;
+    var duties=DUTY.buildDuties(legs), rests=DUTY.restPeriods(duties);
+    var homeOff=dpBaseOff(Date.now());
+    try{ DUTY.simulateTrip(duties, rests, homeOff, dpOff, FATIGUE); }catch(e){ return null; }
+    var now=Date.now(), cur=null, next=null;
+    for(var i=0;i<duties.length;i++){
+      var d=duties[i];
+      if(d.report==null) continue;
+      if(d.release!=null && d.report<=now && now<=d.release){ cur=d; cur._i=i; break; }
+      if(d.report>now && next==null){ next=d; next._i=i; }
+    }
+    var pick=cur||next;
+    if(!pick) return null;
+    pick._rest=(pick._i>0)? rests[pick._i-1] : null;
+    pick._n=duties.length; pick._inProgress=(pick===cur);
+    return pick;
+  }
+
+  function ftCompute(){
+    ftRptNotes=null;
+    var out=$('#ftOut'); if(!out||typeof FATIGUE==='undefined') return;
+    ftSave();
+    var F=FATIGUE;
+    var home=($('#ftHome').value||'').toUpperCase().trim(), stn=($('#ftStn').value||'').toUpperCase().trim();
+    var days=ftNum($('#ftDays'))||0, sleep=ftNum($('#ftSleep'));
+    var wake=F.hhmmToH($('#ftWake').value), tod=F.hhmmToH($('#ftTod').value);
+    if(!home||!stn||wake==null||sleep==null){
+      /* The roster cards still render here: they depend on nothing typed on this screen. */
+      var rc=''; try{ rc=ftRosterCards(F); }catch(e){}
+      out.innerHTML=rc+'<div class="hint" style="padding:0 4px;margin-top:12px">Enter your home base, where you are now, when you woke and how much sleep you got — that adds the report check, which uses the sleep you actually had rather than the sleep the model assumes.</div>';
+      return;
+    }
+    var hOff=ftOffH(home), sOff=ftOffH(stn);
+    if(hOff==null||sOff==null){
+      out.innerHTML='<div class="warnbox" style="margin-top:12px"><div class="wtitle">Unknown airport</div><p>I don’t have a time zone for <b>'+esc(hOff==null?home:stn)+'</b>. Open the Zulu strip at the top with a flight plan loaded and tap that airport to set its UTC offset manually — I will not guess one.</p></div>';
+      return;
+    }
+    var ad=F.adaptation(hOff,sOff,days), bOff=F.bodyOffset(hOff,sOff,days);
+    // Typed times may be Zulu or station-local. Everything downstream is UTC.
+    if(ftTimeMode==='L'){ wake=F.norm24(wake-sOff); if(tod!=null) tod=F.norm24(tod-sOff); }
+    var sleepStart=F.norm24(wake-sleep);
+    var night=F.sleepInBodyNight(sleepStart,sleep,bOff), q=F.sleepQuality(night,ftFacility);
+    var r0=F.reservoirAtWake(sleep,q,0);
+    var now=new Date(); var nowH=now.getUTCHours()+now.getUTCMinutes()/60;
+    /* Hours awake must be able to exceed 24. Wrapping it into 0-24 silently reset a
+       26-hour duty to "2 hours awake" — and suppressed the alcohol-equivalence line that
+       exists precisely for the far end of that range. */
+    var awakeNow=F.norm24(nowH-wake)+24*ftWakeDay;
+    var eNow=F.effectiveness(r0,awakeNow,nowH,bOff), bNow=F.band(eNow);
+    var w=F.wocl(bOff);
+
+    var h='';
+    try{ h+=ftRosterCards(F); }catch(e){}
+
+    /* ---- REPORT CHECK -------------------------------------------------------------
+       The question this tab is actually opened to answer is not "how tired will I be at
+       the top of descent" - that is a planning question, answered further down. It is
+       "should I be reporting for this duty at all", and that is a different calculation:
+       anchored at REPORT rather than at landing, and built from the sleep you actually
+       got rather than the sleep the model thinks a rest opportunity would have given you.
+
+       It deliberately does NOT return a verdict. It cannot: it knows only what you typed,
+       and a tool that told you that you were fit would be wrong on the night you lay awake
+       and a tool that told you that you were not would be making a call that is yours to
+       make. What it does is turn a feeling into the specific figures - hours awake, sleep
+       in 24 and 48 hours, where report falls against your body clock - which is exactly
+       what you have to be able to state if you do make that call.
+
+       The thresholds are the ones commonly used as flags in airline FRMS programmes. They
+       are INDICATORS, not limits, and none of them is regulatory. */
     var rep=F.hhmmToH($('#ftReport').value);
     if(ftTimeMode==='L' && rep!=null) rep=F.norm24(rep-sOff);
     var s48=ftNum($('#ftSleep48'));
