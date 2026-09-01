@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v30';
+var V='cargodecode-v32';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
@@ -66,6 +66,13 @@ self.addEventListener('fetch', function(e){
   if(url.origin!==self.location.origin) return;
 
   var isDoc = req.mode==='navigate' || req.destination==='document';
+
+  /* Only the app's OWN address gets the app. This branch used to answer every navigation
+     anywhere in scope with the cached index.html, so any other page on this origin came
+     back as CargoDecode - and worse, the refresh below then cached whatever that address
+     returned AS the app, which is a cache poisoned by visiting a wrong URL once. */
+  var base=new URL('./', self.location).pathname;
+  if(isDoc && url.pathname!==base && url.pathname!==base+'index.html') return;
 
   if(isDoc){
     e.respondWith(

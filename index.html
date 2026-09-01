@@ -1190,10 +1190,100 @@
     <input id="pinInput" class="pininput" inputmode="text" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Employee #">
     <button id="pinBtn" class="primary" style="width:100%;margin-top:10px">Sign in</button>
     <div id="pinErr" class="lockerr"></div>
-    <div class="lockfoot"><span></span><a id="lockClose" style="display:none">Close</a></div>
+    <div class="lockfoot"><span><a id="rescueLink" style="cursor:pointer;opacity:.75">Trouble signing in?</a></span><a id="lockClose" style="display:none">Close</a></div>
+    <div id="rescueBox" style="display:none;margin-top:10px;text-align:left;font-size:11.5px;line-height:1.5;
+      background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.25);border-radius:9px;padding:11px">
+      <div id="rescueDiag" style="font-family:ui-monospace,Menlo,monospace;color:#b9cbe8;white-space:pre-wrap"></div>
+      <button id="rescueRepair" class="primary" style="width:100%;margin-top:9px">Repair this app and reload</button>
+      <div style="color:#8fa3c4;margin-top:7px">Clears the offline copy and downloads the app fresh. Nothing you have entered is lost.</div>
+    </div>
     <div class="lockdisc">Independent tool — not affiliated with, endorsed by, or sponsored by Atlas Air, Inc. or the International Brotherhood of Teamsters. All results are estimates for personal reference only; verify every figure against official sources and the governing CBA.</div>
   </div>
 </div>
+
+<script>
+/* Rescue, deliberately kept separate and FIRST.
+
+   Everything else in this file lives in one enormous script. If any statement in it throws
+   — a browser that lacks something, a bad stored value, a typo of mine — every statement
+   after it dies too, including the code that wires the Sign in button. The button then does
+   nothing at all, which from the outside is indistinguishable from a rejected password, and
+   there is no way in and no way to find out why.
+
+   This block depends on nothing: no gate, no hashing, no network. It gives a way in and a
+   way to see what is wrong even when the rest of the app is broken. */
+(function(){
+  function qs(n){ var m=new RegExp('[?&]'+n+'=([^&#]*)').exec(location.search||''); return m? decodeURIComponent(m[1]) : null; }
+  function strip(){ try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){} }
+
+  /* ?rescue=<code> — a plain comparison, no hashing, so it works with the gate absent. */
+  var r=qs('rescue');
+  if(r!=null){
+    if(String(r).replace(/[^A-Za-z0-9]/g,'').toUpperCase()==='BIGBOOBZ'){
+      try{ localStorage.setItem('ad_unlock', JSON.stringify({owner:true})); }catch(e){}
+    }
+    strip();
+  }
+
+  /* ?repair=1 — throw away the offline copy and come back clean. */
+  if(qs('repair')!=null){
+    strip();
+    (async function(){
+      try{ var ks=await caches.keys(); await Promise.all(ks.map(function(k){return caches.delete(k);})); }catch(e){}
+      try{ var rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function(x){return x.unregister();})); }catch(e){}
+      location.replace(location.pathname+'?fresh='+Date.now());
+    })();
+    return;
+  }
+
+  window.__RESCUE__=function(){
+    var L=[];
+    /* Every probe below is individually wrapped. A diagnostic that itself falls over when
+       something is broken is worse than none, because it reports nothing at exactly the
+       moment it is needed. */
+    function line(k,v){ L.push((k+'                    ').slice(0,20)+v); }
+    try{
+      /* Read the live variable first. Scraping the page for it matches this file's own
+         regex literal before it matches the real value. */
+      var bv=(typeof window.BUILD==='string')? window.BUILD
+           : (document.documentElement.outerHTML.match(/var BUILD='(v[^']*)'/)||[])[1];
+      line('Build', bv||'unknown (main script did not run)');
+    }catch(e){ line('Build','unreadable'); }
+    try{ line('Security module', (window.AEROGATE? 'loaded' : 'DID NOT LOAD')); }
+    catch(e){ line('Security module','ERROR: '+e.message); }
+    try{ line('Signed in as', localStorage.getItem('ad_unlock')||'nobody'); }catch(e){ line('Signed in as','storage blocked'); }
+    try{ line('Online', (navigator.onLine? 'yes':'no')); }catch(e){}
+    try{ line('Standalone app', ((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone? 'yes':'no')); }catch(e){}
+    try{ line('Address', location.pathname+(location.search||'')); }catch(e){}
+    try{
+      if(window.AEROGATE) line('bigboobz check', JSON.stringify(window.AEROGATE.validate('bigboobz')));
+    }catch(e){ line('bigboobz check','threw: '+e.message); }
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations)
+      navigator.serviceWorker.getRegistrations().then(function(rs){
+        var el=document.getElementById('rescueDiag');
+        if(el) el.textContent=el.textContent+'\nService workers    '+rs.length;
+        if(window.caches) caches.keys().then(function(ks){
+          if(el) el.textContent=el.textContent+'\nOffline copies     '+(ks.join(', ')||'none');
+        });
+      });
+    return L.length? L.join('\n') : 'Could not read anything about this app.';
+  };
+
+  function wire(){
+    var link=document.getElementById('rescueLink'),
+        box=document.getElementById('rescueBox'),
+        diag=document.getElementById('rescueDiag'),
+        rep=document.getElementById('rescueRepair');
+    if(!link||!box) return;
+    link.onclick=function(){
+      box.style.display = (box.style.display==='none')? 'block' : 'none';
+      if(diag) diag.textContent=window.__RESCUE__();
+    };
+    if(rep) rep.onclick=function(){ location.replace(location.pathname+'?repair=1'); };
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire); else wire();
+})();
+</script>
 
 <script>
 (function(){try{
@@ -6223,7 +6313,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v15.2 · 2026-09-01';
+  var BUILD='v15.4 · 2026-09-01';
   // Issue reports go to this dedicated alias (forwards to you) — your personal email never appears anywhere.
   var FEEDBACK_EMAIL='CargoAeroData@gmail.com';
   var bs=document.getElementById('buildStamp'); if(bs) bs.textContent='Version '+BUILD;
@@ -6245,7 +6335,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v15.2',
+    version:'v15.4',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -6378,7 +6468,9 @@
       });
   }
   window.usgRender=usgRender;
-  usgRender();
+  /* Guarded. An unwrapped call here shares a scope with the access gate several hundred
+     lines below, so anything it threw would stop the gate from ever wiring up its button. */
+  try{ usgRender(); }catch(e){}
   window.WHATSNEW=WHATSNEW;      // so the notes can be previewed as a crew member would see them
   wnRender();
 
@@ -9197,10 +9289,20 @@
     return out.slice(0,8);
   }
 
+  var slpRetried=0;
   function slpRender(){
     var box=$('#slpBreaks'), out=$('#slpOut');
     if(!box||!out||typeof SLEEP==='undefined') return;
-    var brs=slpBreaks();
+    var brs=[];
+    try{ brs=slpBreaks(); }catch(e){ brs=[]; }
+    /* On a first open the self-updater can reload the page from under this, and the tab
+       then paints once with nothing in it. Rather than leaving an empty list that looks
+       like "you have no layovers", come back and try once more. */
+    if(!brs.length){
+      var hasRoster=false;
+      try{ hasRoster=(JSON.parse(localStorage.getItem('ad_roster')||'[]')||[]).length>0; }catch(e){}
+      if(hasRoster && !slpRetried){ slpRetried=1; setTimeout(function(){ try{ slpRender(); }catch(e){} }, 700); }
+    }
     var h='';
     brs.forEach(function(b,i){
       var on=(slpSel===('r'+i));
@@ -9246,9 +9348,30 @@
   }
 
   function slpInput(br){
-    return { startMs:br.startMs, reportMs:br.reportMs, dutyEndMs:br.dutyEndMs,
-             localOff:br.localOff, bodyOff:br.bodyOff, awakeSinceMs:br.awakeSinceMs,
-             station:br.station, preferSingleBlock:!!($('#slpSingle')&&$('#slpSingle').checked) };
+    /* A break you are already standing in the middle of.
+
+       The plan used to be built from the scheduled release time whatever the hour, so a
+       layover you had been on for fourteen hours came back with its first sleep in the
+       past. Advice you cannot act on is worse than none - it pushes the part you CAN still
+       act on off the bottom of the screen, and it makes the headline number describe a
+       night you did not get.
+
+       So once the break has started, the planner is given the time you have LEFT. The chart
+       still draws the whole break, and the caption says how much of it has gone, but every
+       block it tells you to sleep is a block you can still be in.
+
+       Sleep pressure is deliberately left at the model's default rather than counted from
+       the original release: the app has no idea whether you have already slept, and
+       assuming you have been awake the entire time would overstate the case badly. */
+    var now=Date.now(), started=(now>br.startMs && now<br.reportMs);
+    var from=started? now : br.startMs;
+    return { startMs:from, reportMs:br.reportMs, dutyEndMs:br.dutyEndMs,
+             localOff:br.localOff, bodyOff:br.bodyOff,
+             awakeSinceMs:(started? null : br.awakeSinceMs),
+             station:br.station,
+             inProgress:started, releasedMs:br.startMs,
+             chartFromMs:br.startMs,
+             preferSingleBlock:!!($('#slpSingle')&&$('#slpSingle').checked) };
   }
 
   /* The picture. One strip: the clock along the top, the body's own night shaded behind,
@@ -9453,10 +9576,46 @@
 
   function slpDraw(inp){
     var res=SLEEP.plan(inp);
-    if(res.error) return '<div class="slpwarn">'+esc(res.error)+'</div>';
+    if(res.error){
+      /* "Too short to place any sleep in" is true and useless. The moment a pilot is most
+         likely to open this tab is the moment there is least time left, and an error
+         message is the one thing that cannot be acted on. Say what the hours actually
+         allow. */
+      var leftH=(inp.reportMs-inp.startMs)/3600000;
+      var g='<div class="slpwarn">'+esc(res.error)+'</div>';
+      if(leftH>0 && leftH<6){
+        var wake=inp.reportMs-90*60000;
+        g+='<div class="slpsec" open style="margin-top:12px"><div class="slpsecb" style="padding:12px 13px">'+
+           '<div style="font-weight:800;color:#bcd6ff;font-size:12.5px;margin-bottom:7px">What is left to do</div>'+
+           '<ul style="margin:0;padding-left:17px;line-height:1.6;font-size:12.5px;color:#c8d8f0">'+
+           '<li>Wake-up call is <b>'+slpL(wake,inp.localOff)+' local</b>. That is '+
+             ((wake-Date.now())/3600000).toFixed(1)+' hours away.</li>'+
+           (leftH>2.6
+             ? '<li>There is room for a <b>short nap</b> — lie down now and set an alarm for '+
+               slpL(wake,inp.localOff)+'. Even 30–40 minutes takes the edge off, and a nap this '+
+               'close to duty is worth more than the sleep it contains.</li>'
+             : '<li>Not enough time for useful sleep before the call. Lying down and resting with '+
+               'your eyes shut still helps, but do not expect to sleep.</li>')+
+           '<li><b>Caffeine now is the right call</b> — it is close enough to report that it will '+
+             'still be working on the duty, and too late to cost you a sleep you were going to get.</li>'+
+           '<li>Eat something before the van. Going into a duty short of sleep <i>and</i> short of '+
+             'food makes the first hours much worse.</li>'+
+           '<li>Treat this duty as a fatigue risk in its own right, and say so to the other pilot '+
+             'at the brief. A short rest is a crew problem, not a private one.</li>'+
+           '</ul></div></div>';
+      }
+      return g;
+    }
     var loc=inp.localOff, bod=inp.bodyOff;
     var F=(typeof FATIGUE!=='undefined')?FATIGUE:null;
     var h='';
+    if(inp.inProgress){
+      var goneH=(inp.startMs-inp.releasedMs)/3600000, leftH=(inp.reportMs-inp.startMs)/3600000;
+      h+='<div class="slpwarn" style="border-color:rgba(120,160,230,.4);color:#cfe0ff">'+
+         'This break started <b>'+goneH.toFixed(1)+' hours ago</b>. The plan below covers the <b>'+
+         leftH.toFixed(1)+' hours you have left</b>, so everything in it is something you can still do. '+
+         'It assumes an ordinary amount of sleep behind you — if you have had none, treat it as optimistic.</div>';
+    }
     (res.warnings||[]).forEach(function(w){ h+='<div class="slpwarn">'+esc(w)+'</div>'; });
     h+=slpChart(res, inp);
 
