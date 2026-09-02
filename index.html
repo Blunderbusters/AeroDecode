@@ -791,6 +791,23 @@
   .usgerr{font-size:11px;color:#ff9d9d;margin-top:8px}
   .usgin{width:100%;box-sizing:border-box;margin-top:8px;padding:9px;border-radius:8px;
     border:1px solid rgba(120,160,230,.35);background:rgba(8,16,32,.7);color:#e6eefc;font:12px/1 inherit}
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-top:10px}
+  .cgrid .full{grid-column:1/-1}
+  .ck{font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+  .cin{width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid rgba(120,160,230,.3);
+    background:rgba(8,16,32,.7);color:#e6eefc;font:600 15px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .cin:focus{outline:none;border-color:rgba(120,160,230,.75)}
+  .csec{margin-top:14px;background:rgba(6,14,28,.45);border:1px solid rgba(120,160,220,.16);border-radius:12px;padding:13px 14px}
+  .cst{font-size:13px;font-weight:800;color:#bcd6ff;letter-spacing:.2px}
+  .csub{font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:3px}
+  .cout{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+  .cocell{background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.18);border-radius:9px;padding:9px 10px}
+  .cocell .k{font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:#8fa3c4}
+  .cocell .v{font-size:18px;font-weight:800;color:#8fb4ff;line-height:1.2;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .cocell .u{font-size:10px;color:var(--faint);font-weight:600}
+  .cocell.hi .v{color:#4ee39a}
+  .cocell.warn .v{color:#ff9d4d}
+  .cnote{font-size:11px;color:var(--faint);line-height:1.5;margin-top:9px}
   .rptbox{margin-top:14px;border-radius:12px;padding:13px 14px;
     background:linear-gradient(180deg,rgba(20,34,60,.95),rgba(11,20,38,.95));border:1px solid rgba(120,160,230,.32)}
   .rpthead{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#8fb4ff;margin-bottom:3px}
@@ -1345,6 +1362,7 @@
     <button class="tab" id="ftTab" data-view="fatigue" hidden>Fatigue <span class="protopill">DEV</span></button>
     <button class="tab" id="slpTab" data-view="sleep" hidden>Sleep&nbsp;Plan <span class="protopill">DEV</span></button>
     <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
+    <button class="tab" data-view="calc">Calculators</button>
     <button class="tab tab-fun" data-view="wheel">🎡 Wheel of Misfortune</button>
   </div>
 
@@ -1778,6 +1796,117 @@
              for them was asking the crew member to answer a question that changed nothing. -->
       </div>
       <div id="dpOut"></div>
+    </div>
+  </div>
+
+  <div id="view-calc" hidden>
+    <div class="card">
+      <div class="warnbox">
+        <div class="wtitle">Arithmetic, not performance data</div>
+        <p>These are the standard formulas, and the conversion factors are the exact definitions rather than rounded ones. None of it knows anything about your aeroplane — for anything that affects how the aircraft is flown or loaded, the AFM, the FCOM and the performance tool are the authority.</p>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Wind components</div>
+        <div class="csub">Runway heading against the reported wind. A tailwind is shown as a tailwind rather than hidden inside a negative headwind.</div>
+        <div class="cgrid">
+          <div><div class="ck">Runway heading (°)</div><input id="cwRwy" class="cin" inputmode="numeric" placeholder="360"></div>
+          <div><div class="ck">Wind from (°)</div><input id="cwDir" class="cin" inputmode="numeric" placeholder="030"></div>
+          <div><div class="ck">Wind speed (kt)</div><input id="cwSpd" class="cin" inputmode="numeric" placeholder="20"></div>
+        </div>
+        <div id="cwOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Pressure &amp; density altitude</div>
+        <div class="csub">Pressure altitude from the full barometric relation, not the 1000-ft-per-inch rule. Density altitude from the ISA deviation at that pressure altitude.</div>
+        <div class="cgrid">
+          <div><div class="ck">Field elevation (ft)</div><input id="cpElev" class="cin" inputmode="numeric" placeholder="0"></div>
+          <div><div class="ck">Altimeter (inHg)</div><input id="cpAlt" class="cin" inputmode="decimal" placeholder="29.92"></div>
+          <div><div class="ck">OAT (°C)</div><input id="cpOat" class="cin" inputmode="decimal" placeholder="15"></div>
+        </div>
+        <div id="cpOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Airspeed &amp; Mach</div>
+        <div class="csub">The compressible relations. Above roughly 200 kt or FL250 the 2%-per-thousand-feet rule of thumb is out by enough to matter.</div>
+        <div class="cgrid">
+          <div><div class="ck">CAS / IAS (kt)</div><input id="caCas" class="cin" inputmode="numeric" placeholder="280"></div>
+          <div><div class="ck">Pressure altitude (ft)</div><input id="caAlt" class="cin" inputmode="numeric" placeholder="35000"></div>
+          <div><div class="ck">OAT (°C) — blank for ISA</div><input id="caOat" class="cin" inputmode="decimal" placeholder="-54"></div>
+        </div>
+        <div id="caOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Descent planning</div>
+        <div class="csub">Leave the angle blank for the 3:1 rule. Enter one to work a published gradient instead.</div>
+        <div class="cgrid">
+          <div><div class="ck">Altitude to lose (ft)</div><input id="cdAlt" class="cin" inputmode="numeric" placeholder="35000"></div>
+          <div><div class="ck">Groundspeed (kt)</div><input id="cdGs" class="cin" inputmode="numeric" placeholder="450"></div>
+          <div><div class="ck">Angle (°) — optional</div><input id="cdAng" class="cin" inputmode="decimal" placeholder="3"></div>
+        </div>
+        <div id="cdOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Time, speed, distance</div>
+        <div class="csub">Fill any two and the third is worked out.</div>
+        <div class="cgrid">
+          <div><div class="ck">Distance (NM)</div><input id="ctD" class="cin" inputmode="decimal" placeholder="300"></div>
+          <div><div class="ck">Groundspeed (kt)</div><input id="ctG" class="cin" inputmode="numeric" placeholder="450"></div>
+          <div><div class="ck">Time (min)</div><input id="ctM" class="cin" inputmode="decimal" placeholder="40"></div>
+        </div>
+        <div id="ctOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Fuel</div>
+        <div class="csub">Density moves with temperature and with the batch — the fuel ticket is the authority. 0.804 kg/L is the nominal for Jet A-1 at 15 °C.</div>
+        <div class="cgrid">
+          <div><div class="ck">Quantity</div><input id="cfQty" class="cin" inputmode="decimal" placeholder="10000"></div>
+          <div><div class="ck">Units</div><select id="cfUnit" class="cin"><option value="kg">kg</option><option value="lb">lb</option><option value="l">litres</option><option value="usgal">US gal</option></select></div>
+          <div><div class="ck">Density (kg/L)</div><input id="cfDens" class="cin" inputmode="decimal" placeholder="0.804"></div>
+          <div><div class="ck">Burn per hour (same units)</div><input id="cfBurn" class="cin" inputmode="decimal" placeholder="2500"></div>
+        </div>
+        <div id="cfOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Weather rules of thumb</div>
+        <div class="csub">Estimates a crew already treats as estimates: cumulus base from the spread, freezing level from the standard lapse rate.</div>
+        <div class="cgrid">
+          <div><div class="ck">Temperature (°C)</div><input id="cmT" class="cin" inputmode="decimal" placeholder="20"></div>
+          <div><div class="ck">Dew point (°C)</div><input id="cmD" class="cin" inputmode="decimal" placeholder="10"></div>
+          <div><div class="ck">Field elevation (ft)</div><input id="cmE" class="cin" inputmode="numeric" placeholder="0"></div>
+        </div>
+        <div id="cmOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Great circle</div>
+        <div class="csub">Distance and initial track between two positions. Decimal degrees, south and west negative.</div>
+        <div class="cgrid">
+          <div><div class="ck">From latitude</div><input id="cgLa1" class="cin" inputmode="decimal" placeholder="39.0489"></div>
+          <div><div class="ck">From longitude</div><input id="cgLo1" class="cin" inputmode="decimal" placeholder="-84.6678"></div>
+          <div><div class="ck">To latitude</div><input id="cgLa2" class="cin" inputmode="decimal" placeholder="37.4691"></div>
+          <div><div class="ck">To longitude</div><input id="cgLo2" class="cin" inputmode="decimal" placeholder="126.4505"></div>
+        </div>
+        <div id="cgOut" class="cout"></div>
+      </div>
+
+      <div class="csec">
+        <div class="cst">Unit conversion</div>
+        <div class="csub">Type in any box; the rest follow. Factors are the exact definitions — the foot is 0.3048 m, the nautical mile 1852 m, the pound 0.45359237 kg.</div>
+        <div class="cgrid">
+          <div class="full"><div class="ck">Family</div><select id="cuFam" class="cin">
+            <option value="speed">Speed</option><option value="dist">Distance</option><option value="len">Length &amp; altitude</option>
+            <option value="mass">Mass</option><option value="vol">Volume</option><option value="press">Pressure</option>
+            <option value="vs">Vertical speed</option><option value="temp">Temperature</option></select></div>
+        </div>
+        <div id="cuGrid" class="cgrid"></div>
+      </div>
     </div>
   </div>
 
@@ -5915,6 +6044,255 @@
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.SUN=API;
 })(typeof window!=='undefined'?window:globalThis);
+/* CargoDecode — aviation calculators.
+   Every constant and formula here is the standard one, named, so a number can be checked
+   rather than trusted. Where a shortcut is used instead of the exact relation (the 3:1
+   descent rule, the 400-ft-per-degree cloud base) it is labelled as a rule of thumb in the
+   UI, because those are estimates a crew already knows are estimates.
+   Nothing here is a substitute for the aircraft's own performance data. */
+(function(root){
+  'use strict';
+
+  /* ---- exact conversion factors (definitions, not measurements) ---------------------- */
+  var C={
+    FT_PER_M:      1/0.3048,          // the international foot is defined as 0.3048 m exactly
+    M_PER_NM:      1852,              // the nautical mile is defined as 1852 m exactly
+    M_PER_SM:      1609.344,          // statute mile, exactly 1609.344 m
+    KG_PER_LB:     0.45359237,        // the pound is defined as 0.45359237 kg exactly
+    L_PER_USGAL:   3.785411784,       // US liquid gallon, exactly
+    L_PER_IMPGAL:  4.54609,           // imperial gallon, exactly
+    HPA_PER_INHG:  33.863886666667,   // 1 inHg = 3386.388666... Pa
+    MMHG_PER_INHG: 25.4,
+    PSI_PER_INHG:  0.4911541,
+    /* ISA, per ICAO Doc 7488 */
+    ISA_T0_C:      15,                // sea-level temperature
+    ISA_P0_HPA:    1013.25,           // sea-level pressure
+    ISA_LAPSE_C_PER_FT: 1.98/1000,    // 1.98 degC per 1000 ft in the troposphere
+    TROPOPAUSE_FT: 36089,             // where the standard lapse stops
+    ISA_TROPO_C:  -56.5,              // and the temperature holds
+    A0_KT:         661.4788,          // speed of sound at ISA sea level, knots
+    KT_PER_MPS:    1.9438444924406,   // 1 m/s in knots (3600/1852)
+    FT_PER_NM:     6076.11548556      // 1852 / 0.3048
+  };
+
+  function num(v){ var n=(typeof v==='number')? v : parseFloat(String(v).replace(/[^0-9eE+\-.]/g,'')); return isFinite(n)? n : null; }
+
+  /* ---- plain unit conversion --------------------------------------------------------- */
+  var UNITS={
+    speed:  { kt:1, mph:C.M_PER_NM/C.M_PER_SM, kmh:C.M_PER_NM/1000, mps:C.M_PER_NM/3600, fpm:C.FT_PER_NM/60 },
+    dist:   { nm:1, sm:C.M_PER_NM/C.M_PER_SM, km:C.M_PER_NM/1000, m:C.M_PER_NM, ft:C.FT_PER_NM, yd:C.FT_PER_NM/3 },
+    len:    { ft:1, m:0.3048, cm:30.48, in:12, nm:1/C.FT_PER_NM },
+    mass:   { lb:1, kg:C.KG_PER_LB, t:C.KG_PER_LB/1000, st:1/14, oz:16 },
+    vol:    { usgal:1, l:C.L_PER_USGAL, impgal:C.L_PER_USGAL/C.L_PER_IMPGAL, m3:C.L_PER_USGAL/1000 },
+    press:  { inhg:1, hpa:C.HPA_PER_INHG, mb:C.HPA_PER_INHG, mmhg:C.MMHG_PER_INHG, psi:C.PSI_PER_INHG },
+    vs:     { fpm:1, mps:0.3048/60, fps:1/60, kt:1/C.FT_PER_NM*60 }
+  };
+  /* value expressed in `from`, returned in `to`. Both must belong to the same family. */
+  function convert(family, from, to, value){
+    var f=UNITS[family]; if(!f) return null;
+    var a=f[from], b=f[to], v=num(value);
+    if(a==null||b==null||v==null) return null;
+    return v/a*b;                                  // via the family's base unit
+  }
+  function cToF(c){ var v=num(c); return v==null? null : v*9/5+32; }
+  function fToC(f){ var v=num(f); return v==null? null : (v-32)*5/9; }
+  function cToK(c){ var v=num(c); return v==null? null : v+273.15; }
+
+  /* ---- wind components ---------------------------------------------------------------
+     Angle between the wind and the runway; headwind is the along-runway component and
+     crosswind the across-runway one. Sign is kept: a negative headwind IS a tailwind, and
+     hiding that behind an absolute value is how a tailwind landing gets briefed as calm. */
+  function wind(runwayDeg, windDeg, windKt){
+    var r=num(runwayDeg), w=num(windDeg), v=num(windKt);
+    if(r==null||w==null||v==null) return null;
+    var d=((w-r)%360+540)%360-180;                 // signed difference, -180..+180
+    var rad=d*Math.PI/180;
+    var head=v*Math.cos(rad), cross=v*Math.sin(rad);
+    return { angle:d, head:head, cross:cross,
+             tail: head<0? -head : 0,
+             from: cross>=0? 'right' : 'left',
+             crossAbs:Math.abs(cross) };
+  }
+
+  /* ---- pressure and density altitude --------------------------------------------------
+     Pressure altitude from the full barometric relation rather than the 1000-ft-per-inch
+     rule, which drifts at the edges of the altimeter range. */
+  function pressureAlt(fieldElevFt, altimeterInHg){
+    var e=num(fieldElevFt), a=num(altimeterInHg);
+    if(e==null||a==null||a<=0) return null;
+    return e + 145366.45*(1 - Math.pow(a/29.9213, 0.190284));
+  }
+  /* Density altitude, National Weather Service formula. Takes the station pressure the
+     altimeter setting implies, not the altimeter setting itself. */
+  function densityAlt(pressureAltFt, oatC){
+    var pa=num(pressureAltFt), t=num(oatC);
+    if(pa==null||t==null) return null;
+    var isa=isaTempC(pa);
+    return pa + 118.8*(t-isa);                     // 118.8 ft per degC of ISA deviation
+  }
+  function isaTempC(altFt){
+    var h=num(altFt); if(h==null) return null;
+    return h<=C.TROPOPAUSE_FT ? C.ISA_T0_C - C.ISA_LAPSE_C_PER_FT*h : C.ISA_TROPO_C;
+  }
+  function isaDev(altFt, oatC){
+    var i=isaTempC(altFt), t=num(oatC);
+    return (i==null||t==null)? null : t-i;
+  }
+  /* Static pressure at a pressure altitude, hPa — needed by the airspeed maths below. */
+  function pressureAtAltHpa(altFt){
+    var h=num(altFt); if(h==null) return null;
+    if(h<=C.TROPOPAUSE_FT) return C.ISA_P0_HPA*Math.pow(1 - 6.87535e-6*h, 5.2558797);
+    return 226.32*Math.exp(-4.806e-5*(h-C.TROPOPAUSE_FT));
+  }
+
+  /* ---- airspeed -----------------------------------------------------------------------
+     The compressible relations, not the 2%-per-thousand-feet rule. Above about 200 kt or
+     FL250 the rule of thumb is out by enough to matter. */
+  function casToTas(casKt, pressAltFt, oatC){
+    var cas=num(casKt), pa=num(pressAltFt), t=num(oatC);
+    if(cas==null||pa==null||t==null) return null;
+    var P=pressureAtAltHpa(pa); if(P==null||P<=0) return null;
+    // impact pressure from CAS, at sea-level standard conditions
+    var qc=C.ISA_P0_HPA*(Math.pow(1 + 0.2*Math.pow(cas/C.A0_KT,2), 3.5) - 1);
+    var M=machFromQc(qc, P);
+    if(M==null) return null;
+    var Tk=cToK(t);
+    return M*C.A0_KT*Math.sqrt(Tk/288.15);
+  }
+  function machFromQc(qcHpa, staticHpa){
+    var qc=num(qcHpa), P=num(staticHpa);
+    if(qc==null||P==null||P<=0) return null;
+    return Math.sqrt(5*(Math.pow(qc/P + 1, 2/7) - 1));
+  }
+  function machFromCas(casKt, pressAltFt){
+    var cas=num(casKt), pa=num(pressAltFt);
+    if(cas==null||pa==null) return null;
+    var P=pressureAtAltHpa(pa);
+    var qc=C.ISA_P0_HPA*(Math.pow(1 + 0.2*Math.pow(cas/C.A0_KT,2), 3.5) - 1);
+    return machFromQc(qc, P);
+  }
+  function soundSpeedKt(oatC){
+    var Tk=cToK(oatC); return Tk==null||Tk<=0? null : C.A0_KT*Math.sqrt(Tk/288.15);
+  }
+  function machToTas(mach, oatC){
+    var m=num(mach), a=soundSpeedKt(oatC);
+    return (m==null||a==null)? null : m*a;
+  }
+
+  /* ---- descent and climb geometry ----------------------------------------------------- */
+  function descent(altToLoseFt, groundSpeedKt, opts){
+    opts=opts||{};
+    var h=num(altToLoseFt), gs=num(groundSpeedKt);
+    if(h==null) return null;
+    var out={};
+    out.threeToOneNm = h/1000*3;                       // the 3:1 rule of thumb
+    if(opts.gradientFtPerNm!=null){
+      var g=num(opts.gradientFtPerNm);
+      if(g!=null && g>0){ out.distNm=h/g; out.gradientFtPerNm=g; }
+    } else if(opts.angleDeg!=null){
+      var a=num(opts.angleDeg);
+      if(a!=null && a>0){
+        out.gradientFtPerNm=Math.tan(a*Math.PI/180)*C.FT_PER_NM;
+        out.distNm=h/out.gradientFtPerNm;
+      }
+    } else {
+      out.gradientFtPerNm=h/out.threeToOneNm;           // 333 ft/NM
+      out.distNm=out.threeToOneNm;
+    }
+    if(gs!=null && gs>0 && out.gradientFtPerNm){
+      out.vsFpm = out.gradientFtPerNm*gs/60;
+      out.minutes = out.distNm/gs*60;
+    }
+    if(gs!=null && gs>0) out.vsFpmThreeToOne = gs*5;    // the "half the groundspeed x 10" rule
+    return out;
+  }
+  function gradient(ftPerNm){
+    var g=num(ftPerNm); if(g==null) return null;
+    return { ftPerNm:g, percent:g/C.FT_PER_NM*100, degrees:Math.atan(g/C.FT_PER_NM)*180/Math.PI };
+  }
+  function gradientFromPercent(pct){
+    var p=num(pct); if(p==null) return null;
+    return gradient(p/100*C.FT_PER_NM);
+  }
+
+  /* ---- time, speed, distance ---------------------------------------------------------- */
+  function tsd(distNm, gsKt, minutes){
+    var d=num(distNm), g=num(gsKt), m=num(minutes);
+    var known=[d!=null,g!=null,m!=null].filter(Boolean).length;
+    if(known<2) return null;
+    if(d==null) return { distNm:g*m/60, gsKt:g, minutes:m };
+    if(g==null) return { distNm:d, gsKt:(m>0? d/m*60 : null), minutes:m };
+    return { distNm:d, gsKt:g, minutes:(g>0? d/g*60 : null) };
+  }
+
+  /* ---- fuel --------------------------------------------------------------------------- */
+  /* Jet A-1 nominal density is 0.804 kg/L at 15 degC, but it moves with temperature and
+     with the batch - the fuel ticket is the authority, so the density is an input. */
+  function fuel(opts){
+    opts=opts||{};
+    var dens=num(opts.densityKgL); if(dens==null||dens<=0) dens=0.804;
+    var out={ densityKgL:dens, lbPerUsGal: dens*C.L_PER_USGAL/C.KG_PER_LB };
+    var kg=num(opts.kg), lb=num(opts.lb), l=num(opts.litres), g=num(opts.usgal);
+    if(kg==null && lb!=null) kg=lb*C.KG_PER_LB;
+    if(kg==null && l!=null)  kg=l*dens;
+    if(kg==null && g!=null)  kg=g*C.L_PER_USGAL*dens;
+    if(kg==null) return out;
+    out.kg=kg; out.lb=kg/C.KG_PER_LB; out.litres=kg/dens; out.usgal=out.litres/C.L_PER_USGAL;
+    return out;
+  }
+  function endurance(fuelKg, burnKgPerHr){
+    var f=num(fuelKg), b=num(burnKgPerHr);
+    if(f==null||b==null||b<=0) return null;
+    var h=f/b;
+    return { hours:h, minutes:h*60, hhmm:hm(h) };
+  }
+  function hm(hours){
+    var h=num(hours); if(h==null||!isFinite(h)) return null;
+    var neg=h<0; h=Math.abs(h);
+    var t=Math.round(h*60), hh=Math.floor(t/60), mm=t%60;
+    return (neg?'-':'')+hh+':'+(mm<10?'0':'')+mm;
+  }
+
+  /* ---- weather rules of thumb ---------------------------------------------------------- */
+  /* Convective cloud base: the spread closes at about 2.5 degC per 1000 ft, so roughly
+     400 ft per degree. A rule of thumb for cumulus, not a forecast. */
+  function cloudBaseFt(tempC, dewC, fieldElevFt){
+    var t=num(tempC), d=num(dewC), e=num(fieldElevFt)||0;
+    if(t==null||d==null) return null;
+    var agl=(t-d)/2.5*1000;
+    return { agl:agl, msl:agl+e, spread:t-d };
+  }
+  /* Freezing level, from the observed temperature and the standard lapse rate. */
+  function freezingLevelFt(oatC, atAltFt, lapsePer1000){
+    var t=num(oatC), h=num(atAltFt)||0, l=num(lapsePer1000); if(l==null||l<=0) l=1.98;
+    if(t==null) return null;
+    return h + t/l*1000;
+  }
+
+  /* ---- great circle -------------------------------------------------------------------- */
+  function greatCircle(lat1,lon1,lat2,lon2){
+    var a=num(lat1),b=num(lon1),c=num(lat2),d=num(lon2);
+    if([a,b,c,d].some(function(x){return x==null;})) return null;
+    var R=Math.PI/180;
+    var p1=a*R,p2=c*R,dp=(c-a)*R,dl=(d-b)*R;
+    var h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    var dist=2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))*6371008.8/C.M_PER_NM;   // mean Earth radius
+    var y=Math.sin(dl)*Math.cos(p2);
+    var x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+    var brg=(Math.atan2(y,x)/R+360)%360;
+    return { nm:dist, km:dist*C.M_PER_NM/1000, initialBearing:brg };
+  }
+
+  var API={ C:C, UNITS:UNITS, convert:convert, cToF:cToF, fToC:fToC, cToK:cToK,
+            wind:wind, pressureAlt:pressureAlt, densityAlt:densityAlt, isaTempC:isaTempC,
+            isaDev:isaDev, pressureAtAltHpa:pressureAtAltHpa,
+            casToTas:casToTas, machFromCas:machFromCas, machToTas:machToTas, soundSpeedKt:soundSpeedKt,
+            descent:descent, gradient:gradient, gradientFromPercent:gradientFromPercent,
+            tsd:tsd, fuel:fuel, endurance:endurance, hm:hm,
+            cloudBaseFt:cloudBaseFt, freezingLevelFt:freezingLevelFt, greatCircle:greatCircle };
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.CALC=API;
+})(typeof window!=='undefined'?window:globalThis);
 /* CargoDecode — layover sleep planner --------------------------------------------------
    Where to put your sleep between one release and the next report.
 
@@ -6613,7 +6991,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v16.4 · 2026-09-01';
+  var BUILD='v17.0 · 2026-09-01';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -6639,7 +7017,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v16.4',
+    version:'v17.0',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -7452,6 +7830,7 @@
       var vct=$('#view-catering'); if(vct) vct.hidden=(v!=='catering');
       var vft=$('#view-fatigue'); if(vft) vft.hidden=(v!=='fatigue');
       var vsl=$('#view-sleep'); if(vsl){ vsl.hidden=(v!=='sleep'); if(v==='sleep'){ try{ slpRender(); }catch(e){} } }
+      var vca=$('#view-calc'); if(vca){ vca.hidden=(v!=='calc'); if(v==='calc'){ try{ calcAll(); }catch(e){} } }
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
       var vw=$('#view-wheel'); if(vw) vw.hidden=(v!=='wheel');
       var adv=$('#advisory'); if(adv) adv.hidden=(v!=='crewrest');   // humorous advisory only on Crew Rest
@@ -9910,6 +10289,202 @@
     }
     return out.slice(0,8);
   }
+
+  /* ---------- aviation calculators ---------------------------------------------------
+     Every box recalculates on every keystroke and every result is labelled with its unit.
+     Nothing is rounded before it is displayed except for display: the arithmetic runs at
+     full precision and only the printed figure is shortened. */
+  function cN(id){ var e=$('#'+id); if(!e) return null; var v=parseFloat(String(e.value).replace(/[^0-9eE+\-.]/g,'')); return isFinite(v)? v : null; }
+  function cCell(k,v,u,cls){
+    if(v==null||!isFinite(v)) return '';
+    return '<div class="cocell'+(cls?' '+cls:'')+'"><div class="k">'+esc(k)+'</div>'+
+           '<div class="v">'+esc(String(v))+(u?' <span class="u">'+esc(u)+'</span>':'')+'</div></div>';
+  }
+  function cTxt(k,v,cls){
+    if(v==null) return '';
+    return '<div class="cocell'+(cls?' '+cls:'')+'"><div class="k">'+esc(k)+'</div><div class="v">'+esc(String(v))+'</div></div>';
+  }
+  function r1(x,d){ if(x==null||!isFinite(x)) return null; var m=Math.pow(10,d==null?1:d); return Math.round(x*m)/m; }
+
+  function calcWind(){
+    var o=$('#cwOut'); if(!o) return;
+    var w=CALC.wind(cN('cwRwy'), cN('cwDir'), cN('cwSpd'));
+    if(!w){ o.innerHTML=''; return; }
+    var h='';
+    h+=cCell(w.head>=0?'Headwind':'TAILWIND', r1(Math.abs(w.head)), 'kt', w.head<0?'warn':'hi');
+    h+=cCell('Crosswind '+(w.crossAbs<0.05?'':'from the '+w.from), r1(w.crossAbs), 'kt', w.crossAbs>=25?'warn':'');
+    h+=cCell('Angle off the runway', r1(Math.abs(w.angle),0), '°');
+    o.innerHTML=h;
+  }
+  function calcPress(){
+    var o=$('#cpOut'); if(!o) return;
+    var elev=cN('cpElev'), alt=cN('cpAlt'), oat=cN('cpOat');
+    if(elev==null&&alt==null){ o.innerHTML=''; return; }
+    if(alt==null) alt=29.92;
+    var pa=CALC.pressureAlt(elev==null?0:elev, alt);
+    var h=cCell('Pressure altitude', r1(pa,0), 'ft');
+    if(oat!=null){
+      var da=CALC.densityAlt(pa,oat), dev=CALC.isaDev(pa,oat);
+      h+=cCell('Density altitude', r1(da,0), 'ft', (da!=null&&pa!=null&&da-pa>2000)?'warn':'');
+      h+=cCell('ISA', r1(dev), '°C '+(dev>=0?'above':'below'));
+      h+=cCell('ISA temp there', r1(CALC.isaTempC(pa)), '°C');
+    }
+    o.innerHTML=h;
+  }
+  function calcAir(){
+    var o=$('#caOut'); if(!o) return;
+    var cas=cN('caCas'), pa=cN('caAlt'), oat=cN('caOat');
+    if(cas==null||pa==null){ o.innerHTML=''; return; }
+    var isa=CALC.isaTempC(pa), t=(oat==null? isa : oat);
+    var tas=CALC.casToTas(cas,pa,t), M=CALC.machFromCas(cas,pa);
+    var h=cCell('TAS', r1(tas,0), 'kt', 'hi');
+    h+=cCell('Mach', r1(M,3));
+    h+=cCell('Speed of sound', r1(CALC.soundSpeedKt(t),0), 'kt');
+    h+=cCell(oat==null? 'OAT assumed (ISA)':'OAT used', r1(t), '°C');
+    h+=cCell('Static pressure', r1(CALC.pressureAtAltHpa(pa),0), 'hPa');
+    o.innerHTML=h;
+  }
+  function calcDesc(){
+    var o=$('#cdOut'); if(!o) return;
+    var alt=cN('cdAlt'), gs=cN('cdGs'), ang=cN('cdAng');
+    if(alt==null){ o.innerHTML=''; return; }
+    var d=CALC.descent(alt, gs, ang!=null? {angleDeg:ang} : {});
+    if(!d){ o.innerHTML=''; return; }
+    var h=cCell('Distance needed', r1(d.distNm,1), 'NM', 'hi');
+    h+=cCell('Gradient', r1(d.gradientFtPerNm,0), 'ft/NM');
+    var g=CALC.gradient(d.gradientFtPerNm);
+    if(g) h+=cCell('Angle', r1(g.degrees,2), '°');
+    if(d.vsFpm!=null) h+=cCell('Rate of descent', r1(d.vsFpm,0), 'fpm');
+    if(d.minutes!=null) h+=cTxt('Time', CALC.hm(d.minutes/60));
+    if(ang==null && d.vsFpmThreeToOne!=null) h+=cCell('3:1 check (GS × 5)', r1(d.vsFpmThreeToOne,0), 'fpm');
+    o.innerHTML=h;
+  }
+  function calcTsd(){
+    var o=$('#ctOut'); if(!o) return;
+    var r=CALC.tsd(cN('ctD'), cN('ctG'), cN('ctM'));
+    if(!r){ o.innerHTML=''; return; }
+    var h=cCell('Distance', r1(r.distNm,1), 'NM');
+    h+=cCell('Groundspeed', r1(r.gsKt,0), 'kt');
+    h+=cTxt('Time', r.minutes==null? null : CALC.hm(r.minutes/60)+'  ('+r1(r.minutes,0)+' min)');
+    o.innerHTML=h;
+  }
+  function calcFuel(){
+    var o=$('#cfOut'); if(!o) return;
+    var q=cN('cfQty'), unit=($('#cfUnit')||{}).value||'kg', dens=cN('cfDens'), burn=cN('cfBurn');
+    if(q==null){ o.innerHTML=''; return; }
+    var opt={ densityKgL:dens };
+    opt[unit==='l'?'litres':unit]=q;
+    var f=CALC.fuel(opt);
+    if(f.kg==null){ o.innerHTML=''; return; }
+    var h=cCell('Kilograms', r1(f.kg,0), 'kg');
+    h+=cCell('Pounds', r1(f.lb,0), 'lb');
+    h+=cCell('Litres', r1(f.litres,0), 'L');
+    h+=cCell('US gallons', r1(f.usgal,0), 'gal');
+    h+=cCell('Density used', r1(f.densityKgL,3), 'kg/L');
+    h+=cCell('Weight per US gal', r1(f.lbPerUsGal,2), 'lb');
+    if(burn!=null && burn>0){
+      /* The burn is entered in whatever unit the quantity was, so convert it the same way. */
+      var bo={ densityKgL:dens }; bo[unit==='l'?'litres':unit]=burn;
+      var bf=CALC.fuel(bo);
+      var e=CALC.endurance(f.kg, bf.kg);
+      if(e) h+=cTxt('Endurance', e.hhmm, 'hi');
+    }
+    o.innerHTML=h;
+  }
+  function calcMet(){
+    var o=$('#cmOut'); if(!o) return;
+    var t=cN('cmT'), d=cN('cmD'), e=cN('cmE')||0;
+    var h='';
+    if(t!=null&&d!=null){
+      var cb=CALC.cloudBaseFt(t,d,e);
+      h+=cCell('Cumulus base', r1(cb.agl,0), 'ft AGL');
+      h+=cCell('…that is', r1(cb.msl,0), 'ft MSL');
+      h+=cCell('Spread', r1(cb.spread,1), '°C');
+    }
+    if(t!=null){
+      h+=cCell('Freezing level', r1(CALC.freezingLevelFt(t,e),0), 'ft MSL');
+      h+=cCell('Temperature', r1(CALC.cToF(t),1), '°F');
+    }
+    o.innerHTML=h;
+  }
+  function calcGc(){
+    var o=$('#cgOut'); if(!o) return;
+    var g=CALC.greatCircle(cN('cgLa1'),cN('cgLo1'),cN('cgLa2'),cN('cgLo2'));
+    if(!g){ o.innerHTML=''; return; }
+    var h=cCell('Distance', r1(g.nm,0), 'NM', 'hi');
+    h+=cCell('…that is', r1(g.km,0), 'km');
+    h+=cCell('Initial track', r1(g.initialBearing,0), '°T');
+    o.innerHTML=h;
+  }
+
+  /* Unit conversion: one box per unit, all live, edit any of them. */
+  var CU_LABEL={ kt:'knots', mph:'mph', kmh:'km/h', mps:'m/s', fpm:'ft/min',
+                 nm:'nautical miles', sm:'statute miles', km:'kilometres', m:'metres', ft:'feet', yd:'yards',
+                 cm:'centimetres', in:'inches',
+                 lb:'pounds', kg:'kilograms', t:'tonnes', st:'stone', oz:'ounces',
+                 usgal:'US gallons', l:'litres', impgal:'imperial gallons', m3:'cubic metres',
+                 inhg:'inHg', hpa:'hPa', mb:'millibars', mmhg:'mmHg', psi:'psi',
+                 fps:'ft/sec', c:'°C', f:'°F', k:'K' };
+  var cuBusy=false;
+  function cuUnits(fam){
+    if(fam==='temp') return ['c','f','k'];
+    return Object.keys(CALC.UNITS[fam]||{});
+  }
+  function cuBuild(){
+    var fam=($('#cuFam')||{}).value||'speed', box=$('#cuGrid'); if(!box) return;
+    box.innerHTML=cuUnits(fam).map(function(u){
+      return '<div><div class="ck">'+esc(CU_LABEL[u]||u)+'</div>'+
+             '<input class="cin cuin" data-cu="'+u+'" inputmode="decimal" placeholder="—"></div>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.cuin'),function(el){
+      el.addEventListener('input', function(){ cuFrom(el.getAttribute('data-cu'), el.value); });
+    });
+  }
+  function cuFrom(unit, raw){
+    if(cuBusy) return; cuBusy=true;
+    var fam=($('#cuFam')||{}).value||'speed';
+    var v=parseFloat(String(raw).replace(/[^0-9eE+\-.]/g,''));
+    Array.prototype.forEach.call(document.querySelectorAll('#cuGrid .cuin'),function(el){
+      var u=el.getAttribute('data-cu');
+      if(u===unit) return;
+      if(!isFinite(v)){ el.value=''; return; }
+      var out;
+      if(fam==='temp'){
+        var c = unit==='c'? v : unit==='f'? CALC.fToC(v) : v-273.15;
+        out = u==='c'? c : u==='f'? CALC.cToF(c) : c+273.15;
+      } else out=CALC.convert(fam, unit, u, v);
+      el.value = (out==null)? '' : String(Math.round(out*1e6)/1e6);
+    });
+    cuBusy=false;
+  }
+  function calcAll(){
+    try{ calcWind(); }catch(e){}
+    try{ calcPress(); }catch(e){}
+    try{ calcAir(); }catch(e){}
+    try{ calcDesc(); }catch(e){}
+    try{ calcTsd(); }catch(e){}
+    try{ calcFuel(); }catch(e){}
+    try{ calcMet(); }catch(e){}
+    try{ calcGc(); }catch(e){}
+  }
+  (function(){
+    var map={ cwRwy:calcWind, cwDir:calcWind, cwSpd:calcWind,
+              cpElev:calcPress, cpAlt:calcPress, cpOat:calcPress,
+              caCas:calcAir, caAlt:calcAir, caOat:calcAir,
+              cdAlt:calcDesc, cdGs:calcDesc, cdAng:calcDesc,
+              ctD:calcTsd, ctG:calcTsd, ctM:calcTsd,
+              cfQty:calcFuel, cfDens:calcFuel, cfBurn:calcFuel, cfUnit:calcFuel,
+              cmT:calcMet, cmD:calcMet, cmE:calcMet,
+              cgLa1:calcGc, cgLo1:calcGc, cgLa2:calcGc, cgLo2:calcGc };
+    Object.keys(map).forEach(function(id){
+      var el=document.getElementById(id); if(!el) return;
+      el.addEventListener('input', function(){ try{ map[id](); }catch(e){} });
+      el.addEventListener('change', function(){ try{ map[id](); }catch(e){} });
+    });
+    var fam=document.getElementById('cuFam');
+    if(fam) fam.addEventListener('change', cuBuild);
+    try{ cuBuild(); }catch(e){}
+  })();
 
   var slpRetried=0;
   function slpRender(){
