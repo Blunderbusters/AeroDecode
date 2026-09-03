@@ -7015,7 +7015,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.5 · 2026-09-03';
+  var BUILD='v17.7 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -9259,6 +9259,36 @@
              (nd.legs.length>1? ', '+nd.legs.length+' legs':'')+
              (augRest>0? ' · '+aug+' pilots, about '+augRest.toFixed(1)+' h bunk rest assumed' : ''),
              augRest>0? 'Crew complement is assumed from sector length unless your roster states it. If you are actually flying it unaugmented, this is optimistic.' : null);
+      /* The pattern, not the duty. One 3-hour swing is a bad night; four of them in a row
+         with a day between each is a clock that never arrives anywhere, and only the sum
+         shows that. */
+      var swSum=null, abSum=null, swN=0, swBack=0;
+      try{
+        var _legs=dpRoster(), _all=DUTY.buildDuties(_legs), _rst=DUTY.restPeriods(_all);
+        DUTY.simulateTrip(_all,_rst,dpBaseOff(Date.now()),dpOff,F);
+        var _i=-1; for(var q=0;q<_all.length;q++) if(_all[q].report===nd.report){ _i=q; break; }
+        if(_i>0){
+          swSum=0; abSum=0;
+          for(var q2=Math.max(1,_i-3); q2<=_i; q2++){
+            var _bo=(_all[q2].bodyOffset!=null)? _all[q2].bodyOffset : dpBaseOff(Date.now());
+            var _b=dpBodyClock(_all[q2], _all[q2-1], _bo, F);
+            if(_b && _b.swing!=null){
+              swSum+=Math.abs(_b.swing); abSum+=_b.absorbable; swN++;
+              if(_b.backward) swBack++;
+            }
+          }
+        }
+      }catch(e){}
+      if(swSum!=null && swN>0 && swSum>0.5){
+        var unmet=swSum-abSum;
+        h+=row('Clock movement asked of you',
+          swSum.toFixed(1)+' h across the last '+swN+' duty change'+(swN===1?'':'s')+
+          ', about '+Math.max(0,abSum).toFixed(1)+' h of it absorbable',
+          unmet>0.5
+            ? 'Roughly '+unmet.toFixed(1)+' h of that was never made up before the next duty moved you again'+
+              (swBack? ', and '+swBack+' of those change'+(swBack===1?'':'s')+' pulled you earlier — the slow direction to adjust in.' : '.')
+            : 'Within what the model says your clock can follow across those gaps.');
+      }
       if(nd.effWhere) h+=row('Low point falls', esc(String(nd.effWhere).replace(/<[^>]*>/g,'')), null);
       h+='<div class="rptfoot"><b>This is a projection, and the decision is yours alone.</b> '+
          'It is built from your roster and a published model, not from the sleep you actually got — '+
@@ -9786,7 +9816,7 @@
         var stamped=(parsed.rows||[]).length;
         return {err:'Nothing importable in <b>'+esc(name)+'</b>.<br>'+
           (stamped? 'Entries were found, but none of them carried usable times. Check that the date lines came out as <b>2026-08-26T13:48:00-05:00</b> or <b>20260826T184800Z</b>, and that <b>Location</b> was included — that is where the block times live.'
-                  : 'No entries carried the <b>AIMS eCrew</b> stamp, so everything was treated as a personal appointment and skipped. If this came from a Shortcut, make sure the <b>Notes</b> field of each event is being copied across — that is where the stamp is.')};
+                  : 'No entries carried the <b>AIMS eCrew</b> stamp, so everything was treated as a personal appointment and skipped. That stamp lives in each event\'s <b>Notes</b>, so anything that copies events without their notes — an older Shortcut, some calendar exporters — arrives unreadable. A linked calendar or a direct <b>.ics</b> export keeps it.')};
       }
       return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'};
     }
@@ -9867,7 +9897,7 @@
      rather than trusting the extension, and decode the CSV as ISO-8859-1 because that is
      what the export actually is - reading it as UTF-8 destroys the day markers. */
   /* ---------- linked calendar ---------------------------------------------------------
-     The thirty-step Shortcut existed for one reason: a browser cannot fetch a calendar feed
+     The thirty-step Shortcut this replaced existed for one reason: a browser cannot fetch a calendar feed
      directly. Google serves its iCal endpoint without an Access-Control-Allow-Origin header,
      so the browser refuses to let the page read the response — tested from the live origin,
      the request succeeds in no-cors mode and fails in cors mode, which is that header and
@@ -10171,61 +10201,13 @@
     {h:'Part 2 — Getting it from the calendar into this app'},
     {n:6, t:'First, check whether eCrew can just <b>email or export</b> your roster as a file. Some versions can.',
           s:'If it can, email it to yourself, open the attachment on your phone, tap the share button, choose <b>Save to Files</b>, then come back here and use <b>Upload schedule</b>. That is the whole job and you can stop reading.'},
-    {n:7, t:'If it cannot, you build a <b>Shortcut</b> once. It takes about fifteen minutes and it is fiddly, but you only ever do it once — after that it is one tap, forever, and it always has your latest roster.',
-          s:'The next section walks through every action. Follow it in order and do not skip the warnings, because two of the steps have a trap in them.'},
-    {h:'Building the Shortcut'},
-    {n:8, t:'Open the <b>Shortcuts</b> app — it comes with every iPhone. Grey icon, two coloured squares.'},
-    {n:9, t:'Tap <b>+</b> at the top right. Tap the name at the top and call it <b>Schedule to CargoDecode</b>.'},
-    {n:10, t:'<b>Read this one before going any further — it is how every step below works.</b> You never scroll a list looking for these actions. There is a <b>grey search bar at the bottom of the screen</b>. Tap it, <b>type the name</b> of the action, and tap the result that comes up.',
-           s:'So when a step says "add <b>Set Variable</b>", what you actually do is tap the grey search bar, type <i>set variable</i>, and tap <b>Set Variable</b> in the results. Same for <b>Adjust Date</b>, <b>Find Calendar Events</b>, <b>Text</b>, all of them. Nothing below can be found by browsing.<br><br>⚠ <b>There are two grey bars and they do different jobs.</b> The one at the <b>bottom</b> is where you search for actions. A second one appears <b>just above the keyboard</b> when you tap into a field, and that one holds variables like <b>Current Date</b>. Steps below say which one they mean.'},
-    {n:11, t:'Search for <b>Adjust Date</b> and add it. Set it to <b>Subtract 30 Days</b>, and make sure the date it is adjusting says <b>Current Date</b>.',
-           s:'⚠ <b>Current Date is hidden until you go looking for it.</b> Tap the date field and the grey bar <b>just above the keyboard</b> fills with variables. <b>Current Date</b> is not the first thing on it — <b>swipe that bar to the left</b> and it comes into view. This catches everybody, including people who have built Shortcuts before.'},
-    {n:12, t:'In the <b>grey search bar at the bottom</b>, type <b>set variable</b> and add <b>Set Variable</b>. Name the variable <code>From</code>. Finished, it reads <b>Set variable <code>From</code> to Adjusted Date</b>.',
-           s:'<b>Yes, it needs <i>Adjusted Date</i> in it — and it will already be there.</b> Shortcuts fills every action you add with whatever the action above it produced, and the one above is your first <b>Adjust Date</b>, whose output is named <b>Adjusted Date</b>. Here that is exactly right, so leave it alone.<br><br>'+
-             'Worth understanding now, because it is the same behaviour that ruins step 13. Shortcuts <i>always</i> pre-fills. Sometimes what it grabs is what you want and you leave it; sometimes it is wrong and you have to swap it out. Every step from here says what the finished action should read, so you can check instead of guess.'},
-    {n:13, t:'Search for <b>Adjust Date</b> and add a second one. Set it to <b>Add 90 Days</b>. Then read the whole box below before touching anything else — this is the step people get wrong.',
-           s:'⚠ <b>The big trap.</b> This new action already has <code>From</code> sitting in its date field. Shortcuts fills every action it adds with whatever the previous one produced, and it does it silently. You do not want <code>From</code> here. You want <b>Current Date</b>. Two jobs: take the old one out, put the right one in.<br><br>'+
-             '<b>Taking <code>From</code> out</b><br>'+
-             '• Tap the date field so the cursor lands in it and the keyboard comes up.<br>'+
-             '• <code>From</code> is a <b>single coloured pill</b>, not four separate letters. Put the cursor <b>immediately to the right of it</b> and press <b>backspace ⌫ once</b> — the whole pill goes in one press.<br>'+
-             '• If backspace will not take it, <b>tap the pill itself</b>. A small menu appears with an option to remove it.<br>'+
-             '• The field should now be completely empty.<br><br>'+
-             '<b>Putting <code>Current Date</code> in</b><br>'+
-             '• Leave the cursor in that empty field. The <b>grey bar just above the keyboard</b> is full of variables.<br>'+
-             '• <b>Swipe that bar to the left.</b> <b>Current Date</b> sits further along it and is not visible until you scroll.<br>'+
-             '• Tap <b>Current Date</b>. It drops in as its own pill.<br><br>'+
-             'When you are done the action should read <b>Add 90 Days to Current Date</b>. If the word <code>From</code> is still showing anywhere in it, it is not right yet. Get this wrong and the Shortcut quietly pulls the wrong six weeks of your roster, with nothing on screen to tell you anything is off.'},
-    {n:14, t:'Grey search bar again: type <b>set variable</b>, add another <b>Set Variable</b>, and name this one <code>To</code>. Finished, it reads <b>Set variable <code>To</code> to Adjusted Date</b>.',
-           s:'Same as step 12 — <b>Adjusted Date</b> is pre-filled and is correct, because the action above it is the second <b>Adjust Date</b> you just fixed. Leave it. If it says <code>From</code> instead of <b>Adjusted Date</b>, go back and finish step 13 properly.'},
-    {n:15, t:'Search for <b>Find Calendar Events</b> and add it. Add a filter: <b>Start Date — is between — <code>From</code> and <code>To</code></b>. Add a second filter: <b>Is All Day — is off</b>. Sort by <b>Start Date</b>.'},
-    {n:16, t:'Search for <b>Repeat with Each</b> and add it. Everything from here until step 21 goes <i>inside</i> that loop.'},
-    {n:17, t:'Inside the loop, search for <b>Format Date</b> and add it. For the date, insert the <b>Repeat Item</b> variable, then <b>tap it</b> and choose <b>Start Date</b> from the list that appears. Set Format to <b>ISO 8601</b> and turn <b>Include Time on</b>. Then add a <b>Set Variable</b> named <code>S</code> — it should read <b>Set variable <code>S</code> to Formatted Date</b>.',
-           s:'Tapping an inserted variable to pick which part of it you want is the one Shortcuts trick worth learning. You will use it several more times below.<br><br>'+
-             'The <b>Set Variable</b> pre-fills with <b>Formatted Date</b>, which is the output of the Format Date above it. That is correct — leave it. If the date field of <b>Format Date</b> pre-filled itself with something, clear it the same way you did in step 13 and put <b>Repeat Item</b> in instead.'},
-    {n:18, t:'Same again for the end: another <b>Format Date</b>, this time on <b>Repeat Item → End Date</b>, <b>ISO 8601</b>, <b>Include Time on</b>. Then a <b>Set Variable</b> named <code>E</code>, reading <b>Set variable <code>E</code> to Formatted Date</b>.'},
-    {n:19, t:'Search for <b>Text</b>, add it, and type exactly this — using the variables where shown:', code:
-      'BEGIN:VEVENT\nSUMMARY:[Repeat Item → Title]\nDTSTART:[S]\nDTEND:[E]\nLOCATION:[Repeat Item → Location]\nDESCRIPTION:[Repeat Item → Notes]\nEND:VEVENT',
-      s:'Everything in square brackets is a variable you insert, not text you type. <b>DESCRIPTION is the important one</b> — the Notes of each event are what tell this app the entry came from eCrew, and which flight it actually was. Leave it out and nothing will import.'},
-    {n:20, t:'Search for <b>Add to Variable</b> and add it. Name it <code>Events</code>. It should read <b>Add Text to variable <code>Events</code></b>. That is the end of the loop.',
-           s:'<b>Text</b> here is the pre-filled output of the Text action you just built, and it is correct — leave it.'},
-    {n:21, t:'Below the loop, search for <b>Find Calendar Events</b> and add a second one. Same <b>Start Date is between <code>From</code> and <code>To</code></b>, but this time <b>Is All Day — is on</b>.',
-           s:'This second pass picks up your X days and GDOs. They have no times on them, which is why they need their own loop — and they are what tells the app when one pattern of duty ends and the next begins.'},
-    {n:22, t:'Add another <b>Repeat with Each</b>. Inside it, a <b>Format Date</b> on <b>Repeat Item → Start Date</b>, Format <b>Custom</b>, format string <code>yyyyMMdd</code>. Then a <b>Set Variable</b> named <code>D</code>, reading <b>Set variable <code>D</code> to Formatted Date</b>.',
-           s:'⚠ The <b>Repeat with Each</b> you just added will have grabbed the wrong thing for its input. It must run over the <b>second Find Calendar Events</b> — the all-day one from step 21. If it says anything else, clear it and put that in.'},
-    {n:23, t:'Still inside, add another <b>Text</b> action:', code:
-      'BEGIN:VEVENT\nSUMMARY:[Repeat Item → Title]\nDTSTART;VALUE=DATE:[D]\nDESCRIPTION:[Repeat Item → Notes]\nEND:VEVENT',
-      s:'⚠ Second trap: the semicolon in <code>DTSTART;VALUE=DATE:</code> is not a typo and neither is the colon after it. Type it exactly.'},
-    {n:24, t:'Add another <b>Add to Variable</b> → <code>Events</code>, reading <b>Add Text to variable <code>Events</code></b>. End of the second loop.'},
-    {n:25, t:'Below everything, search for <b>Combine Text</b> and add it. It should read <b>Combine <code>Events</code> with New Lines</b>.',
-           s:'⚠ This one pre-fills with the previous action rather than <code>Events</code>. Clear it the same way as step 13, then put the <code>Events</code> variable in from the grey bar above the keyboard. Then set the separator to <b>New Lines</b>.'},
-    {n:26, t:'Add one final <b>Text</b> action:', code:
-      'BEGIN:VCALENDAR\nVERSION:2.0\n[Combined Text]\nEND:VCALENDAR'},
-    {n:27, t:'Search for <b>Copy to Clipboard</b> and add it. Done — tap <b>Done</b> at the top right.'},
-    {h:'Using it, from now on'},
-    {n:28, t:'Run the Shortcut. The first time, your phone will ask whether it may read your calendar — say yes.'},
-    {n:29, t:'Come back here, tap <b>📋 Paste a schedule instead</b>, tap in the box, <b>Paste</b>, then <b>Import what I pasted</b>.',
-           s:'That is it. Do that whenever your roster changes. Nothing is replaced — new trips are added to what is already stored, and an updated version of a trip you already have overwrites the old one.'},
-    {n:30, t:'To make it genuinely one tap, press and hold the Shortcut and choose <b>Add to Home Screen</b>.'}
+    {n:7, t:'If it cannot, use <b>🔗 Link my calendar</b> on this tab instead. You paste your calendar\'s address in once and the app pulls your roster itself from then on.',
+           s:'That button carries its own short walkthrough for finding the address — five steps on Google Calendar, two on an iPhone. It replaces the fifteen-minute Shortcut this guide used to walk you through: the Shortcut only ever existed because a browser cannot fetch a calendar feed on its own, and the app now goes through its own relay to do exactly that. If you built the Shortcut before, it still works and there is no need to take it apart.'},
+    {n:8, t:'Once the link is saved, your roster refreshes on its own. Nothing to re-export, nothing to paste, no computer.',
+           s:'New trips are added to what is already stored, and an updated version of a trip you already have overwrites the old one — so re-importing is always safe.'},
+    {h:'If you would rather not link anything'},
+    {n:9, t:'<b>📋 Paste a schedule instead</b> takes the text of a roster straight from your clipboard, and <b>Upload schedule</b> takes a <b>.ics</b>, <b>.csv</b>, <b>.xls</b> or <b>.zip</b> file.',
+           s:'Both are snapshots of the moment you took them — you repeat it whenever your roster changes. The link does not have that problem, which is the only reason to prefer it.'}
   ];
   var SU_COMP=[
     {h:'If your trips are in a Google calendar'},
@@ -10238,10 +10220,10 @@
     {n:6, t:'Come back here and use <b>Upload schedule</b>. That is the whole job.'},
     {h:'If your trips are in the iPhone\'s own Calendar (iCloud)'},
     {n:7, t:'Apple does not give you an export button, so there is no equivalent of the above.',
-          s:'Two ways round it. Either build the Shortcut on the phone tab — which is better anyway, because it needs no computer at all — or, in eCrew, point the calendar sync at a <b>Google</b> calendar instead of the iCloud one, and then follow the steps above.'},
+          s:'Two ways round it, and both are quicker than this page. Use <b>🔗 Link my calendar</b> on the import card — an iPhone calendar can be shared as a <code>webcal://</code> link, which the app reads directly. Or, in eCrew, point the calendar sync at a <b>Google</b> calendar instead of the iCloud one and follow the steps above.'},
     {h:'A note on keeping it current'},
     {n:8, t:'A file export is a snapshot of the moment you took it. Re-export and re-upload whenever your roster changes and the app will merge it in.',
-          s:'The Shortcut does not have this problem, which is the real reason it is worth the fifteen minutes.'}
+          s:'A linked calendar does not have this problem — it re-reads the feed itself. That is the whole reason to set one up.'}
   ];
   /* This guide sends you to three other apps and back. On iOS a web app that has been in the
      background is routinely thrown away and started again from scratch, so leaving to open
@@ -10250,9 +10232,9 @@
 
      So none of this is held in memory. Which tab you are on, how far you have scrolled and
      which steps you have ticked all live in storage, and the guide reopens itself where you
-     left it. The ticks are the important half: on a twenty-nine step job that takes you out
-     of the app a dozen times, being able to see which ones are already done is the
-     difference between finishing and giving up. */
+     left it. The ticks matter less now that the guide is nine steps rather than twenty-nine
+     — the Shortcut it used to walk through has been replaced by the calendar link — but the
+     guide still sends you into eCrew and back, so the state is still worth keeping. */
   function suState(){ try{ return JSON.parse(localStorage.getItem('ad_setup')||'{}')||{}; }catch(e){ return {}; } }
   function suSave(p){
     var s=suState();
@@ -11258,6 +11240,46 @@
   }
   function dpSetDrop(k,on){ var d=dpDrop(); if(on) d[k]=1; else delete d[k]; try{ localStorage.setItem('ad_legdrop',JSON.stringify(d)); }catch(e){} }
   function dpSetDh(k,on){ var f=dpDhFix(); f[k]=on?1:0; try{ localStorage.setItem('ad_dhfix',JSON.stringify(f)); }catch(e){} }
+  /* ---- body clock, and what the schedule is asking of it -------------------------------
+     Two numbers that are easy to confuse and are not the same thing.
+
+     DISPLACEMENT is where your clock has ended up relative to the time you are reporting
+     for. SWING is how far the schedule moved your report since the last duty - the cause,
+     not the consequence.
+
+     The asymmetry between them is the point, and it is not invented here: the SAFTE
+     re-entrainment rates already in CFG have the clock DELAYING about an hour a day and
+     ADVANCING only about two thirds of one. A pattern that keeps pushing you later is
+     roughly survivable, because the clock keeps up. One that keeps dragging you earlier
+     asks for more than 0.67 h/day, the shortfall does not clear before the next duty pulls
+     you earlier again, and it compounds rather than resetting. That is backward rotation.
+     Reading it off six report times by eye is exactly what nobody does. */
+  function dpUtcH(ms){ var t=new Date(ms); return t.getUTCHours()+t.getUTCMinutes()/60; }
+  function dpBodyClock(d, prev, bOff, F){
+    if(!F || d.report==null || bOff==null) return null;
+    var locOff=dpOff(d.from, d.report); if(locOff==null) locOff=bOff;
+    var o={};
+    /* Positive means local time is ahead of your body clock - you are BEHIND, and closing
+       it is the advance direction, the slow one. */
+    o.disp=F.shortestShift(bOff, locOff);
+    var ad=F.adaptation(bOff, locOff, 0);
+    o.daysToClose=(ad && ad.daysToFull!=null && Math.abs(o.disp)>=0.25)? ad.daysToFull : null;
+    if(prev && prev.report!=null){
+      var pOff=(prev.bodyOffset!=null)? prev.bodyOffset : bOff;
+      var sw=F.bodyHourAt(dpUtcH(d.report), bOff) - F.bodyHourAt(dpUtcH(prev.report), pOff);
+      sw=sw-24*Math.round(sw/24);                       // shortest way round the dial
+      o.swing=sw;
+      var ref=(prev.release!=null? prev.release : prev.report);
+      o.gapDays=Math.max(0,(d.report-ref)/86400000);
+      /* Earlier is an advance and gets the advance rate; later is a delay. */
+      o.rate=(sw<0)? F.CFG.eastRatePerDay : F.CFG.westRatePerDay;
+      o.absorbable=o.gapDays*o.rate;
+      o.overAsk=Math.abs(sw)-o.absorbable;
+      o.backward=(sw<-0.5);
+    }
+    return o;
+  }
+
   function dpRoster(){
     var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
     /* Only legs. If anything else has been written here - and something once was - drop it
@@ -11713,6 +11735,43 @@
            (d.flightMin!=null && d.flightMin!==d.blockMin? '<div class="dpsub">'+dpHM(d.flightMin)+' flight time</div>':'')+'</div></div>'+
          (d.effDutyMin!=null&&d.effDutyMin!==d.dutyMin? '<div class="dpstat"><div class="k">Duty excl. gateway</div><div class="v" style="color:var(--gold)">'+dpHM(d.effDutyMin)+'</div></div>':'')+
          '</div>';
+
+      var bc=dpBodyClock(d, (i>0? duties[i-1] : null), bOff, F);
+      if(bc){
+        var dCol=DUTY.bandColor(DUTY.pct(Math.abs(bc.disp),0,6)).c;
+        var dVal=(Math.abs(bc.disp)<0.25)? 'In step'
+               : Math.abs(bc.disp).toFixed(1)+'h '+(bc.disp>0? 'behind':'ahead');
+        var dSub=(Math.abs(bc.disp)<0.25)? 'matches local time here'
+               : (bc.daysToClose!=null? bc.daysToClose.toFixed(1)+' days to close at '+
+                   (bc.disp>0? F.CFG.eastRatePerDay:F.CFG.westRatePerDay)+' h/day' : '');
+        var bh='<div class="dpstats">'+
+          '<div class="dpstat"><div class="k">Body clock</div><div class="v" style="color:'+dCol+'">'+dVal+'</div>'+
+            (dSub? '<div class="dpsub">'+esc(dSub)+'</div>':'')+'</div>';
+        if(bc.swing!=null){
+          var sCol=DUTY.bandColor(DUTY.pct(Math.max(0,bc.overAsk),0,3)).c;
+          var sVal=(Math.abs(bc.swing)<0.5)? 'Steady'
+                 : Math.abs(bc.swing).toFixed(1)+'h '+(bc.swing<0? 'earlier':'later');
+          bh+='<div class="dpstat"><div class="k">Report moved</div><div class="v" style="color:'+sCol+'">'+sVal+'</div>'+
+              '<div class="dpsub">'+(bc.gapDays<0.05? 'same day as the last release'
+                 : bc.absorbable.toFixed(1)+' h absorbable in '+bc.gapDays.toFixed(1)+' d off')+'</div></div>';
+        }
+        bh+='</div>';
+        h+=bh;
+        if(bc.swing!=null && bc.overAsk>0.5){
+          h+='<div class="dpcite" style="border-left-color:'+(bc.backward?'#ff9d4d':'#5b93e8')+'">'+
+             '<b style="color:'+(bc.backward?'#ff9d4d':'#8fb4ff')+'">'+
+             (bc.backward? 'Backward rotation — this asks your clock to move earlier faster than it can.'
+                         : 'This moves your clock later faster than it can follow.')+'</b><br>'+
+             'Report is '+Math.abs(bc.swing).toFixed(1)+' h '+(bc.swing<0?'earlier':'later')+
+             ' in body time than the last duty, with '+bc.gapDays.toFixed(1)+' day'+(bc.gapDays===1?'':'s')+
+             ' between them. At the model’s '+bc.rate+' h/day the clock can absorb about '+
+             bc.absorbable.toFixed(1)+' h of that, leaving roughly <b>'+bc.overAsk.toFixed(1)+' h unadjusted</b> '+
+             'going into this duty.'+
+             (bc.backward? ' Advancing is the slow direction — about '+F.CFG.eastRatePerDay+
+                ' h/day against '+F.CFG.westRatePerDay+' for delays — so an earlier report costs more than a later one of the same size, and the shortfall carries into the next duty rather than clearing.' : '')+
+             '</div>';
+        }
+      }
 
       if(d.allGateway){
         h+='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">Gateway duty period — excluded from duty time.</b><br>'+
