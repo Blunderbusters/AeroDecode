@@ -7015,7 +7015,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.3 · 2026-09-03';
+  var BUILD='v17.4 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7120,19 +7120,58 @@
      changes, which it will. Anchoring the pattern on the seat/base/aircraft trio rather
      than on column positions is what survives pdf.js collapsing the whitespace. */
   function rosParse(text){
-    var lines=String(text||'').split(/\r?\n/), out=[], seen={};
-    var re=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d\d?\/\d\d?\/\d\d)\s+(.+?)\s+([A-Z]{2})\s+([A-Z]{3})\s+(\d{3})(?:\s+([A-Z]{2,6}))?(?:\s+(\d\d?\/\d\d?\/\d\d))?\s*$/;
+    var raw=String(text||'').split(/\r?\n/);
+
+    /* pdf.js groups text items by their rounded y position, so a row whose columns were
+       typeset a hair apart arrives split across two or three lines. Stitch any line that
+       opens like a row but never reaches the seat/base/aircraft trio onto what follows,
+       and stop the moment the trio appears or the next row begins. */
+    var lines=[], HEAD=/^\s*\d+\s+\d+\s+\d{2,8}\s+\d\d?\/\d\d?\/\d\d/, TRIO=/[A-Z]{2}\s+[A-Z]{3}\s+\d{2,4}/;
+    for(var i=0;i<raw.length;i++){
+      var l=raw[i];
+      if(HEAD.test(l) && !TRIO.test(l)){
+        var j=i+1, merged=l;
+        while(j<raw.length && j<=i+3 && !HEAD.test(raw[j])){
+          merged+=' '+raw[j];
+          if(TRIO.test(merged)) break;
+          j++;
+        }
+        lines.push(merged.replace(/\s+/g,' ')); i=j; continue;
+      }
+      lines.push(l);
+    }
+
+    /* Unanchored on purpose. The published list carries leading index columns and trailing
+       retirement columns that come and go by row, and an earlier pattern that pinned itself
+       to the start and end of the line matched every row in the two extractions tested here
+       and a small fraction of them in the field. What is actually stable is the run of
+       employee number, hire date, name, seat, base, aircraft - so match THAT, wherever in
+       the line it happens to sit, and ignore whatever surrounds it. */
+    var re=/(\d{2,8})\s+(\d\d?\/\d\d?\/\d\d)\s+([^\d].*?)\s+([A-Z]{2})\s+([A-Z]{3})\s+(\d{2,4})(?!\d)/;
     var csv=/^\s*(\d{2,8})\s*[,;\t]\s*(.+?)\s*$/;
-    for(var i=0;i<lines.length;i++){
-      var m=re.exec(lines[i]);
+    var out=[], seen={}, dataish=0, misses=[];
+    for(var n=0;n<lines.length;n++){
+      var line=lines[n], m=re.exec(line);
       if(m){
-        if(seen[m[3]]) continue; seen[m[3]]=1;
-        out.push({e:m[3], n:m[5].replace(/\s+/g,' ').trim(), s:m[6], b:m[7], a:m[8]});
+        if(!seen[m[1]]){ seen[m[1]]=1;
+          out.push({e:m[1], n:m[3].replace(/\s+/g,' ').trim(), s:m[4], b:m[5], a:m[6]}); }
         continue;
       }
-      var c=csv.exec(lines[i]);
-      if(c && !seen[c[1]]){ seen[c[1]]=1; out.push({e:c[1], n:c[2].trim(), s:'', b:'', a:''}); }
+      var c=csv.exec(line);
+      if(c){ if(!seen[c[1]]){ seen[c[1]]=1; out.push({e:c[1], n:c[2].trim(), s:'', b:'', a:''}); } continue; }
+      /* Anything that still looks like a pilot row and did not parse is worth being able to
+         see - as a shape, never as a person. Letters collapse to A/a and digits to 9, which
+         is enough to spot a layout change and nowhere near enough to identify anybody. */
+      if(HEAD.test(line)){
+        dataish++;
+        if(misses.length<5){
+          misses.push(line.replace(/\d/g,'9').replace(/[A-Z]/g,'A').replace(/[a-z]/g,'a')
+                          .replace(/a+/g,'a').replace(/A+/g,'A').replace(/9+/g,'9')
+                          .replace(/\s+/g,' ').trim().slice(0,90));
+        }
+      }
     }
+    rosParse.diag={read:out.length, unparsed:dataish, shapes:misses};
     return out;
   }
   async function rosLoadFile(f){
@@ -7180,6 +7219,15 @@
          (rc? (rc.toLocaleString()+' pilots loaded. Names are matched on this device and are never sent anywhere.')
             : 'Load the seniority PDF once and this card shows names instead of hashes.')+
          '</div>';
+      /* Only shown when rows were skipped. A silent under-read is the failure that looks
+         like success: the card fills with names, and the people it quietly dropped are
+         invisible precisely because they are missing. */
+      var dg=rosParse.diag;
+      if(rc && dg && dg.unparsed){
+        h+='<div class="usgerr">'+dg.unparsed+' row'+(dg.unparsed===1?'':'s')+
+           ' in that file did not parse. Shapes of the first few (letters and digits masked):</div>'+
+           '<div class="usgpre">'+esc(dg.shapes.join('\n'))+'</div>';
+      }
       if(state&&state.err) h+='<div class="usgerr">'+esc(state.err)+
         (state.detail? ' <span style="opacity:.7">('+esc(state.detail)+')</span>' : '')+'</div>';
       if(state&&state.openUrl) h+='<div class="usgrow" style="margin-top:8px">'+
