@@ -641,6 +641,7 @@
   .dpscore{text-align:right;flex:0 0 100px;max-width:100px}
   .dpscoreval{font-family:var(--mono);font-size:26px;font-weight:800;line-height:1}
   .dpscorelab{font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;margin-top:3px;line-height:1.2}
+  .dpscorewhen{font-size:9.5px;font-weight:600;color:#8fa3c4;margin-top:4px;line-height:1.25;max-width:120px}
   .dpbody{padding:11px 13px}
   .leg{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid rgba(120,160,220,.1)}
   .leg:last-child{border-bottom:none}
@@ -7111,7 +7112,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.8 · 2026-09-03';
+  var BUILD='v17.9 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -11801,8 +11802,15 @@
             if(d.allGateway) return '<div class="dpscore"><div class="dpscoreval" style="color:'+bc.c+'">—</div>'+
                                     '<div class="dpscorelab" style="color:'+bc.c+'">Gateway</div></div>';
             if(F && d.effWorst!=null){ var eb=F.band(d.effWorst);
+              /* The number is the LOW POINT of the duty, measured at a landing - not your
+                 state at report and not an average. Without saying so it reads as "how I
+                 will be on this trip", which is the one thing it is not. The Fatigue tab
+                 has always labelled it "Projected low point"; this makes the two agree. */
               return '<div class="dpscore"><div class="dpscoreval" style="color:'+eb.color+'">'+d.effWorst+'<span class="pcs">%</span></div>'+
-                     '<div class="dpscorelab" style="color:'+eb.color+'">'+esc(eb.label)+'</div></div>'; }
+                     '<div class="dpscorelab" style="color:'+eb.color+'">'+esc(eb.label)+'</div>'+
+                     '<div class="dpscorewhen">Lowest point of this duty'+
+                       (d.effWorstLeg? ', at the landing in '+esc(String(d.effWorstLeg).split('→').pop().trim()) : '')+
+                     '</div></div>'; }
             /* No alertness figure could be computed. Showing the inverted risk score in the
                same slot and the same colours would read as an alertness percentage. */
             return '<div class="dpscore"><div class="dpscoreval" style="color:#7f95b5">?</div>'+
