@@ -7008,7 +7008,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.1 · 2026-09-01';
+  var BUILD='v17.2 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7161,8 +7161,18 @@
            way forward, which is precisely the dead end this branch exists to prevent.
            Opening the report directly always works: a top-level navigation has no origin
            for the relay to check. */
-        usgRender({err:'Could not read the report from inside the app. Open it directly:',
-          detail:(e&&e.message)? e.message : '',
+        /* Two different situations, and only one of them is the owner's problem. A 404 or a
+           relay status is worth quoting verbatim - it means the key or the relay is wrong.
+           A fetch that simply fails is the missing CORS header on /who, and quoting the
+           browser's word for it ("Load failed", "Failed to fetch") reads as a broken app
+           when nothing is broken: the report is there, it just cannot be read from this
+           origin. Say that in words, put the link first, and quote nothing. */
+        var msg=(e&&e.message)? String(e.message) : '';
+        var relaySaid=/not accepted|relay answered/i.test(msg);
+        usgRender({
+          err: relaySaid ? msg
+             : 'The relay does not yet send the header a browser needs before it will hand '+
+               'the report to this page. Nothing is broken - open it directly:',
           openUrl: USG_URL+'?k='+encodeURIComponent(k)});
       });
   }
