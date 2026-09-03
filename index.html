@@ -788,6 +788,11 @@
   .usgn .v{font-size:20px;font-weight:800;color:#8fb4ff;line-height:1.15}
   .usgpre{white-space:pre;overflow-x:auto;background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.18);
     border-radius:9px;padding:10px;margin-top:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9cbe8}
+  .whysum{background:rgba(20,34,60,.75);border:1px solid rgba(120,160,230,.28);border-left:3px solid #8fb4ff;
+    border-radius:10px;padding:12px 13px;margin-bottom:12px}
+  .whysumh{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8fa3c4;margin-bottom:6px}
+  .whysumt{font-size:14px;line-height:1.5;color:#e8f0ff}
+  .whysumf{font-size:11.5px;line-height:1.45;color:#8fa3c4;margin-top:8px}
   .usgtbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
   .usgtbl th{text-align:left;font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:#8fa3c4;
     border-bottom:1px solid rgba(120,160,230,.25);padding:4px 6px 5px;white-space:nowrap}
@@ -1366,8 +1371,8 @@
     <button class="tab" data-view="logbook">Logbook</button>
     <button class="tab" data-view="hf">HF&nbsp;Checks</button>
     <button class="tab" data-view="catering">Catering</button>
-    <button class="tab" id="ftTab" data-view="fatigue" hidden>Fatigue <span class="protopill">DEV</span></button>
-    <button class="tab" id="slpTab" data-view="sleep" hidden>Sleep&nbsp;Plan <span class="protopill">DEV</span></button>
+    <button class="tab tab-proto" id="ftTab" data-view="fatigue">Fatigue <span class="protopill">PROTO</span></button>
+    <button class="tab tab-proto" id="slpTab" data-view="sleep">Sleep&nbsp;Plan <span class="protopill">PROTO</span></button>
     <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
     <button class="tab" data-view="calc">Calculators</button>
     <button class="tab tab-fun" data-view="wheel">🎡 Wheel of Misfortune</button>
@@ -1668,6 +1673,11 @@
   </div>
 
   <div id="view-fatigue" hidden>
+    <div class="protobanner">
+      <div class="protobanner-tag">🚧 PROTOTYPE</div>
+      <div class="protobanner-title">Fatigue — work in progress</div>
+      <p class="protobanner-body">This tab is an early <b>prototype</b>. It has <b>not been validated or tested</b>, and it may — and will — contain errors. Do not rely on anything here for operational or scheduling decisions. Always verify against official company scheduling, your CBA, and authoritative sources.</p>
+    </div>
     <div class="card">
       <div class="warnbox">
         <div class="wtitle">⚠️ Planning aid — not a measurement, not a legality check</div>
@@ -1920,6 +1930,11 @@
   </div>
 
   <div id="view-sleep" hidden>
+    <div class="protobanner">
+      <div class="protobanner-tag">🚧 PROTOTYPE</div>
+      <div class="protobanner-title">Sleep Plan — work in progress</div>
+      <p class="protobanner-body">This tab is an early <b>prototype</b>. It has <b>not been validated or tested</b>, and it may — and will — contain errors. Do not rely on anything here for operational or scheduling decisions. Always verify against official company scheduling, your CBA, and authoritative sources.</p>
+    </div>
     <div class="card">
       <div class="warnbox">
         <div class="wtitle">⚠️ A starting point, not a prescription</div>
@@ -5731,7 +5746,88 @@
     return { lines:out, summary:sum };
   }
 
-  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,markConsecutive:markConsecutive,offDaySet:offDaySet,explain:explain,
+  /* ---- the same thing in one breath ---------------------------------------------------
+     explain() produces the case: eight numbered paragraphs, each defensible, each with its
+     citation. That is the right shape for a document somebody at the company will read.
+
+     It is the wrong shape for the question actually being asked, which is "why do I feel
+     like this". A crew member reading nine paragraphs at 0300 to find out what is wrong
+     with him has been handed homework. So this says it once, in the words a person would
+     use, and puts the detail underneath for whoever wants it.
+
+     Same numbers, same thresholds, same model as explain() - deliberately, because the two
+     appearing to disagree would discredit both. This adds no new arithmetic. It only picks
+     the biggest one or two causes and says them as sentences. */
+  function plainWhy(x){
+    if(!x) return null;
+    var d=[];
+    function push(sev, short, why){ if(sev>0) d.push({sev:sev, short:short, why:why}); }
+
+    if(x.awakeAtRelease!=null){
+      var aw=x.awakeAtRelease;
+      push(aw>=17?3:(aw>=15?2:(aw>=13?1:0)),
+        'you have been awake too long',
+        'by the end of this duty you will have been up for '+aw.toFixed(0)+' hours straight'+
+        ((x.awakeContinuousH!=null && x.awakeContinuousH>aw+0.5)
+          ? ', and '+x.awakeContinuousH.toFixed(0)+' hours since you last slept properly' : ''));
+    }
+    if(x.woclH>=0.5){
+      push(x.woclH>=3?3:(x.woclH>=1.5?2:1),
+        'you are working through the middle of your body’s night',
+        'about '+x.woclH.toFixed(1)+' hours of this duty falls in the small hours on your body clock, '+
+        'which is the flattest part of anybody’s day and is not something you can push through');
+    }
+    if(x.tzMis>=3){
+      push(x.tzMis>=6?3:(x.tzMis>=4?2:1),
+        'your body clock is in the wrong time zone',
+        'it is still running about '+x.tzMis.toFixed(0)+' hours away from the clock on the wall here, '+
+        'and it only moves about an hour a day');
+    }
+    if(!x.restRecovered && x.restSleepH!=null && x.restSleepH<7){
+      push(x.restSleepH<5?3:2,
+        'the rest before this was too short to sleep off',
+        'once travel, food and winding down come out of it there was room for roughly '+
+        x.restSleepH.toFixed(1)+' hours of sleep, so you started this duty already behind');
+    }
+    if(x.restMin!=null && x.reqRestMin!=null && x.restMin<x.reqRestMin){
+      push(3, 'you were given less rest than you are owed',
+        'the break was '+Math.round((x.reqRestMin-x.restMin))+' minutes under the minimum');
+    }
+    if(x.consecN>=4){
+      push(x.consecN>=6?3:2,
+        'the days have stacked up',
+        'this is day '+x.consecN+' in a row without a day off, and that kind of debt does not clear on a layover');
+    }
+    if(x.thirtyTwo && x.thirtyTwo.ok===false){
+      push(2, 'you have not had a proper break in a week',
+        'there is no 32-hour clear period anywhere in your last seven days');
+    }
+    if(x.dutyMin!=null && x.dutyMin>=13*60){
+      push(x.dutyMin>=16*60?3:1,
+        'it is simply a long day',
+        (x.dutyMin/60).toFixed(1)+' hours from report to release');
+    }
+    if(!d.length) return null;
+    d.sort(function(a,b){ return b.sev-a.sev; });
+
+    var top=d[0], rest=d.slice(1,3);
+    var head='The main reason is '+top.short+' — '+top.why+'.';
+    var para=head;
+    if(rest.length===1) para+=' On top of that, '+rest[0].short+': '+rest[0].why+'.';
+    else if(rest.length===2) para+=' Two things make it worse: '+rest[0].short+' ('+rest[0].why+'), and '+
+      rest[1].short+' ('+rest[1].why+').';
+    if(x.eff!=null && x.eff<77){
+      para+=' Put together, the model puts you at about '+x.eff+'% of your own rested best'+
+        (x.effLabel? ' — its “'+String(x.effLabel).toLowerCase()+'” band':'')+'.';
+    }
+    /* Said every time, not only when the numbers are bad. The model reads a roster; it has
+       never met the person holding the phone. */
+    var tail='None of this decides anything for you. It is what the schedule alone would do '+
+             'to an average person — how you actually feel is yours to report.';
+    return { headline:head, paragraph:para, tail:tail, drivers:d };
+  }
+
+  var API={REGIMES:REGIMES,simulateTrip:simulateTrip,markConsecutive:markConsecutive,offDaySet:offDaySet,explain:explain,plainWhy:plainWhy,
            controllingRest:controllingRest,cumulative:cumulative,windowTotals:windowTotals,
            inferCrew:inferCrew,alertnessCurve:alertnessCurve,hardCaps:hardCaps,HARDCAPS:HARDCAPS,duty24:duty24,worstDuty24:worstDuty24,
            longestFreeSpan:longestFreeSpan,CUMREF:CUMREF,limitsFor:limitsFor,buildDuties:buildDuties,restPeriods:restPeriods,
@@ -7015,7 +7111,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.7 · 2026-09-03';
+  var BUILD='v17.8 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7040,15 +7136,15 @@
      THEM, not what changed in the code. Once someone dismisses a version's notes they stay
      dismissed until the version in this block changes. */
   var WHATSNEW={
-    live:false,
-    version:'v17.1',
-    title:'Your schedule, and where to sleep on a layover',
+    live:true,
+    version:'v17.8',
+    title:'Fatigue, Sleep Plan and Calculators are now open to everyone',
     items:[
-      'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
-      'New <b>Sleep Plan</b> tab. Pick a layover and it works out where to put your sleep in the hours you have, when to stop drinking coffee, and what time the wake-up call lands.',
-      'The app now understands <b>sims, ground school, briefings and reserve</b>. They count toward duty and rest, as they should, and no longer show up pretending to be flights.',
-      'Rebooked deadheads that AIMS never retracted are spotted and left out, so they stop inflating your duty totals. Where the app genuinely cannot tell which itinerary happened, it now shows you both and lets you strike out the one that did not.',
-      'You can <b>see and correct the schedule data</b> the app is working from — Fatigue tab, <b>See and correct the schedule data</b>. Anything you fix stays fixed through later imports.'
+      'The <b>Fatigue</b> and <b>Sleep Plan</b> tabs are no longer hidden. Both carry a <b>PROTOTYPE</b> banner for the same reason Schedule Checks does — they are not validated, they will contain errors, and nothing in them is a legality finding. Read the warnings on each tab before you lean on anything there.',
+      'New <b>Calculators</b> tab: crosswind and gust components, pressure and density altitude, true airspeed, descent planning, time–speed–distance, fuel and endurance, and the usual unit conversions.',
+      '<b>Why am I fatigued?</b> and the <b>fatigue report prep</b> now open with a plain-English summary that names the actual cause first — how long you have been awake, the middle of your body night, a clock in the wrong time zone, days stacked up — instead of leaving you to assemble it from nine paragraphs.',
+      'Every duty card now shows your <b>body clock</b>: how far out of step it is with local time, how long it would take to catch up, and how far the schedule moved your report since the last duty. A change that outruns what your clock can absorb is flagged, with backward rotation called out — an earlier report costs more than a later one of the same size.',
+      'Importing your roster no longer needs a fifteen-minute iPhone Shortcut. <b>🔗 Link my calendar</b> takes your calendar address once and keeps itself current after that. The setup guide is nine steps instead of thirty. An existing Shortcut still works.'
     ]
   };
   function wnSeen(){ try{ return localStorage.getItem('ad_wnseen')||''; }catch(e){ return ''; } }
@@ -9162,22 +9258,21 @@
 
 
   /* ---------- Fatigue (Stage 1: circadian phase + sleep reservoir) ----------
-     OWNER-ONLY while in development: the tab stays hidden unless the stored
-     credential is the owner override. NOTE this hides it from the UI, not from
-     anyone who reads the page source. */
+     These two shipped to everybody alongside Schedule Checks, carrying the same PROTOTYPE
+     banner. They are no longer owner-gated.
+
+     What IS still owner-only is the usage card on the Decode tab - the sign-in counts, the
+     view key and the seniority list. That gate is separate and lives in usgIsOwner(); do
+     not fold the two together. Who may see the fatigue model and who may see how many
+     people are using the app are different questions with different answers. */
   var ftFacility='bed', ftWakeDay=0;
-  /* Reveal the dev-only Fatigue tab for the owner login. Called at load AND right after
-     sign-in, because signing in only hides the overlay - it does not reload the page. */
+  /* Kept, and kept exported, because the sign-in path still calls it - signing in only
+     hides the overlay, it does not reload the page, so anything that used to change on
+     unlock had to be re-applied here. Both tabs are now open to everyone, so all this has
+     left to do is make sure neither is still hidden from an older stored state. */
   function ftApplyOwner(){
-    var owner=false;
-    try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); owner=!!(c&&c.owner); }catch(e){}
-    var t=document.getElementById('ftTab'); if(t) t.hidden=!owner;
-    var t2=document.getElementById('slpTab'); if(t2) t2.hidden=!owner;
-    if(!owner){                                    // signed out / crew login: leave the tab
-      var v=document.getElementById('view-fatigue'), v2=document.getElementById('view-sleep');
-      var leave=(v&&!v.hidden)||(v2&&!v2.hidden);
-      if(leave){ var d=document.querySelector('.tab[data-view="decode"]'); if(d) d.click(); }
-    }
+    var t=document.getElementById('ftTab'); if(t) t.hidden=false;
+    var t2=document.getElementById('slpTab'); if(t2) t2.hidden=false;
   }
   window.ftApplyOwner=ftApplyOwner;
   ftApplyOwner();
@@ -11413,6 +11508,17 @@
     function end(){ h+='</div>'; }
     function ask(t){ h+='<div class="rptask">'+t+'</div>'; }
 
+    /* Before the tables. A report that opens with block times makes the reader assemble the
+       argument himself; this states it, then evidences it. It is also the paragraph the crew
+       member will end up saying out loud on the phone, so it is worth him reading it once
+       before he calls rather than composing it under pressure. */
+    var pw=(typeof DUTY!=='undefined' && DUTY.plainWhy)? DUTY.plainWhy(x) : null;
+    if(pw){
+      h+='<div class="whysum"><div class="whysumh">In plain terms — why this duty is the problem</div>'+
+         '<div class="whysumt">'+pw.paragraph+'</div>'+
+         '<div class="whysumf">'+pw.tail+' Everything below is the detail behind it.</div></div>';
+    }
+
     sec('The duty period');
     row('Date', esc(x.day));
     row('Route', esc(x.route)+(x.allDeadhead? ' (all deadhead)':''));
@@ -11475,6 +11581,19 @@
     P.push('');
     P.push('Fatigue report — duty period '+x.day+', '+x.route);
     P.push('');
+    if(pw){
+      var flat=function(t){ var e=document.createElement('div'); e.innerHTML=String(t);
+        return (e.textContent||'').replace(/\s+/g,' ').trim(); };
+      P.push('IN PLAIN TERMS');
+      /* Wrapped, because this lands in a mail window next to fixed-width tables and one
+         400-character line through the middle of them looks like a mistake. */
+      var words=flat(pw.paragraph).split(' '), ln='';
+      words.forEach(function(w){
+        if((ln+' '+w).trim().length>78){ P.push('  '+ln.trim()); ln=w; } else ln+=' '+w;
+      });
+      if(ln.trim()) P.push('  '+ln.trim());
+      P.push('');
+    }
     P.push('DUTY');
     (x.legs||[]).forEach(function(l){
       P.push('  '+pad((l.dh?'DH ':'')+l.flight)+l.from+'-'+l.to+'   '+l.out+' -> '+l.inn+'   blk '+l.blk);
@@ -12241,6 +12360,14 @@
     $('#whySub').innerHTML='<span style="color:'+col+'">'+esc(x.day)+
       (x.eff!=null? ' · predicted alertness '+x.eff+'%'+(x.effLabel? ' ('+esc(x.effLabel.toLowerCase())+')':'') : '')+'</span>';
     var body='';
+    /* The answer first, then the evidence. Somebody opening this at three in the morning
+       wants one sentence, not nine paragraphs to sift. */
+    var pw=(DUTY.plainWhy? DUTY.plainWhy(x) : null);
+    if(pw){
+      body+='<div class="whysum"><div class="whysumh">In plain terms</div>'+
+            '<div class="whysumt">'+pw.paragraph+'</div>'+
+            '<div class="whysumf">'+pw.tail+'</div></div>';
+    }
     if(!r.lines.length){
       body='<div class="whyrow"><div class="whydot" style="background:#4ee39a"></div><div>Nothing in this duty period stands out as a fatigue driver. Short duty, rest in your body night, body clock roughly on local time. If you still feel unfit, that is real and it counts — the model only sees the schedule, not you.</div></div>';
     } else {
@@ -12265,6 +12392,7 @@
     var lines=['Fatigue — duty period of '+x.day+', '+x.route];
     if(x.eff!=null) lines.push('Predicted alertness: '+x.eff+'%'+(x.effLabel? ' ('+x.effLabel.toLowerCase()+')':''));
     lines.push('');
+    if(pw){ lines.push('IN PLAIN TERMS'); lines.push(strip(pw.paragraph)); lines.push(''); }
     r.lines.forEach(function(l,k){ lines.push((k+1)+'. '+strip(l.text)); });
     dpWhyPlain=lines.join('\n');
     var cp=$('#whyCopy'); if(cp) cp.textContent='Copy as plain text';
