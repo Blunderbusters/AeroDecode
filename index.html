@@ -1808,13 +1808,15 @@
 
       <div class="csec">
         <div class="cst">Wind components</div>
-        <div class="csub">Runway heading against the reported wind. A tailwind is shown as a tailwind rather than hidden inside a negative headwind.</div>
+        <div class="csub">Runway heading against the reported wind. A tailwind is shown as a tailwind rather than hidden inside a negative headwind. Enter the gust and you get the gust components too — those are usually the figures a limit is checked against.</div>
         <div class="cgrid">
           <div><div class="ck">Runway heading (°)</div><input id="cwRwy" class="cin" inputmode="numeric" placeholder="360"></div>
           <div><div class="ck">Wind from (°)</div><input id="cwDir" class="cin" inputmode="numeric" placeholder="030"></div>
           <div><div class="ck">Wind speed (kt)</div><input id="cwSpd" class="cin" inputmode="numeric" placeholder="20"></div>
+          <div><div class="ck">Gust (kt) — optional</div><input id="cwGst" class="cin" inputmode="numeric" placeholder="28"></div>
         </div>
         <div id="cwOut" class="cout"></div>
+        <div id="cwNote" class="cnote"></div>
       </div>
 
       <div class="csec">
@@ -6102,16 +6104,31 @@
      Angle between the wind and the runway; headwind is the along-runway component and
      crosswind the across-runway one. Sign is kept: a negative headwind IS a tailwind, and
      hiding that behind an absolute value is how a tailwind landing gets briefed as calm. */
-  function wind(runwayDeg, windDeg, windKt){
-    var r=num(runwayDeg), w=num(windDeg), v=num(windKt);
+  function wind(runwayDeg, windDeg, windKt, gustKt){
+    var r=num(runwayDeg), w=num(windDeg), v=num(windKt), g=num(gustKt);
     if(r==null||w==null||v==null) return null;
     var d=((w-r)%360+540)%360-180;                 // signed difference, -180..+180
     var rad=d*Math.PI/180;
-    var head=v*Math.cos(rad), cross=v*Math.sin(rad);
-    return { angle:d, head:head, cross:cross,
-             tail: head<0? -head : 0,
-             from: cross>=0? 'right' : 'left',
-             crossAbs:Math.abs(cross) };
+    var cos=Math.cos(rad), sin=Math.sin(rad);
+    var head=v*cos, cross=v*sin;
+    var out={ angle:d, head:head, cross:cross,
+              tail: head<0? -head : 0,
+              from: cross>=0? 'right' : 'left',
+              crossAbs:Math.abs(cross) };
+    /* Gusts resolve on the same bearing - a METAR reports one direction for both, so the
+       components share an angle and differ only in magnitude. This matters because the
+       crosswind and tailwind figures a limit is checked against are normally the GUST
+       values, not the steady ones: 27015G28KT on runway 36 is a 15-knot steady crosswind
+       and a 28-knot gusting one, and it is the 28 that decides. */
+    if(g!=null && g>v){
+      out.gustKt=g;
+      out.headGust=g*cos;
+      out.crossGust=g*sin;
+      out.crossGustAbs=Math.abs(g*sin);
+      out.tailGust= out.headGust<0? -out.headGust : 0;
+      out.gustIncrement=g-v;
+    }
+    return out;
   }
 
   /* ---- pressure and density altitude --------------------------------------------------
@@ -6991,7 +7008,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.0 · 2026-09-01';
+  var BUILD='v17.1 · 2026-09-01';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7017,7 +7034,7 @@
      dismissed until the version in this block changes. */
   var WHATSNEW={
     live:false,
-    version:'v17.0',
+    version:'v17.1',
     title:'Your schedule, and where to sleep on a layover',
     items:[
       'Your <b>eCrew calendar</b> can now be imported straight from your phone — no computer, no spreadsheets. Open the Fatigue tab and tap <b>First time? Step-by-step setup for your phone</b> and it walks you through the whole thing.',
@@ -10308,13 +10325,36 @@
 
   function calcWind(){
     var o=$('#cwOut'); if(!o) return;
-    var w=CALC.wind(cN('cwRwy'), cN('cwDir'), cN('cwSpd'));
+    var w=CALC.wind(cN('cwRwy'), cN('cwDir'), cN('cwSpd'), cN('cwGst'));
     if(!w){ o.innerHTML=''; return; }
+    var g=(w.crossGustAbs!=null);
     var h='';
     h+=cCell(w.head>=0?'Headwind':'TAILWIND', r1(Math.abs(w.head)), 'kt', w.head<0?'warn':'hi');
     h+=cCell('Crosswind '+(w.crossAbs<0.05?'':'from the '+w.from), r1(w.crossAbs), 'kt', w.crossAbs>=25?'warn':'');
+    /* The gust figures sit next to the steady ones rather than replacing them, because a
+       limit is normally checked against the gust while the handling technique is flown off
+       the steady wind - a crew needs both numbers, not a choice between them. */
+    if(g){
+      h+=cCell((w.headGust>=0?'Headwind':'TAILWIND')+' in gust', r1(Math.abs(w.headGust)), 'kt', w.headGust<0?'warn':'');
+      h+=cCell('Crosswind in gust', r1(w.crossGustAbs), 'kt', w.crossGustAbs>=25?'warn':'hi');
+    }
     h+=cCell('Angle off the runway', r1(Math.abs(w.angle),0), '°');
     o.innerHTML=h;
+    var n=$('#cwNote');
+    if(n){
+      if(!g) n.innerHTML='';
+      else {
+        /* Name only the components that actually exist. "0 kt crosswind and 25 kt tailwind"
+           reads as though a crosswind were part of the problem. */
+        var parts=[];
+        if(w.crossGustAbs>=0.5) parts.push(r1(w.crossGustAbs)+' kt crosswind');
+        if(w.tailGust>0.5) parts.push(r1(w.tailGust)+' kt tailwind');
+        n.innerHTML = parts.length
+          ? 'Limits are normally quoted against the <b>gust</b>: '+parts.join(' and ')+
+            '. Check yours in the AFM or FCOM — this does not know your aircraft.'
+          : 'Gust is straight down the runway — no crosswind or tailwind component in it.';
+      }
+    }
   }
   function calcPress(){
     var o=$('#cpOut'); if(!o) return;
@@ -10468,7 +10508,7 @@
     try{ calcGc(); }catch(e){}
   }
   (function(){
-    var map={ cwRwy:calcWind, cwDir:calcWind, cwSpd:calcWind,
+    var map={ cwRwy:calcWind, cwDir:calcWind, cwSpd:calcWind, cwGst:calcWind,
               cpElev:calcPress, cpAlt:calcPress, cpOat:calcPress,
               caCas:calcAir, caAlt:calcAir, caOat:calcAir,
               cdAlt:calcDesc, cdGs:calcDesc, cdAng:calcDesc,
