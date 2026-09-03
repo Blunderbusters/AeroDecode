@@ -788,6 +788,13 @@
   .usgn .v{font-size:20px;font-weight:800;color:#8fb4ff;line-height:1.15}
   .usgpre{white-space:pre;overflow-x:auto;background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.18);
     border-radius:9px;padding:10px;margin-top:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9cbe8}
+  .usgtbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+  .usgtbl th{text-align:left;font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:#8fa3c4;
+    border-bottom:1px solid rgba(120,160,230,.25);padding:4px 6px 5px;white-space:nowrap}
+  .usgtbl td{padding:5px 6px;border-bottom:1px solid rgba(120,160,230,.10);color:#cfe0ff;white-space:nowrap}
+  .usgtbl td.nm{white-space:normal;font-weight:700}
+  .usgtbl td.dim{color:#7d8fae;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px}
+  .usgwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .usgerr{font-size:11px;color:#ff9d9d;margin-top:8px}
   .usgin{width:100%;box-sizing:border-box;margin-top:8px;padding:9px;border-radius:8px;
     border:1px solid rgba(120,160,230,.35);background:rgba(8,16,32,.7);color:#e6eefc;font:12px/1 inherit}
@@ -7008,7 +7015,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.2 · 2026-09-03';
+  var BUILD='v17.3 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7082,6 +7089,71 @@
   function usgIsOwner(){
     try{ var c=JSON.parse(localStorage.getItem('ad_unlock')||'null'); return !!(c&&c.owner); }catch(e){ return false; }
   }
+  /* ---------- the roster, and why it lives here and nowhere else -----------------------
+     The relay stores a salted hash per person, never a number and never a name, so the
+     report on its own can only ever say "somebody". To put a name against a hash you need
+     the roster, and the roster is 2,700 colleagues' names and employee numbers - which is
+     exactly the thing that must not be uploaded anywhere, must not be committed, and must
+     not travel with a release.
+
+     So it doesn't. The seniority list is read in this browser, hashed with the same salt
+     the access gate already uses, and kept in this device's localStorage. The matching
+     happens here, on screen, at render time. Nothing about it is ever sent to the relay,
+     which goes on holding hashes and nothing else. Clear the list and the card is back to
+     hashes in one click. */
+  var _rosIdx=null;
+  function rosGet(){ try{ return JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){ return []; } }
+  function rosSet(a){ try{ localStorage.setItem('ad_roster', JSON.stringify(a||[])); }catch(e){} _rosIdx=null; }
+  function rosCount(){ return rosGet().length; }
+  function rosIndex(){
+    if(_rosIdx) return _rosIdx;
+    var idx={}, list=rosGet();
+    var G=(typeof window!=='undefined' && window.AEROGATE)? window.AEROGATE : null;
+    if(G && G.idHash) for(var i=0;i<list.length;i++){
+      try{ idx[G.idHash(list[i].e)]=list[i]; }catch(e){}
+    }
+    _rosIdx=idx; return idx;
+  }
+  /* Two shapes accepted. The seniority PDF as published - seniority number, pre-hire
+     number, employee number, date of hire, name, seat, base, aircraft, then an optional
+     retirement flag and date - and a plain "number,name" CSV for when the PDF layout
+     changes, which it will. Anchoring the pattern on the seat/base/aircraft trio rather
+     than on column positions is what survives pdf.js collapsing the whitespace. */
+  function rosParse(text){
+    var lines=String(text||'').split(/\r?\n/), out=[], seen={};
+    var re=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d\d?\/\d\d?\/\d\d)\s+(.+?)\s+([A-Z]{2})\s+([A-Z]{3})\s+(\d{3})(?:\s+([A-Z]{2,6}))?(?:\s+(\d\d?\/\d\d?\/\d\d))?\s*$/;
+    var csv=/^\s*(\d{2,8})\s*[,;\t]\s*(.+?)\s*$/;
+    for(var i=0;i<lines.length;i++){
+      var m=re.exec(lines[i]);
+      if(m){
+        if(seen[m[3]]) continue; seen[m[3]]=1;
+        out.push({e:m[3], n:m[5].replace(/\s+/g,' ').trim(), s:m[6], b:m[7], a:m[8]});
+        continue;
+      }
+      var c=csv.exec(lines[i]);
+      if(c && !seen[c[1]]){ seen[c[1]]=1; out.push({e:c[1], n:c[2].trim(), s:'', b:'', a:''}); }
+    }
+    return out;
+  }
+  async function rosLoadFile(f){
+    usgRender({loading:true});
+    var txt='';
+    try{
+      if(/\.pdf$/i.test(f.name) || f.type==='application/pdf'){
+        if(!await ensurePdf()) throw new Error('the PDF reader needs internet once before it works offline');
+        txt=await extractPdfText(f);
+      } else {
+        txt=await f.text();
+      }
+    }catch(e){
+      return usgRender({err:'Could not read that file'+((e&&e.message)? ' — '+e.message : '')+'.'});
+    }
+    var rows=rosParse(txt);
+    if(!rows.length) return usgRender({err:'No pilots found in that file. The seniority PDF works as published, and so does a plain CSV of "number,name".'});
+    rosSet(rows);
+    usgLoad();
+  }
+
   function usgRender(state){
     var box=document.getElementById('usageCard'); if(!box) return;
     if(!usgIsOwner()){ box.innerHTML=''; return; }        // crew never see this card
@@ -7098,12 +7170,23 @@
          '<a class="usgbtn" style="text-decoration:none;display:inline-block" target="_blank" rel="noopener" href="'+
          esc(USG_URL+'?k='+encodeURIComponent(k))+'">Open report</a>'+
          '<button class="usgbtn" id="usgForget">Forget key</button></div>';
+      var rc=rosCount();
+      h+='<div class="usgrow" style="margin-top:8px;flex-wrap:wrap">'+
+         '<label class="usgbtn" style="display:inline-block" for="usgRosIn">'+
+           (rc? 'Replace seniority list' : 'Load seniority list')+'</label>'+
+         '<input type="file" id="usgRosIn" accept=".pdf,.txt,.csv" hidden>'+
+         (rc? '<button class="usgbtn" id="usgRosClear">Clear list</button>' : '')+
+         '</div><div class="usgsub" style="margin:6px 0 0">'+
+         (rc? (rc.toLocaleString()+' pilots loaded. Names are matched on this device and are never sent anywhere.')
+            : 'Load the seniority PDF once and this card shows names instead of hashes.')+
+         '</div>';
       if(state&&state.err) h+='<div class="usgerr">'+esc(state.err)+
         (state.detail? ' <span style="opacity:.7">('+esc(state.detail)+')</span>' : '')+'</div>';
       if(state&&state.openUrl) h+='<div class="usgrow" style="margin-top:8px">'+
         '<a class="usgbtn" style="text-decoration:none;display:inline-block" target="_blank" rel="noopener" href="'+
         esc(state.openUrl)+'">Open the full report</a></div>';
       if(state&&state.nums) h+=state.nums;
+      if(state&&state.table) h+=state.table;
       if(state&&state.text) h+='<div class="usgpre">'+esc(state.text)+'</div>';
     }
     box.innerHTML=h+'</div>';
@@ -7122,19 +7205,70 @@
     };
     var gb=document.getElementById('usgGo');
     if(gb) gb.onclick=usgLoad;
+    var ri=document.getElementById('usgRosIn');
+    if(ri) ri.onchange=function(){ var f=ri.files&&ri.files[0]; if(f) rosLoadFile(f); };
+    var rcb=document.getElementById('usgRosClear');
+    if(rcb) rcb.onclick=function(){ rosSet([]); usgLoad(); };
   }
+  function usgTiles(j){
+    var cells=[['People',j.people],['Last 7 days',j.active7],['Opens',j.opens],
+               ['Active days',(j.byDay||[]).length]];
+    if(j.new7) cells.splice(2,0,['New this week',j.new7]);
+    return '<div class="usgnums">'+cells.map(function(c){
+      return '<div class="usgn"><div class="k">'+c[0]+'</div><div class="v">'+(c[1]==null?'-':c[1])+'</div></div>';
+    }).join('')+'</div>';
+  }
+  /* One row per person, newest activity first. With a roster loaded this reads as a crew
+     list; without one it is the same table with the hash standing in for the name, so the
+     card is useful either way and nothing about the layout changes when the list is
+     cleared. Anyone the roster does not know - a number that has since left the list, or
+     the owner's own 'owner' record - keeps their hash and is not silently dropped. */
+  function usgPeople(j){
+    var rows=(j.byPerson||[]).slice();
+    if(!rows.length) return '';
+    var idx=rosIndex(), known=0;
+    rows.sort(function(a,b){
+      return String(b.last||'').localeCompare(String(a.last||'')) || ((b.opens||0)-(a.opens||0));
+    });
+    var body=rows.map(function(p){
+      var r=idx[p.u];
+      if(r) known++;
+      return '<tr>'+
+        '<td class="'+(r?'nm':'dim')+'">'+esc(r? r.n : p.u)+'</td>'+
+        '<td class="dim">'+esc(r? r.e : '')+'</td>'+
+        '<td>'+esc(r? (r.b||'') : '')+'</td>'+
+        '<td>'+esc(r? ((r.s||'')+(r.a? ' '+r.a : '')) : '')+'</td>'+
+        '<td>'+(p.days||0)+'</td>'+
+        '<td>'+(p.opens||0)+'</td>'+
+        '<td class="dim">'+esc(p.last||'')+'</td>'+
+        '<td class="dim">'+esc(p.v||'')+'</td></tr>';
+    }).join('');
+    var note='';
+    if(!rosCount()) note='<div class="usgsub" style="margin:6px 0 0">Load the seniority list above to see names here.</div>';
+    else if(known<rows.length) note='<div class="usgsub" style="margin:6px 0 0">'+(rows.length-known)+
+      ' of '+rows.length+' not in the loaded list — shown by hash.</div>';
+    return '<div class="usgwrap"><table class="usgtbl"><thead><tr>'+
+      '<th>Name</th><th>Emp #</th><th>Base</th><th>Seat</th><th>Days</th><th>Opens</th><th>Last</th><th>Build</th>'+
+      '</tr></thead><tbody>'+body+'</tbody></table></div>'+note;
+  }
+
   function usgLoad(){
     var k=usgKey(); if(!k) return usgRender();
     usgRender({loading:true});
     /* netFetch, so this obeys the same hard deadline as everything else here. A phone with
        a radio on and no route does not fail a fetch, it hangs. */
-    netFetch(USG_URL+'?k='+encodeURIComponent(k)+'&t='+Date.now(), 8000)
+    /* Ask for JSON. A relay still running the older script ignores the parameter and
+       answers with the plain-text report, so the parse below is attempted and quietly
+       falls through to the text path rather than failing. One request either way. */
+    netFetch(USG_URL+'?k='+encodeURIComponent(k)+'&f=json&t='+Date.now(), 8000)
       .then(function(r){
         if(r.status===404) throw new Error('That key was not accepted.');
         if(!r.ok) throw new Error('The relay answered '+r.status+'.');
         return r.text();
       })
       .then(function(t){
+        var j=null; try{ j=JSON.parse(t); }catch(e){}
+        if(j && typeof j.people==='number') return usgRender({nums:usgTiles(j), table:usgPeople(j)});
         /* Pull the headline figures out for a glanceable row, and show the full report
            underneath. Written against BOTH report formats - the older one says "Distinct
            people ever:" with a colon - so updating the Worker later cannot blank this. */
