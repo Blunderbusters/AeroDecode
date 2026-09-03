@@ -7015,7 +7015,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.4 · 2026-09-03';
+  var BUILD='v17.5 · 2026-09-03';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7101,9 +7101,39 @@
      happens here, on screen, at render time. Nothing about it is ever sent to the relay,
      which goes on holding hashes and nothing else. Clear the list and the card is back to
      hashes in one click. */
+  /* The key is ad_senlist and it must never be ad_roster. ad_roster is the FLIGHT roster -
+     the imported schedule that the Schedule Checks tab, the duty builder and the whole
+     fatigue projection are built from. An earlier version of this card wrote the seniority
+     list to that key and destroyed the schedule underneath it: every duty card lost its
+     times and rendered "undefined", and the pairing curve drew garbage. Two unrelated
+     things called "roster" in one app, and one line of storage between them.
+
+     The migration below runs once and puts it right: seniority records found sitting in
+     ad_roster are moved here, and ad_roster is emptied rather than left holding data the
+     schedule code cannot read. */
+  var SEN_KEY='ad_senlist';
+  function senShaped(a){
+    return Array.isArray(a) && a.length>0 && a.every(function(x){
+      return x && typeof x==='object' && typeof x.e==='string' && typeof x.n==='string' && x.report===undefined;
+    });
+  }
+  (function migrateRosterKey(){
+    try{
+      var mine=JSON.parse(localStorage.getItem(SEN_KEY)||'null');
+      if(mine && mine.length) return;
+      var theirs=JSON.parse(localStorage.getItem('ad_roster')||'null');
+      if(senShaped(theirs)){
+        localStorage.setItem(SEN_KEY, JSON.stringify(theirs));
+        localStorage.setItem('ad_roster','[]');   // the schedule is gone; do not leave rubble
+      }
+    }catch(e){}
+  })();
   var _rosIdx=null;
-  function rosGet(){ try{ return JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){ return []; } }
-  function rosSet(a){ try{ localStorage.setItem('ad_roster', JSON.stringify(a||[])); }catch(e){} _rosIdx=null; }
+  function rosGet(){
+    var a=[]; try{ a=JSON.parse(localStorage.getItem(SEN_KEY)||'[]'); }catch(e){ return []; }
+    return senShaped(a)? a : [];
+  }
+  function rosSet(a){ try{ localStorage.setItem(SEN_KEY, JSON.stringify(a||[])); }catch(e){} _rosIdx=null; }
   function rosCount(){ return rosGet().length; }
   function rosIndex(){
     if(_rosIdx) return _rosIdx;
@@ -11230,6 +11260,13 @@
   function dpSetDh(k,on){ var f=dpDhFix(); f[k]=on?1:0; try{ localStorage.setItem('ad_dhfix',JSON.stringify(f)); }catch(e){} }
   function dpRoster(){
     var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
+    /* Only legs. If anything else has been written here - and something once was - drop it
+       rather than build duty cards out of it. A schedule that reads as empty says "import
+       your roster"; a schedule built from the wrong objects says "undefined" on every date
+       and draws a two-year curve, which looks like the fatigue model broke. */
+    if(Array.isArray(r)) r=r.filter(function(l){
+      return l && typeof l==='object' && (l.report!=null||l.out!=null||l['in']!=null||l.gnd||l.flight!=null);
+    }); else r=[];
     var g=dpGw(), fx=dpDhFix(), dr=dpDrop(), ed=dpEdits();
     r=r.filter(function(l){ return !dr[l.k]; });
     r.forEach(function(l){
