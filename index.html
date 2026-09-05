@@ -567,6 +567,13 @@
   .wrsub{font-size:12.5px;color:#e0b4b4;margin-top:11px;font-style:italic}
   .wheelnote{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5;margin-top:14px}
   /* Fatigue tab */
+  .ftlead{font-size:13px;color:var(--dim);line-height:1.55;margin:8px 0 2px}
+  .ftlead b{color:var(--ink)}
+  .ftsecl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8fa3c4;margin-top:14px}
+  /* Why the app is asking, next to the thing it is asking for. A form that explains itself
+     where you are looking beats a paragraph above it that you read once and forget. */
+  .fthelp{font-size:10.5px;line-height:1.4;color:var(--faint);margin-top:5px}
+  .fthelp b{color:var(--dim);font-weight:700}
   .ftgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
   /* Grid and flex children default to min-width:auto, so a monospace input refuses to
      shrink below its intrinsic width and pushes the whole tab 15px wider than the phone. */
@@ -706,7 +713,11 @@
   .dpbtnrow{display:flex;gap:8px;margin-top:10px}
   .dpbtnrow .whybtn,.dpbtnrow .rptbtn{margin-top:0;flex:1;padding:10px 6px;font-size:12px}
   .dpscorelab{font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;margin-top:3px;line-height:1.2}
-  .dpscorewhen{font-size:9.5px;font-weight:600;color:#8fa3c4;margin-top:4px;line-height:1.25;max-width:120px}
+  /* Restored. This line was on the card in v17.9 and I took it out when compressing the
+     header, which left a big percentage with no statement of WHAT it measures or WHEN.
+     Twice now that has been read as "how I will be when I report", which is the one thing
+     it is not - it is the LOWEST point of the duty, at a landing. */
+  .dpscorewhen{font-size:9px;font-weight:600;color:#8fa3c4;margin-top:3px;line-height:1.25;max-width:132px;text-align:right}
   .dpbody{padding:11px 13px}
   .leg{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid rgba(120,160,220,.1)}
   .leg:last-child{border-bottom:none}
@@ -1820,36 +1831,57 @@
         <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:10px"><b style="color:var(--ink)">Reporting is not the same as calling out.</b> In a mature FRMS you can file a fatigue report to document a schedule that produced fatigue <b style="color:var(--ink)">without</b> removing yourself from the trip. Those reports are what drive scheduling changes. Check what your own contract and company programme provide.</p>
         <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:8px"><b style="color:var(--ink)">Model honesty:</b> fatigue modelling assumes an ideal scenario. It cannot know about a 3-hour maintenance delay, a diversion, or a hotel with a fire alarm at 0300. The same pairing affects different pilots differently, and the same pilot differently on different days. Treat the score as one input, never the verdict.</p>
       </details>
-      <label class="fld" style="margin-top:18px">Your body clock</label>
+      <label class="fld" style="margin-top:18px">The check before you go</label>
+      <p class="ftlead">Run this <b>before you report</b>, not in the air. Everything else on this
+        tab is predicted from your roster; this is the one place your <b>real</b> sleep goes in, and it
+        is what turns "I feel rough" into the specific figures you would have to state if you made
+        the call.</p>
+
+      <div class="ftsecl">What only you know</div>
       <div class="ftgrid">
-        <div><div class="ftk">Home base (ICAO)</div><input id="ftHome" class="ftin" maxlength="4" autocapitalize="characters" placeholder="KJFK"></div>
-        <div><div class="ftk">Where you are now</div><input id="ftStn" class="ftin" maxlength="4" autocapitalize="characters" placeholder="ZHEC"></div>
-        <div><div class="ftk">Days since you arrived (0 = today)</div><input id="ftDays" class="ftin" inputmode="decimal" value="0"></div>
-        <div class="full"><div class="ftk">Times I type below are…</div>
-          <span class="seg" style="display:flex;gap:6px">
-            <button class="segbtn on" data-fttm="Z" style="flex:1">Zulu (UTC)</button>
-            <button class="segbtn" data-fttm="L" style="flex:1">Local at station</button>
-          </span>
-        </div>
-        <div><div class="ftk">Woke up <span id="ftWakeU">(Zulu)</span></div><input id="ftWake" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+        <div><div class="ftk">Woke up <span id="ftWakeU">(Zulu)</span></div><input id="ftWake" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM">
+          <div class="fthelp">Starts the clock on hours awake. Filled in from the company wake-up call — <b>correct it to when you actually woke</b>.</div></div>
         <div><div class="ftk">That was…</div>
           <span class="seg" style="display:flex;gap:5px">
             <button class="segbtn on" data-ftday="0" style="flex:1">Today</button>
             <button class="segbtn" data-ftday="1" style="flex:1">Yesterday</button>
-          </span></div>
-        <div><div class="ftk">Sleep obtained (h)</div><input id="ftSleep" class="ftin" inputmode="decimal" placeholder="7.5"></div>
-        <div><div class="ftk">Total sleep in the last 48 h</div><input id="ftSleep48" class="ftin" inputmode="decimal" placeholder="14"></div>
-        <div><div class="ftk">Slept in a…</div>
+          </span>
+          <div class="fthelp">So a 26-hour day is not read as a 2-hour one.</div></div>
+        <div><div class="ftk">Sleep obtained (h)</div><input id="ftSleep" class="ftin" inputmode="decimal" placeholder="7.5">
+          <div class="fthelp">Your last sleep. Sets how full you start. Under <b>4 h</b> in the previous 24 is the one published line that says treat yourself as susceptible whatever a model says; <b>6 h</b> is the commoner flag.</div></div>
+        <div><div class="ftk">Total sleep in the last 48 h</div><input id="ftSleep48" class="ftin" inputmode="decimal" placeholder="14">
+          <div class="fthelp">Catches a debt one short night did not create and one good night will not clear. Flagged under <b>12 h</b>.</div></div>
+        <div class="full"><div class="ftk">Slept in a…</div>
           <span class="seg" style="display:flex;gap:5px">
             <button class="segbtn on" data-ftfac="bed" style="flex:1">Bed</button>
             <button class="segbtn" data-ftfac="bunk" style="flex:1">Bunk</button>
             <button class="segbtn" data-ftfac="seat" style="flex:1">Seat</button>
           </span>
-        </div>
-        <div><div class="ftk">Report time <span id="ftRepU">(Zulu)</span></div><input id="ftReport" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
-        <div><div class="ftk">Expected workload</div><span class="seg"><button class="segbtn on" data-ftwl="normal">Normal</button><button class="segbtn" data-ftwl="high">Elevated</button></span></div>
-        <div class="full"><div class="ftk">Top of descent <span id="ftTodU">(Zulu)</span> — when alertness actually matters</div><input id="ftTod" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM"></div>
+          <div class="fthelp">Applies to the <b>last</b> sleep above. A bunk restores less than a bed and a seat less again, so the same hours are worth less.</div></div>
+        <div class="full"><div class="ftk">Expected workload</div><span class="seg"><button class="segbtn on" data-ftwl="normal">Normal</button><button class="segbtn" data-ftwl="high">Elevated</button></span>
+          <div class="fthelp">Maintenance, weather, an unfamiliar field, a known-difficult arrival. The one input that separates an 18-hour duty from a 4-hour one and that no model constant can supply.</div></div>
       </div>
+
+      <details class="dpsec" style="margin-top:12px"><summary>From your roster and flight plan</summary><div class="dpsecb">
+        <p class="fthelp" style="margin:6px 0 2px">Filled in for you from the imported schedule and, if one is loaded, the OFP. Correct anything that is wrong — nothing here is locked.</p>
+        <div class="ftgrid">
+          <div><div class="ftk">Home base (ICAO)</div><input id="ftHome" class="ftin" maxlength="4" autocapitalize="characters" placeholder="KJFK">
+            <div class="fthelp">Where your body clock is anchored.</div></div>
+          <div><div class="ftk">Where you are now</div><input id="ftStn" class="ftin" maxlength="4" autocapitalize="characters" placeholder="ZHEC">
+            <div class="fthelp">With the days below, this is how far your clock has drifted from local.</div></div>
+          <div><div class="ftk">Days since you arrived (0 = today)</div><input id="ftDays" class="ftin" inputmode="decimal" value="0">
+            <div class="fthelp">Your clock moves about an hour a day, so this decides how much of the shift you have absorbed.</div></div>
+          <div><div class="ftk">Report time <span id="ftRepU">(Zulu)</span></div><input id="ftReport" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM">
+            <div class="fthelp">The moment the whole check is anchored to.</div></div>
+          <div class="full"><div class="ftk">Top of descent <span id="ftTodU">(Zulu)</span></div><input id="ftTod" class="ftin" inputmode="numeric" maxlength="4" placeholder="HHMM">
+            <div class="fthelp">A <b>forecast</b>, taken from the flight plan before you go — not something to fill in airborne. It answers how deep into your day the approach lands, which is the part of a long duty that is actually hard.</div></div>
+          <div class="full"><div class="ftk">Times I type above are…</div>
+            <span class="seg" style="display:flex;gap:6px">
+              <button class="segbtn on" data-fttm="Z" style="flex:1">Zulu (UTC)</button>
+              <button class="segbtn" data-fttm="L" style="flex:1">Local at station</button>
+            </span></div>
+        </div>
+      </div></details>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
       <div id="ftOut"></div>
       <div class="impcard">
@@ -4913,7 +4945,7 @@
       def:'Modelled sleep capacity remaining, 0–100%. It fills with sleep — discounted if that sleep fell outside your body night or was taken in a bunk or seat rather than a bed — and depletes steadily while awake. It is a <b>prediction</b> from your rest opportunities, not a measurement of sleep you actually got.' },
     consec:{ label:'Consecutive Duty Days', good:'Fewer is better. Day 1 is a fresh pattern; by day 5 or 6 the accumulated debt is doing real work.',
       def:'How many duty periods deep into the current <b>pattern</b> you are. Fatigue accumulates across a trip: sleep debt carries over and is not cleared by one long layover, so risk rises even when each individual duty period is legal.<br><br>The count <b>resets to 1</b> when your roster shows an actual day off — an <b>X</b> or a <b>GDO</b> — between two duty periods, because that is where one pattern ends and the next begins. A long layover part-way through a pairing does <i>not</i> reset it: you are still on the same trip, still away from home, and the debt is still accumulating.<br><br>If your imported roster contains no OFF or GDO rows, the app falls back to counting any whole calendar day free of duty instead, and says so.' },
-    eff:{ label:'Modelled Alertness', good:'Higher is better. 90% and above is optimal; below 65% is the model vendor\'s red threshold.',
+    eff:{ label:'Predicted Cognitive Effectiveness', good:'Higher is better. 90% and above is optimal; below 65% is the model vendor\'s red threshold.',
       def:'Predicted cognitive effectiveness on a 0–100 scale, from a two-process model in the SAFTE/FAST tradition. It combines the <b>sleep reservoir</b> (how much sleep capacity you have left, filled by the sleep the model thinks you obtained in each rest and drained steadily while awake) with the <b>circadian rhythm</b> (a ±12-point swing peaking in your body afternoon and troughing around 0400 <b>body</b> time, the centre of the 0200&ndash;0600 window shaded everywhere else in this app). The figure shown is the worst value reached anywhere in the duty period, and the leg it occurs on is named. Bands: <b>90 and above</b> Optimal, <b>77–89</b> Reduced, <b>65–76</b> Impaired, <b>below 65</b> Severely impaired. The 90% criterion line appears in FAA aeromedical validation work on this model family, though the underlying quantitative risk result is Federal Railroad Administration research, not an FAA finding. 77% and 65% are the defaults used by the commercial implementation of this model family. <b>None of the three is a regulatory limit</b> — no aviation regulator publishes an effectiveness threshold at all.<br><br>Sleep is <b>estimated from your rest opportunity</b>, not measured. The model wakes you at the <b>company wake-up call, 3 hours before scheduled departure</b> — that is when you can count on being up — and counts hours awake from there rather than from report. It caps any one sleep at 8.5 h, adds a second or third sleep on a long layover, subtracts transit and sleep latency, and charges the waking hours in between. Sleep taken outside your body night still restores you, but never all the way back to fully rested. It also assumes you actually go to bed. Like every fatigue model it describes an ideal case — your own sleep, health, commute and workload can make the real number worse. It is a planning aid, not a fitness-for-duty determination.' },
     cum:{ label:'7-Day Block', good:'Lower is better. Compared against the cumulative caps that actually bind your operation.',
       def:'Flight time and duty time in the preceding 168 hours (a rolling 7 days), prorated so a duty period only partly inside the window contributes only the part that actually falls inside it. Deadhead legs count toward duty but not toward flight time, because deadheading is not flying as a crew member.<br><br>This is compared against the cumulative limits that genuinely bind your operation — for a flag two-pilot crew that is <b>32 flight hours in any 7 consecutive days</b> and <b>24 consecutive hours free of all duty in any 7 days</b> (14 CFR 121.481(d)) — and the comparison is only shown when your imported roster actually covers the whole window. If it does not, the app says so rather than reporting a pass it cannot support.' }
@@ -7149,7 +7181,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v19.2 · 2026-09-05';
+  var BUILD='v19.4 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -9388,6 +9420,37 @@
       sleep48:$('#ftSleep48').value, report:$('#ftReport').value,
       fac:ftFacility, wakeDay:ftWakeDay, workload:ftWorkload })); }catch(e){}
   }
+  /* ---- fill in what the roster already states -----------------------------------------
+     The four fields below used to be typed by hand every time, and every one of them is
+     stated by an imported schedule: which station you are sitting in, how long you have
+     been there, when you report, and the wake-up call the model works from. Asking for
+     them again was asking a crew member to copy numbers out of one screen into another.
+
+     Only EMPTY fields are filled. A correction always wins - if you tell it you woke at
+     0410 rather than at the company call, that is the whole point of the box. */
+  function ftPrefill(force){
+    var nd=null; try{ nd=ftNextDuty(); }catch(e){}
+    if(!nd) return false;
+    var set=function(id,val){ var el=$('#'+id); if(!el||val==null) return false;
+      if(el.value && !force) return false; el.value=val; return true; };
+    var z=function(ms){ var t=new Date(ms);
+      return String(t.getUTCHours()).padStart(2,'0')+String(t.getUTCMinutes()).padStart(2,'0'); };
+    var did=[];
+    if(nd.from && set('ftStn', nd.from)) did.push('station '+nd.from);
+    if(nd.report!=null && set('ftReport', z(nd.report))) did.push('report '+z(nd.report)+'Z');
+    if(nd.wakeMs!=null && set('ftWake', z(nd.wakeMs))) did.push('wake-up call '+z(nd.wakeMs)+'Z');
+    /* Days in the zone comes from the rest you are in: release of the last duty to now. */
+    if(nd._rest && nd._rest.from!=null){
+      var d=Math.floor((Date.now()-nd._rest.from)/86400000);
+      if(d>=0 && d<=30 && set('ftDays', String(d))) did.push(d+' day'+(d===1?'':'s')+' in zone');
+    }
+    if(did.length){
+      var el=$('#ftNote');
+      if(el) el.textContent='Filled in from your roster — '+did.join(' · ')+
+        '. Correct anything that is wrong; your own sleep is never filled in for you.';
+    }
+    return did.length>0;
+  }
   function ftLoadFromOfp(){
     var n=[];
     if(typeof flId!=='undefined' && flId && flId.dest && $('#ftStn') && !$('#ftStn').value){ $('#ftStn').value=flId.dest; n.push('destination '+flId.dest); }
@@ -9400,6 +9463,9 @@
     var el=$('#ftNote'); if(el) el.textContent = n.length? ('Loaded from OFP — '+n.join(' · ')+'.') : '';
     ftCompute();
   }
+  /* After an import there is a roster to read, and on a cold start there may already be
+     one in storage. Both paths land here. */
+  function ftAfterRoster(){ try{ if(ftPrefill(false)) ftCompute(); }catch(e){} }
   var ftTimeMode='Z';
   /* Render one instant in all three frames that matter to a crewmember:
      Zulu (canonical), station local (where you are), and BODY time (what you feel). */
@@ -9864,6 +9930,9 @@
       if(st.fac){ ftFacility=st.fac; document.querySelectorAll('[data-ftfac]').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-ftfac')===ftFacility); }); }
       if(st.wakeDay!=null){ ftWakeDay=+st.wakeDay; document.querySelectorAll('[data-ftday]').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-ftday')===ftWakeDay); }); }
     }
+    /* A roster may already be in storage from a previous session, so fill the blanks
+       before the first compute rather than waiting for the next import. */
+    try{ ftPrefill(false); }catch(e){}
     ftCompute();
   })();
 
@@ -10765,6 +10834,7 @@
     if(errs.length) msg+=(msg?'<br>':'')+'<span class="impwarn">'+errs.join('<br>')+'</span>';
     impSay(msg||'Nothing was imported.', done.length?'':'impbad');
     impSpan(); try{ dpRender(); }catch(e){}
+    try{ ftAfterRoster(); }catch(e){}
   }
 
 
@@ -12116,7 +12186,10 @@
                  will be on this trip", which is the one thing it is not. The Fatigue tab
                  has always labelled it "Projected low point"; this makes the two agree. */
               return '<div class="dpscore"><div class="dpscoreval" style="color:'+eb.color+'">'+d.effWorst+'<span class="pcs">%</span></div>'+
-                     '<div class="dpscorelab" style="color:'+eb.color+'">'+esc(eb.label)+'</div></div>'; }
+                     '<div class="dpscorelab" style="color:'+eb.color+'">'+esc(eb.label)+'</div>'+
+                     '<div class="dpscorewhen">predicted effectiveness at its lowest'+
+                       (d.effWhereShort? ' — '+esc(String(d.effWhereShort)) : ' in this duty')+
+                     '</div></div>'; }
             /* No alertness figure could be computed. Showing the inverted risk score in the
                same slot and the same colours would read as an alertness percentage. */
             return '<div class="dpscore"><div class="dpscoreval" style="color:#7f95b5">?</div>'+
