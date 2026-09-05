@@ -1834,17 +1834,17 @@
           <div class="sch">Samn-Perelli <span>crew status check</span><span class="qm" data-scinfo="sp">?</span></div>
           <div class="scrow" id="scSP"></div>
           <div class="scanchor" id="scSPt">Tap a number.</div>
-          <div class="fthelp"><b>Where this goes:</b> a <b>5 or worse</b> becomes one of the flagged factors in your report-time check, alongside hours awake and sleep in the last 24. It is the only factor there that is a measurement rather than a model output. Below 5 it is recorded but flags nothing.</div>
+          <div class="fthelp"><b>Where this goes:</b> a <b>5 or worse</b> becomes one of the flagged factors in <b>the case you would have to make</b>, further down this tab — alongside hours awake and sleep in the last 24. It is the only factor there that is a measurement rather than a model output. Below 5 it is recorded but flags nothing, and a rating <b>more than 10 hours old stops counting</b> — it was about a different day.</div>
         </div>
         <div class="scblock">
           <div class="sch">Karolinska <span>sleepiness scale</span><span class="qm" data-scinfo="kss">?</span></div>
           <div class="scrow" id="scKSS"></div>
           <div class="scanchor" id="scKSSt">Tap a number.</div>
-          <div class="fthelp"><b>Where this goes:</b> your history and the comparison below. It is deliberately <b>not</b> a report-time flag — one scale doing that job is enough, and Samn-Perelli is the one written for crews on duty.</div>
+          <div class="fthelp"><b>Where this goes:</b> your history and the comparison below, and <b>nowhere else</b>. It is deliberately not one of the flagged factors — one scale doing that job is enough, and Samn-Perelli is the one written for crews on duty. Say so if you would rather it counted too.</div>
         </div>
         <button id="scSave" class="scsave">Save this check</button>
         <div class="fthelp" style="margin-top:7px">Saving stores <b>the time, and the two numbers</b> — nothing else — on this phone, keeping the last 30. Each one is shown against the model's <b>low point for the duty period it falls in</b>, so over a few trips you can see where the model reads you well and where it does not. If you rate yourself worse than the model does, the app says so and tells you to <b>trust your own rating</b>: the model cannot see a head cold, a bad night before the trip, or a hotel room next to the lift.</div>
-        <div class="fthelp"><b>Neither scale changes the percentage.</b> The prediction is computed from your schedule alone and stays that way, so it never quietly becomes a reflection of what you just told it. The two numbers sit beside it and disagree with it when they disagree.</div>
+        <div class="fthelp"><b>Neither scale changes the percentage.</b> The prediction is computed from your schedule alone and stays that way, so it never quietly becomes a reflection of what you just told it. The two numbers sit beside it and disagree with it when they disagree. The <b>one</b> thing a rating moves is the flagged-factor count in the case below — a Samn-Perelli of 5 or worse adds one.</div>
         </div>
         <div id="scOut" class="scout"></div>
       </div>
@@ -7229,7 +7229,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v20.0 · 2026-09-05';
+  var BUILD='v20.1 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -12933,6 +12933,17 @@
      Stored on the device only. Kept deliberately separate from the model's number: the
      two measure different things and there is no published conversion between them, so
      the app shows them side by side and reports whether they agree. */
+  /* One rule, in one place, for "is this rating still about today". Used by the fold, by
+     the restore below, and by the report check, so the three can never disagree about
+     whether a rating counts. Ten hours: long enough to cover a rating taken at the wake-up
+     call and read again at report, short enough that Tuesday's 6 cannot flag Thursday. */
+  var SC_FRESH_MS=10*3600000;
+  function scLatest(){
+    var all=scStore(), last=all[all.length-1];
+    if(!last || (Date.now()-last.t)>SC_FRESH_MS) return null;
+    if(last.sp==null && last.kss==null) return null;
+    return last;
+  }
   var scSP=null, scKSS=null;
   var scOpen=false;
   /* The two disclaimer boxes are now behind a fold. They are not decoration - the tab has no
@@ -12971,8 +12982,36 @@
         $('#'+(kind==='sp'?'scSPt':'scKSSt')).innerHTML='<b style="color:'+col+'">'+v+'</b> — '+esc(pt.t)+
           (v>=S.high? ' <span style="color:'+col+';font-weight:700">· '+esc(S.highNote)+'</span>':'');
         var sv=$('#scSave'); if(sv) sv.disabled=(scSP==null&&scKSS==null);
+        /* The Samn-Perelli value is READ by ftCompute as one of the report-check factors.
+           Setting it without recomputing meant you could tap "6 - extremely tired" and watch
+           nothing at all happen: the factor only appeared later, when some unrelated field
+           was edited and forced a recompute by accident. */
+        try{ ftCompute(); }catch(e){}
       };
     });
+    /* Restore the last rating if it is still about today. Without this, scSP was a bare
+       in-memory variable: you rated yourself at the wake-up call, closed the app, opened it
+       again at report - and the Samn-Perelli factor had silently vanished from the check,
+       while the saved history on the same screen still showed the 6. The number was in
+       storage the whole time; nothing ever read it back. */
+    (function(){
+      var last=scLatest(); if(!last) return;
+      [['sp',last.sp,FATIGUE.SAMN_PERELLI,'scSPt'],['kss',last.kss,FATIGUE.KSS,'scKSSt']].forEach(function(r){
+        if(r[1]==null) return;
+        if(r[0]==='sp') scSP=r[1]; else scKSS=r[1];
+        var S=r[2], col=FATIGUE.scaleColor(r[1],S.high,S.points.length);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-sc="'+r[0]+'"]'),function(x){
+          var on=+x.getAttribute('data-v')===r[1];
+          x.classList.toggle('on',on);
+          x.style.background=on? col : 'rgba(6,14,28,.6)';
+          x.style.borderColor=on? col : 'rgba(120,160,220,.25)';
+        });
+        var pt=S.points.filter(function(q){return q.v===r[1];})[0], t=$('#'+r[3]);
+        if(pt&&t) t.innerHTML='<b style="color:'+col+'">'+r[1]+'</b> — '+esc(pt.t)+
+          (r[1]>=S.high? ' <span style="color:'+col+';font-weight:700">· '+esc(S.highNote)+'</span>':'');
+      });
+      var sv=$('#scSave'); if(sv) sv.disabled=(scSP==null&&scKSS==null);
+    })();
     Array.prototype.forEach.call(document.querySelectorAll('[data-scinfo]'),function(q){
       q.onclick=function(){
         var S=(q.getAttribute('data-scinfo')==='sp')?FATIGUE.SAMN_PERELLI:FATIGUE.KSS;
@@ -12992,6 +13031,7 @@
         try{ localStorage.setItem('ad_selfcheck', JSON.stringify(all)); }catch(e){}
         sv.textContent='✓ Saved'; setTimeout(function(){ sv.textContent='Save this check'; },1600);
         scOpen=false; scRender();
+        try{ ftCompute(); }catch(e){}
       };
     }
     scRender();
