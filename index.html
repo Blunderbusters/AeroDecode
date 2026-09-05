@@ -666,10 +666,14 @@
     border:1px solid rgba(120,160,230,.18);border-radius:999px;padding:4px 9px;color:var(--dim);white-space:nowrap}
   .dpchip b{color:var(--ink);font-weight:700}
   .dpchip.warn{border-color:rgba(255,157,77,.45);color:#ffbe7a}
-  .dpflag{display:flex;gap:7px;align-items:flex-start;margin-top:9px;font-size:12px;line-height:1.4;color:#ffbe7a}
-  .dpflag .fd{width:6px;height:6px;border-radius:50%;background:#ff9d4d;flex:0 0 auto;margin-top:5px}
-  .dpflag.info{color:#8fb4ff} .dpflag.info .fd{background:#5b93e8}
-  .dpflag b{font-weight:800}
+  /* .dpalert, NOT .dpflag - that name was already taken further down by a small red
+     uppercase pill, and the later rule won. A full sentence was being rendered as a badge:
+     "BACKWARD ROTATION - 10.6 H OF CLOCK CHANGE YOUR BODY CANNOT ABSORB", shouted at
+     9.5px. */
+  .dpalert{display:flex;gap:7px;align-items:flex-start;margin-top:9px;font-size:12px;line-height:1.45;color:#ffbe7a}
+  .dpalert .fd{width:6px;height:6px;border-radius:50%;background:#ff9d4d;flex:0 0 auto;margin-top:5px}
+  .dpalert.info{color:#8fb4ff} .dpalert.info .fd{background:#5b93e8}
+  .dpalert b{font-weight:800}
   .dpmini{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
   .dpmini td{padding:5px 0;border-bottom:1px solid rgba(120,160,220,.09);color:var(--dim);vertical-align:top}
   .dpmini td:first-child{color:var(--ink);font-weight:700;padding-right:10px;overflow-wrap:anywhere}
@@ -946,17 +950,27 @@
   .effcard{margin-top:12px;padding:10px 12px;border-radius:12px;cursor:pointer;
     border:1px solid rgba(120,160,220,.28);background:linear-gradient(180deg,rgba(10,24,46,.75),rgba(6,14,28,.6))}
   .effhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-  .efflab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);
+  /* Sentence case. These are labels and headings written as sentences, and uppercasing a
+     sentence is what makes a screen read like a machine printed it. Badges keep their caps
+     - OPTIMAL, SEVERE, NEXT DUTY PERIOD - because a badge is a badge. */
+  .efflab{font-size:11.5px;font-weight:800;letter-spacing:.2px;color:var(--faint);
     display:flex;align-items:center;gap:5px}
   .efflab .qm{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
     border-radius:50%;border:1px solid var(--faint);color:var(--faint);font-size:9px;font-weight:800;flex:0 0 auto}
   .effval{font-family:var(--mono);font-size:26px;font-weight:800;line-height:1}
   .effval .effpc{font-size:14px;font-weight:700;opacity:.75}
   .effband{font-size:12px;font-weight:700;margin-top:3px}
-  .effgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:7px;margin-top:9px}
-  .effi{background:rgba(6,14,28,.55);border:1px solid rgba(120,160,220,.13);border-radius:9px;padding:6px 9px}
-  .effi .k{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
-  .effi .v{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--ink);margin-top:2px}
+  /* Rows, not tiles. Two 108px columns could not hold "0452L / 0852Z (3 h before
+     departure)" without breaking it over four lines, and the tile borders were spending a
+     third of the width on decoration. A label on the left and its value on the right reads
+     in one pass and matches the table used higher up the card. */
+  .effgrid{display:block;margin-top:9px;border-top:1px solid rgba(120,160,220,.13)}
+  .effi{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:7px 2px;border-bottom:1px solid rgba(120,160,220,.10)}
+  .effi:last-child{border-bottom:none}
+  .effi .k{font-size:11.5px;font-weight:700;letter-spacing:.1px;color:var(--faint);flex:0 0 auto}
+  .effi .v{font-family:var(--mono);font-size:12.5px;font-weight:800;color:var(--ink);
+    text-align:right;min-width:0;overflow-wrap:anywhere}
   .efflegs{margin-top:9px;border-top:1px solid rgba(120,160,220,.15);padding-top:7px}
   .effleg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px 0;font-size:11.5px}
   .effleg .ef{font-family:var(--mono);font-weight:700;color:var(--dim);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1024,7 +1038,7 @@
   .ovwhy{color:#7fa9e8;font-weight:700;cursor:pointer;text-decoration:underline dotted;white-space:nowrap}
   .ovstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;margin-top:12px}
   .ovs{background:rgba(6,14,28,.55);border:1px solid rgba(120,160,220,.14);border-radius:10px;padding:7px 9px}
-  .ovs .k{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--faint)}
+  .ovs .k{font-size:10.5px;font-weight:700;letter-spacing:.1px;color:var(--faint)}
   .ovs .v{font-family:var(--mono);font-size:17px;font-weight:800;color:var(--ink);margin-top:2px;line-height:1.1}
   .ovs .s{font-size:10px;color:var(--faint);margin-top:1px}
   .dpscoreval .pcs{font-size:15px;font-weight:700;opacity:.7}
@@ -1777,8 +1791,7 @@
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px"><b style="color:var(--ink)">Quality and recency</b> of my sleep?</li>
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long will my <b style="color:var(--ink)">duty</b> continue?</li>
           <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How much <b style="color:var(--ink)">longer will I be awake</b>?</li>
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b>? (maintenance, weather, an unfamiliar field)</li>
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b> — maintenance, weather, delays?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b>? (maintenance, weather, delays, an unfamiliar field)</li>
         </ol>
         <div class="warnbox" style="margin-top:12px">
           <div class="wtitle">The 4-hour rule of thumb</div>
@@ -7377,7 +7390,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v18.5 · 2026-09-05';
+  var BUILD='v18.6 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -12344,7 +12357,7 @@
       /* One line each, and only when there is something to say. The full wording of every
          one of these is still reachable - the rotation note under "Why", the itinerary
          clash inside the legs list. */
-      function flag(cls,txt){ h+='<div class="dpflag '+(cls||'')+'"><span class="fd"></span><span>'+txt+'</span></div>'; }
+      function flag(cls,txt){ h+='<div class="dpalert '+(cls||'')+'"><span class="fd"></span><span>'+txt+'</span></div>'; }
       if(shortBefore) flag('', '<b>Rest below the minimum</b> — '+dpHM(reqBefore.min-restBefore.min)+
         ' short of the '+dpHM(reqBefore.min)+' required');
       if(bclk && bclk.swing!=null && bclk.overAsk>0.5)
