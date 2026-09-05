@@ -580,6 +580,35 @@
   /* Why the app is asking, next to the thing it is asking for. A form that explains itself
      where you are looking beats a paragraph above it that you read once and forget. */
   .fthelp{font-size:10.5px;line-height:1.4;color:var(--faint);margin-top:5px}
+  .ovttd{margin:10px 0 4px;padding:11px 12px;border:1px solid var(--edge);border-radius:12px;background:rgba(6,14,28,.5)}
+  .ovttdk{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+  .ovttdv{display:flex;align-items:baseline;gap:9px;margin-top:3px;font-size:27px;font-weight:800;font-variant-numeric:tabular-nums}
+  .ovttdb{font-size:12px;font-weight:800}
+  .ovttdt{font-size:13px;line-height:1.5;color:var(--dim);margin-top:5px}
+  .ovttdc{font-size:10.5px;line-height:1.45;color:var(--faint);margin-top:5px}
+  .ovdebt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:9px}
+  .ovdebtc{min-width:0;padding:9px 10px;border:1px solid var(--edge);border-radius:11px;background:rgba(6,14,28,.45)}
+  .ovdebtw{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+  .ovdebtv{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+  .ovdebts{font-size:10px;color:var(--faint);margin-top:2px}
+  .ovcurve{display:flex;align-items:flex-start;gap:2px}
+  .ovscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;min-width:0}
+  .dpvit{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 0 2px;border-bottom:1px solid var(--edge);margin-bottom:9px;padding-bottom:11px}
+  .dpvitb{display:flex;align-items:center;gap:9px}
+  .dpbatt{flex:none}
+  .dpvitn{font-size:19px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .dpvitn span{font-size:11px;font-weight:700;margin-left:1px}
+  .dpvitk{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+  .dpvitc{display:flex;align-items:center;gap:11px;margin-left:auto}
+  .dpvitt{font-size:19px;font-weight:800;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+  .dpvitsep{width:1px;height:24px;background:var(--edge)}
+  .dpvitcap{font-size:10.5px;line-height:1.45;color:var(--faint);margin:-4px 0 10px}
+  .scopewrap{margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
+  .scdone{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:13px;color:var(--dim);line-height:1.45}
+  .scdone b{color:var(--ink)}
+  .scdone .scdoneV{font-weight:800;font-variant-numeric:tabular-nums}
+  .scdone .scdoneA{margin-left:auto;font-size:12px;color:var(--acc);text-decoration:underline;cursor:pointer;white-space:nowrap}
+  .ftdisc>summary{color:var(--dim)}
   .fthelp b{color:var(--dim);font-weight:700}
   .ftgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
   /* Grid and flex children default to min-width:auto, so a monospace input refuses to
@@ -1130,6 +1159,8 @@
   .rptwarn{margin-top:2px;padding:12px 13px;border-radius:12px;
     border:1px solid rgba(255,107,107,.5);background:linear-gradient(180deg,rgba(58,20,20,.7),rgba(28,10,12,.55))}
   .rptwarn-t{font-size:15px;font-weight:800;color:#ffd9d9}
+  .rptchart{margin:10px 0 2px}
+  .rptchartc{font-size:11px;line-height:1.45;color:var(--faint);margin-top:4px}
   .rptwarn p{font-size:12.5px;color:var(--dim);line-height:1.6;margin-top:7px}
   .rptwarn p b{color:#ffb3b3}
   .fprepnote{font-size:11px;color:var(--faint);line-height:1.5;margin-top:7px}
@@ -1779,66 +1810,46 @@
       <p class="protobanner-body">This tab is an early <b>prototype</b>. It has <b>not been validated or tested</b>, and it may — and will — contain errors. Do not rely on anything here for operational or scheduling decisions. Always verify against official company scheduling, your CBA, and authoritative sources.</p>
     </div>
     <div class="card">
-      <div class="warnbox">
-        <div class="wtitle">⚠️ Planning aid — not a measurement, not a legality check</div>
-        <p>This predicts alertness from what you enter. It <b>cannot know the sleep you actually got</b>. Use it to plan rest and spot risk, never as proof you are fit — that judgement is always yours.</p>
-        <p><b>Legal is not the same as safe.</b> Duty legality lives in the LABT/LATT and Schedule Checks tabs. Under Part 121 Subpart R (flag all-cargo) there is <b>no maximum duty period at all</b> — only flight-time caps — so there your CBA is the only duty backstop. Subpart S does set duty ceilings; pick the regime below and the app will apply the right ones. Either way, a schedule can be entirely legal and still unflyable.</p>
-      </div>
-      <div class="privbox">
-        <div class="privtitle">This is yours. Keep it that way.</div>
-        <p class="privlead">Do not share it, quote it, screenshot it, cite it in a report, or acknowledge that it exists — not to the Company, not to the AOA, not to a Chief Pilot, not to anyone in management.</p>
-        <p>Nothing this app produces is a company record, and it should never be allowed to become one. It is a private planning aid that helps <i>you</i> decide what <i>you</i> think about a schedule. It is not evidence, it is not a legality finding, and it has no business in anybody's file.</p>
-        <p>If you are fatigued, use the channel the contract already gives you: the <b>fatigue call</b> and the <b>Fatigue Event Report</b> in the <b>Fatigue Risk Management Letter of Agreement</b> — Article 35, CBA <b>p. 318</b>, with the call process at <b>Paragraph F</b>, p. 324. That is a contractual route with protections attached, and it is what actually changes a pairing. This app is for making up your own mind beforehand — nothing more. <span class="ovwhy" data-ov="para">What is Paragraph F?</span></p>
-        <p class="privrule">The first rule of the CargoDecode fatigue tool is: we do not talk about the CargoDecode fatigue tool.</p>
-      </div>
-      <!-- ORDER, deliberately.
 
-           What you do on this tab every time you fly - say how you feel, check the numbers -
-           now comes first. What you do once - import a roster, read where the file comes
-           from - is below it.
 
-           It used to be the other way round: "How do you feel right now?" sat 7,600 pixels
-           down the page, behind the whole eCrew walkthrough, so the two scales that are the
-           only MEASUREMENT on this tab were the hardest thing on it to reach. Everything
-           else here is a prediction; these are the part that is actually about you.
+      <!-- ORDER, deliberately. Rewritten in v19.8 after the question that matters:
+           awake at 0300, deciding whether to make the fatigue call, what do you need first?
 
-           And they sit ABOVE the model's output on purpose. Rate yourself first, then read
-           what the model thinks. A number on screen before you answer is an anchor, and a
-           self-report taken after seeing a prediction is partly a reading of the prediction. -->
-      <div class="sccard">
+           1. Rate yourself.   2. Read the model.   3. Read the case you would have to make.
+
+           The self-check stays ABOVE the number, but it is now two taps and then it folds
+           itself away, because the reason it is first is anchoring, not importance: a
+           self-report taken after seeing 72% on screen is partly a reading of the 72%.
+           Once you have answered today it collapses to one line and the deck is at the top.
+
+           Everything you do ONCE - import a roster, read how to pull the eCrew report, read
+           the disclaimers - is now below everything you do EVERY TIME. The duty deck used to
+           sit at the very bottom of this card, under about a thousand words. -->
+      <div class="sccard" id="scCard">
+        <div class="scdone" id="scDone" hidden></div>
+        <div id="scFull">
         <div class="sctitle">How do you feel right now?</div>
-        <p class="scintro">The model only sees your schedule. These two scales are what aviation fatigue programmes actually collect from crews, and IATA lists them among the indicators operators are expected to track. Answer honestly — there is no right answer, and nothing leaves your phone.</p>
+        <p class="scintro">Everything else on this tab is a <b>prediction from your schedule</b>. This is the one place the app finds out how you actually are. These two scales are what airline fatigue programmes collect from crews at sign-on, and IATA lists them among the indicators operators are expected to track. Answer honestly — there is no right answer, and nothing leaves your phone.</p>
         <div class="scblock">
           <div class="sch">Samn-Perelli <span>crew status check</span><span class="qm" data-scinfo="sp">?</span></div>
           <div class="scrow" id="scSP"></div>
           <div class="scanchor" id="scSPt">Tap a number.</div>
+          <div class="fthelp"><b>Where this goes:</b> a <b>5 or worse</b> becomes one of the flagged factors in <b>the case you would have to make</b>, further down this tab — alongside hours awake and sleep in the last 24. It is the only factor there that is a measurement rather than a model output. Below 5 it is recorded but flags nothing, and a rating <b>more than 10 hours old stops counting</b> — it was about a different day.</div>
         </div>
         <div class="scblock">
           <div class="sch">Karolinska <span>sleepiness scale</span><span class="qm" data-scinfo="kss">?</span></div>
           <div class="scrow" id="scKSS"></div>
           <div class="scanchor" id="scKSSt">Tap a number.</div>
+          <div class="fthelp"><b>Where this goes:</b> your history and the comparison below, and <b>nowhere else</b>. It is deliberately not one of the flagged factors — one scale doing that job is enough, and Samn-Perelli is the one written for crews on duty. Say so if you would rather it counted too.</div>
         </div>
         <button id="scSave" class="scsave">Save this check</button>
+        <div class="fthelp" style="margin-top:7px">Saving stores <b>the time, and the two numbers</b> — nothing else — on this phone, keeping the last 30. Each one is shown against the model's <b>low point for the duty period it falls in</b>, so over a few trips you can see where the model reads you well and where it does not. If you rate yourself worse than the model does, the app says so and tells you to <b>trust your own rating</b>: the model cannot see a head cold, a bad night before the trip, or a hotel room next to the lift.</div>
+        <div class="fthelp"><b>Neither scale changes the percentage.</b> The prediction is computed from your schedule alone and stays that way, so it never quietly becomes a reflection of what you just told it. The two numbers sit beside it and disagree with it when they disagree. The <b>one</b> thing a rating moves is the flagged-factor count in the case below — a Samn-Perelli of 5 or worse adds one.</div>
+        </div>
         <div id="scOut" class="scout"></div>
       </div>
-      <details class="catsec" style="margin-top:16px">
-        <summary>Pre-flight fatigue self-assessment</summary>
-        <p style="color:var(--dim);font-size:13px;line-height:1.55;margin-top:8px">Adapted from the FedEx/ALPA fatigue programme. A model cannot feel how you feel — ask yourself these before every duty:</p>
-        <ol style="margin:10px 0 0;padding-left:20px">
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long have I been <b style="color:var(--ink)">awake</b>?</li>
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px"><b style="color:var(--ink)">Quality and recency</b> of my sleep?</li>
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long will my <b style="color:var(--ink)">duty</b> continue?</li>
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How much <b style="color:var(--ink)">longer will I be awake</b>?</li>
-          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b>? (maintenance, weather, delays, an unfamiliar field)</li>
-        </ol>
-        <div class="warnbox" style="margin-top:12px">
-          <div class="wtitle">The 4-hour rule of thumb</div>
-          <p>If you have had <b>fewer than 4 hours of sleep in the previous 24</b>, consider yourself susceptible to fatigue regardless of what any model says.</p>
-        </div>
-        <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:10px"><b style="color:var(--ink)">Reporting is not the same as calling out.</b> In a mature FRMS you can file a fatigue report to document a schedule that produced fatigue <b style="color:var(--ink)">without</b> removing yourself from the trip. Those reports are what drive scheduling changes. Check what your own contract and company programme provide.</p>
-        <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:8px"><b style="color:var(--ink)">Model honesty:</b> fatigue modelling assumes an ideal scenario. It cannot know about a 3-hour maintenance delay, a diversion, or a hotel with a fire alarm at 0300. The same pairing affects different pilots differently, and the same pilot differently on different days. Treat the score as one input, never the verdict.</p>
-      </details>
-      <label class="fld" style="margin-top:18px">The check before you go</label>
+      <div id="dpOut"></div>
+      <label class="fld" style="margin-top:22px">The case you would have to make</label>
       <p class="ftlead">Run this <b>before you report</b>, not in the air. Everything else on this
         tab is predicted from your roster; this is the one place your <b>real</b> sleep goes in, and it
         is what turns "I feel rough" into the specific figures you would have to state if you made
@@ -1891,6 +1902,23 @@
       </div></details>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
       <div id="ftOut"></div>
+      <details class="catsec" style="margin-top:16px">
+        <summary>Pre-flight fatigue self-assessment</summary>
+        <p style="color:var(--dim);font-size:13px;line-height:1.55;margin-top:8px">Adapted from the FedEx/ALPA fatigue programme. A model cannot feel how you feel — ask yourself these before every duty:</p>
+        <ol style="margin:10px 0 0;padding-left:20px">
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long have I been <b style="color:var(--ink)">awake</b>?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px"><b style="color:var(--ink)">Quality and recency</b> of my sleep?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How long will my <b style="color:var(--ink)">duty</b> continue?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">How much <b style="color:var(--ink)">longer will I be awake</b>?</li>
+          <li style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:5px">What is my <b style="color:var(--ink)">workload</b>? (maintenance, weather, delays, an unfamiliar field)</li>
+        </ol>
+        <div class="warnbox" style="margin-top:12px">
+          <div class="wtitle">The 4-hour rule of thumb</div>
+          <p>If you have had <b>fewer than 4 hours of sleep in the previous 24</b>, consider yourself susceptible to fatigue regardless of what any model says.</p>
+        </div>
+        <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:10px"><b style="color:var(--ink)">Reporting is not the same as calling out.</b> In a mature FRMS you can file a fatigue report to document a schedule that produced fatigue <b style="color:var(--ink)">without</b> removing yourself from the trip. Those reports are what drive scheduling changes. Check what your own contract and company programme provide.</p>
+        <p style="font-size:13px;color:var(--dim);line-height:1.55;margin-top:8px"><b style="color:var(--ink)">Model honesty:</b> fatigue modelling assumes an ideal scenario. It cannot know about a 3-hour maintenance delay, a diversion, or a hotel with a fire alarm at 0300. The same pairing affects different pilots differently, and the same pilot differently on different days. Treat the score as one input, never the verdict.</p>
+      </details>
       <details class="dpsec impfold" id="impFold">
         <summary>Schedule import<span class="impsum" id="impFoldSum"></span></summary>
         <div class="impcard">
@@ -1932,18 +1960,28 @@
         </details>
         </div>
       </details>
-      <div class="secthead">
-        <div class="secthead-t">Which rules apply to you</div>
-        <div class="secthead-s">These four settings drive the <b>limits</b> — the FAR regime, the CBA duty ceiling, the required rest and the cumulative caps. They do <b>not</b> feed the alertness percentage, which is built only from your report and block times, the sleep the model thinks each rest allowed, and where your body clock is. <span class="ovwhy" data-ov="split">Why is crew complement here at all?</span></div>
+      <details class="dpsec ftdisc" id="ftDisc" style="margin-top:18px">
+        <summary>Read this first — what this tab is, and who it is not for</summary>
+        <div class="dpsecb">
+      <div class="warnbox">
+        <div class="wtitle">⚠️ Planning aid — not a measurement, not a legality check</div>
+        <p>This predicts alertness from what you enter. It <b>cannot know the sleep you actually got</b>. Use it to plan rest and spot risk, never as proof you are fit — that judgement is always yours.</p>
+        <p><b>Legal is not the same as safe.</b> Duty legality lives in the LABT/LATT and Schedule Checks tabs. Under Part 121 Subpart R (flag all-cargo) there is <b>no maximum duty period at all</b> — only flight-time caps — so there your CBA is the only duty backstop. Subpart S does set duty ceilings; pick the regime below and the app will apply the right ones. Either way, a schedule can be entirely legal and still unflyable.</p>
       </div>
-      <div class="ftgrid" style="margin-top:10px">
-        <!-- Regime, Article 33, reserve and crew complement used to be selected here. They
-             existed only to choose duty limits, and duty limits have gone from this tab: every
-             one of them turns on a crew complement that changes flight by flight, which no
-             single setting can represent. Nothing on this tab reads them any more, so asking
-             for them was asking the crew member to answer a question that changed nothing. -->
+      <div class="privbox">
+        <div class="privtitle">This is yours. Keep it that way.</div>
+        <p class="privlead">Do not share it, quote it, screenshot it, cite it in a report, or acknowledge that it exists — not to the Company, not to the AOA, not to a Chief Pilot, not to anyone in management.</p>
+        <p>Nothing this app produces is a company record, and it should never be allowed to become one. It is a private planning aid that helps <i>you</i> decide what <i>you</i> think about a schedule. It is not evidence, it is not a legality finding, and it has no business in anybody's file.</p>
+        <p>If you are fatigued, use the channel the contract already gives you: the <b>fatigue call</b> and the <b>Fatigue Event Report</b> in the <b>Fatigue Risk Management Letter of Agreement</b> — Article 35, CBA <b>p. 318</b>, with the call process at <b>Paragraph F</b>, p. 324. That is a contractual route with protections attached, and it is what actually changes a pairing. This app is for making up your own mind beforehand — nothing more. <span class="ovwhy" data-ov="para">What is Paragraph F?</span></p>
+        <p class="privrule">The first rule of the CargoDecode fatigue tool is: we do not talk about the CargoDecode fatigue tool.</p>
       </div>
-      <div id="dpOut"></div>
+        </div>
+      </details>
+
+
+
+
+
     </div>
   </div>
 
@@ -7191,7 +7229,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v19.6 · 2026-09-05';
+  var BUILD='v20.3 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7622,11 +7660,30 @@
     }
     return found;
   }
+  /* Asking "is there a newer build" used to mean DOWNLOADING THE WHOLE PAGE - now over
+     1.2 MB - and reading one string out of it, with a four-second deadline on the transfer.
+     A phone on cellular misses four seconds routinely, and every miss returned null, which
+     this function cannot distinguish from being offline. So the app said "you appear to be
+     offline. The app still works fully offline" and stayed on an old build indefinitely,
+     while the connection was fine.
+
+     The build now writes version.txt next to index.html: one line, a few dozen bytes. That
+     is what gets fetched. The full-page scan is kept as a fallback for a deploy made before
+     version.txt existed, but with a deadline sized for the payload rather than for a small
+     API call - and it is still only a background check, so waiting is free. */
   async function getLatestBuild(){
     try{
       if(navigator.onLine===false) return null;            // definitely offline: skip it
+      var base=location.pathname.replace(/[^\/]*$/,'');
+      try{
+        var rv=await netFetch(base+'version.txt?ck='+Date.now(), 8000);
+        if(rv.ok){
+          var tv=((await rv.text())||'').replace(/\r/g,'').split('\n')[0].trim();
+          if(/^v\d/.test(tv)) return tv;
+        }
+      }catch(e){}                                          // no version.txt on this deploy → fall through
       var u=location.pathname+'?ck='+Date.now();
-      var r=await netFetch(u, 4000);                        // and never wait longer than this
+      var r=await netFetch(u, 45000);                      // sized for 1.2 MB, not for a ping
       if(!r.ok) return null;
       var t=await r.text();
       return buildStringIn(t);
@@ -8247,7 +8304,13 @@
       var vlg=$('#view-logbook'); if(vlg) vlg.hidden=(v!=='logbook');
       var vhf=$('#view-hf'); if(vhf) vhf.hidden=(v!=='hf');
       var vct=$('#view-catering'); if(vct) vct.hidden=(v!=='catering');
-      var vft=$('#view-fatigue'); if(vft) vft.hidden=(v!=='fatigue');
+      var vft=$('#view-fatigue');
+      if(vft){ vft.hidden=(v!=='fatigue');
+        /* Only now can the deck measure itself, so this is where it lands on today. */
+        if(v==='fatigue') setTimeout(function(){
+          try{ if(window.dpDeckLand) dpDeckLand(); }catch(e){}
+          try{ if(window.dpOvLand) dpOvLand(); }catch(e){}
+        },0); }
       var vsl=$('#view-sleep'); if(vsl){ vsl.hidden=(v!=='sleep'); if(v==='sleep'){ try{ slpRender(); }catch(e){} } }
       var vca=$('#view-calc'); if(vca){ vca.hidden=(v!=='calc'); if(v==='calc'){ try{ calcAll(); }catch(e){} } }
       var vs=$('#view-sched'); if(vs) vs.hidden=(v!=='sched');
@@ -9591,61 +9654,11 @@
         for(var z=0;z<allD.length;z++) if(allD[z].report===nd.report){ here=z; break; }
         var lo=Math.max(0, here-3), hi=Math.min(allD.length, here+4);
         var win=allD.slice(lo,hi);
-        var pts=DUTY.alertnessCurve(win, F, 20);
-        if(pts.length>4){
-          var W=Math.max(320, Math.min(1100, pts.length*3)), H=128, PADL=26, PADB=16, PADT=8;
-          var t0=pts[0].t, t1=pts[pts.length-1].t, span=Math.max(1,t1-t0);
-          var X=function(t){ return PADL+(t-t0)/span*(W-PADL-6); };
-          var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
-          var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block">';
-          // band lines
-          [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
-            g+='<line x1="'+PADL+'" y1="'+Y(b[0]).toFixed(1)+'" x2="'+(W-6)+'" y2="'+Y(b[0]).toFixed(1)+
-               '" stroke="'+b[1]+'" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 3"/>'+
-               '<text x="2" y="'+(Y(b[0])+3).toFixed(1)+'" fill="'+b[1]+'" fill-opacity=".65" font-size="8">'+b[0]+'</text>';
-          });
-          // sleep and duty shading
-          var runStart=null, runKind=null;
-          function flush(endT){
-            if(runStart==null) return;
-            var x0=X(runStart), x1=X(endT);
-            if(runKind==='sleep') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#4d76d8" fill-opacity=".22"/>';
-            else if(runKind==='duty') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#ffffff" fill-opacity=".045"/>';
-            runStart=null;
-          }
-          pts.forEach(function(pt){
-            var kind=pt.sleep? 'sleep' : (pt.phase==='duty'? 'duty' : 'awake');
-            if(kind!==runKind){ flush(pt.t); runKind=kind; runStart=pt.t; }
-          });
-          flush(t1);
-          // the curve itself, only where there is a value (rest has none)
-          var seg=[], paths=[];
-          pts.forEach(function(pt){
-            if(pt.e==null){ if(seg.length>1) paths.push(seg); seg=[]; return; }
-            seg.push(X(pt.t).toFixed(1)+','+Y(pt.e).toFixed(1));
-          });
-          if(seg.length>1) paths.push(seg);
-          paths.forEach(function(sg){
-            g+='<polyline points="'+sg.join(' ')+'" fill="none" stroke="#8fb4ff" stroke-width="1.8" stroke-linejoin="round"/>';
-          });
-          // the low point of each duty in the window
-          win.forEach(function(dd){
-            if(dd.effWorst==null||dd.report==null) return;
-            var lp=null;
-            pts.forEach(function(pt){ if(pt.phase==='duty'&&pt.e!=null&&(lp==null||pt.e<lp.e)&&pt.t>=dd.report&&pt.t<=dd.release) lp=pt; });
-            if(!lp) return;
-            var col=F.band(lp.e).color;
-            g+='<circle cx="'+X(lp.t).toFixed(1)+'" cy="'+Y(lp.e).toFixed(1)+'" r="2.6" fill="'+col+'"/>';
-          });
-          // day marks
-          for(var dm=Math.ceil(t0/86400000)*86400000; dm<t1; dm+=86400000){
-            g+='<line x1="'+X(dm).toFixed(1)+'" y1="'+PADT+'" x2="'+X(dm).toFixed(1)+'" y2="'+(H-PADB)+'" stroke="#8fa3c4" stroke-opacity=".18"/>'+
-               '<text x="'+(X(dm)+2).toFixed(1)+'" y="'+(H-5)+'" fill="#8fa3c4" font-size="8">'+new Date(dm).toISOString().slice(5,10)+'</text>';
-          }
-          g+='</svg>';
+        var g=dpCurveSVG(win, F, false);
+        if(g){
           h+='<div class="rptbox"><div class="rpthead">This pattern, start to finish</div>'+
              '<div class="rptq" style="font-size:13px">Predicted alertness across the days either side of this duty.</div>'+
-             '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'+g+'</div>'+
+             '<div class="ovcurve">'+dpCurveAxis()+'<div class="ovscroll">'+g+'</div></div>'+
              '<div class="rptwhy" style="margin-top:8px;font-size:11.5px">'+
              'Blue shading is modelled sleep, lighter shading is duty. Dots mark the low point of each duty period. '+
              'Dashed lines are the 90 / 77 / 65 bands — vendor defaults, not regulatory limits. '+
@@ -11703,6 +11716,214 @@
      you earlier again, and it compounds rather than resetting. That is backward rotation.
      Reading it off six report times by eye is exactly what nobody does. */
   function dpUtcH(ms){ var t=new Date(ms); return t.getUTCHours()+t.getUTCMinutes()/60; }
+  /* ---- vitals: the battery and the two clocks -------------------------------------
+     Lifted, in idea only, from CrewAlert. The battery is the SLEEP RESERVOIR and it is not
+     the percentage in the card header - that one is effectiveness, which is the reservoir
+     PLUS where your body clock is PLUS sleep inertia. You can start a duty on a nearly full
+     battery and still read Impaired because it is 0400 body time, and the two numbers
+     disagreeing like that is information, not an error. So they are drawn together, and the
+     caption says which is which, because two percentages side by side with no explanation
+     would be worse than showing neither.
+
+     The two clocks are the same fact the app used to state as "body clock out of step:
+     4.2 h". Nobody feels 4.2 h. Everybody feels "it is 0600 here and your body says 0200". */
+  /* ---- how long have I got? --------------------------------------------------------
+     CrewAlert shows "time to next warning limit". It is the most directly actionable number
+     on their front screen, because at wakeup the question is rarely "am I fine" - it is
+     "how much of today can I count on".
+
+     Walks the same curve the chart draws and finds the first sample, from now, that falls
+     below the band you are currently in. Only ever looks INSIDE the modelled duty periods:
+     the model has no value for you while it thinks you are asleep, and inventing one to
+     make the countdown tidier would be inventing the answer. */
+  function dpTimeToDrop(duties, F){
+    if(!F || typeof DUTY==='undefined' || !DUTY.alertnessCurve) return null;
+    var now=Date.now();
+    var win=duties.filter(function(d){ return d.release!=null && d.release>now-6*3600000; }).slice(0,6);
+    if(!win.length) return null;
+    var pts=[]; try{ pts=DUTY.alertnessCurve(win, F, 10); }catch(e){ return null; }
+    var live=pts.filter(function(p){ return p.e!=null && p.t>=now; });
+    if(live.length<2) return null;
+    var cur=live[0], b=F.band(cur.e);
+    /* The floor of the band you are in now. Above 90 there is nothing to fall out of yet,
+       so the next line down is 90 itself. */
+    var floors=[90,77,65], edge=null;
+    for(var i=0;i<floors.length;i++) if(cur.e>=floors[i]){ edge=floors[i]; break; }
+    if(edge==null) return {now:cur.e, band:b, edge:null};   // already below 65
+    var hit=null;
+    for(var k=1;k<live.length;k++){ if(live[k].e<edge){ hit=live[k]; break; } }
+    return {now:cur.e, band:b, edge:edge, at:(hit? hit.t : null),
+            h:(hit? (hit.t-now)/3600000 : null), beyond:(hit? false : true),
+            until:live[live.length-1].t};
+  }
+  /* Sleep debt at 24 / 48 / 72 hours. The 7-day chart smooths away exactly the two bad
+     nights that are the reason a person is standing there at 0300 thinking about the call,
+     so these three sit next to it rather than instead of it. Same estimates, same caveat:
+     this is the sleep the model thinks each rest allowed, not sleep you were measured
+     getting. Need is 8 h a night, so 8 / 16 / 24. */
+  function dpSleepDebt(duties, F){
+    var now=Date.now(), out=[];
+    /* Sleep is counted by INTERSECTING the modelled sleep blocks with the window, not by
+       crediting a whole rest to whichever window its duty's report happens to land in.
+       Over seven days that shortcut washes out; over 24 hours it does not, and 24 hours is
+       the number a person would actually act on. In-flight rest is mirrored from the same
+       placement the curve uses, so the two never disagree. */
+    var blocks=[];
+    duties.forEach(function(d){
+      (d.restBlocks||[]).forEach(function(b){ if(b.start!=null&&b.end>b.start) blocks.push(b); });
+      (d.legs||[]).forEach(function(l){
+        if(!l.restH || l['in']==null) return;
+        var end=l['in']-1.5*3600000, st=end-l.restH*3600000;
+        if(end>st) blocks.push({start:st, end:end, bunk:true});
+      });
+    });
+    var earliest=null;
+    duties.forEach(function(d){ if(d.restFromMs!=null && (earliest==null||d.restFromMs<earliest)) earliest=d.restFromMs; });
+    [[24,8],[48,16],[72,24]].forEach(function(w){
+      var from=now-w[0]*3600000;
+      var covered=(earliest!=null && earliest<=from);
+      if(!blocks.length || !covered){ out.push({win:w[0], need:w[1], got:null, debt:null}); return; }
+      var got=0;
+      blocks.forEach(function(b){
+        var a=Math.max(b.start, from), z=Math.min(b.end, now);
+        if(z>a) got+=(z-a)/3600000;
+      });
+      out.push({win:w[0], need:w[1], got:got, debt:Math.max(0, w[1]-got)});
+    });
+    return out;
+  }
+  function dpVitals(d, bOff, F){
+    if(!F || d.report==null) return '';
+    var res=(d.resAfterRest!=null? d.resAfterRest : null);
+    var bodyH=null, locH=null;
+    if(bOff!=null){
+      var bo=(d.bodyOffset!=null? d.bodyOffset : bOff);
+      bodyH=F.bodyHourAt(dpUtcH(d.report), bo);
+      var lo=dpOff(d.from, d.report);
+      if(lo!=null) locH=F.norm24(dpUtcH(d.report)+lo);
+    }
+    if(res==null && bodyH==null) return '';
+    var hhmm=function(h){ if(h==null) return '—';
+      var m=Math.round(h*60)%1440; if(m<0)m+=1440;
+      return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2); };
+    /* Battery colour is the reservoir's own scale, deliberately NOT the effectiveness band
+       colours - identical colours on two different numbers is how they get conflated. */
+    var col = res==null? '#7f95b5' : (res>=70? '#4ee39a' : res>=50? '#ffd166' : res>=30? '#ff9d4d' : '#ff6b6b');
+    var pct = res==null? 0 : Math.max(0, Math.min(100, res));
+    var g='';
+    if(res!=null){
+      var BW=54, BH=30, fillW=(BW-6)*pct/100;
+      g='<svg class="dpbatt" viewBox="0 0 '+(BW+6)+' '+BH+'" width="'+(BW+6)+'" height="'+BH+'" aria-label="Sleep reservoir '+res+'%">'+
+        '<rect x="1" y="4" width="'+BW+'" height="'+(BH-8)+'" rx="4" fill="none" stroke="#8fa3c4" stroke-opacity=".55" stroke-width="1.5"/>'+
+        '<rect x="'+(BW+2)+'" y="'+(BH/2-4)+'" width="3.5" height="8" rx="1.5" fill="#8fa3c4" fill-opacity=".55"/>'+
+        '<rect x="4" y="7" width="'+fillW.toFixed(1)+'" height="'+(BH-14)+'" rx="2" fill="'+col+'" fill-opacity=".85"/>'+
+        [1,2,3].map(function(k){ var x=4+(BW-6)*k/4;
+          return '<line x1="'+x.toFixed(1)+'" y1="7" x2="'+x.toFixed(1)+'" y2="'+(BH-7)+'" stroke="#0b1626" stroke-opacity=".45" stroke-width="1"/>'; }).join('')+
+        '</svg>';
+    }
+    var offBits=(bodyH!=null&&locH!=null)? F.shortestShift(0, F.norm24(locH-bodyH)) : null;
+    return '<div class="dpvit">'+
+      (res!=null? '<div class="dpvitb">'+g+'<div><div class="dpvitn" style="color:'+col+'">'+res+'<span>%</span></div>'+
+                  '<div class="dpvitk">sleep reservoir</div></div></div>' : '')+
+      (bodyH!=null? '<div class="dpvitc"><div><div class="dpvitt">'+hhmm(bodyH)+'</div><div class="dpvitk">body clock</div></div>'+
+                    '<div class="dpvitsep"></div>'+
+                    '<div><div class="dpvitt">'+hhmm(locH)+'</div><div class="dpvitk">local at '+esc(d.from)+'</div></div></div>' : '')+
+      '</div>'+
+      '<div class="dpvitcap">At report. The <b>battery is not the percentage above</b> — it is how much sleep capacity you have left. '+
+      'The percentage also counts where your body clock is, which is why a full battery at '+
+      (bodyH!=null? esc(hhmm(bodyH))+' body time' : 'the wrong hour')+' can still read low.'+
+      (offBits!=null && Math.abs(offBits)>=0.5? ' Your clock is <b>'+F.fmtSigned(offBits)+' h</b> from local here.' : '')+
+      '</div>';
+  }
+  /* ---- the alertness curve, shared -------------------------------------------------
+     Built in v18 for the report-time check and left there. In v20 it also became the chart
+     on the trip overview, replacing one bar per duty period.
+
+     A bar chart says WHICH duty is worst. A curve says WHEN, and next to the sleep that did
+     or did not refill you beforehand, which is the only form in which "why is this pattern
+     grinding me down" is actually visible. Same points, same arithmetic as the numbers -
+     it reads what simulateTrip already stored rather than modelling anything again. */
+  function dpCurveAxis(){
+    var H=128, PADB=16, PADT=8, W=22;
+    var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
+    var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block;flex:none">';
+    [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
+      g+='<text x="'+(W-2)+'" y="'+(Y(b[0])+3).toFixed(1)+'" text-anchor="end" fill="'+b[1]+'" fill-opacity=".8" font-size="8">'+b[0]+'</text>';
+    });
+    return g+'</svg>';
+  }
+  function dpCurveSVG(win, F, nowMark){
+    if(!win || !win.length || typeof DUTY==='undefined' || !DUTY.alertnessCurve) return '';
+    var pts=DUTY.alertnessCurve(win, F, 20);
+    if(pts.length<=4) return '';
+        var W=Math.max(320, Math.min(1100, pts.length*3)), H=128, PADL=26, PADB=16, PADT=8;
+        var t0=pts[0].t, t1=pts[pts.length-1].t, span=Math.max(1,t1-t0);
+        var X=function(t){ return PADL+(t-t0)/span*(W-PADL-6); };
+        var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
+        var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block">';
+        // band lines
+        /* The numbers are NOT drawn here. This SVG scrolls, and a y-axis that scrolls away
+           leaves three unlabelled dashed lines, which is worse than no lines at all. They
+           are drawn once, in a fixed strip, by dpCurveAxis - two halves of one picture, so
+           if the geometry constants move here they move there too. */
+        [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
+          g+='<line x1="'+PADL+'" y1="'+Y(b[0]).toFixed(1)+'" x2="'+(W-6)+'" y2="'+Y(b[0]).toFixed(1)+
+             '" stroke="'+b[1]+'" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 3"/>';
+        });
+        // sleep and duty shading
+        var runStart=null, runKind=null;
+        function flush(endT){
+          if(runStart==null) return;
+          var x0=X(runStart), x1=X(endT);
+          if(runKind==='sleep') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#4d76d8" fill-opacity=".22"/>';
+          else if(runKind==='duty') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#ffffff" fill-opacity=".045"/>';
+          runStart=null;
+        }
+        pts.forEach(function(pt){
+          var kind=pt.sleep? 'sleep' : (pt.phase==='duty'? 'duty' : 'awake');
+          if(kind!==runKind){ flush(pt.t); runKind=kind; runStart=pt.t; }
+        });
+        flush(t1);
+        // the curve itself, only where there is a value (rest has none)
+        var seg=[], paths=[];
+        pts.forEach(function(pt){
+          if(pt.e==null){ if(seg.length>1) paths.push(seg); seg=[]; return; }
+          seg.push(X(pt.t).toFixed(1)+','+Y(pt.e).toFixed(1));
+        });
+        if(seg.length>1) paths.push(seg);
+        paths.forEach(function(sg){
+          g+='<polyline points="'+sg.join(' ')+'" fill="none" stroke="#8fb4ff" stroke-width="1.8" stroke-linejoin="round"/>';
+        });
+        // the low point of each duty in the window
+        win.forEach(function(dd){
+          if(dd.effWorst==null||dd.report==null) return;
+          var lp=null;
+          pts.forEach(function(pt){ if(pt.phase==='duty'&&pt.e!=null&&(lp==null||pt.e<lp.e)&&pt.t>=dd.report&&pt.t<=dd.release) lp=pt; });
+          if(!lp) return;
+          var col=F.band(lp.e).color;
+          g+='<circle cx="'+X(lp.t).toFixed(1)+'" cy="'+Y(lp.e).toFixed(1)+'" r="2.6" fill="'+col+'"/>';
+        });
+        // day marks
+        for(var dm=Math.ceil(t0/86400000)*86400000; dm<t1; dm+=86400000){
+          g+='<line x1="'+X(dm).toFixed(1)+'" y1="'+PADT+'" x2="'+X(dm).toFixed(1)+'" y2="'+(H-PADB)+'" stroke="#8fa3c4" stroke-opacity=".18"/>'+
+             '<text x="'+(X(dm)+2).toFixed(1)+'" y="'+(H-5)+'" fill="#8fa3c4" font-size="8">'+new Date(dm).toISOString().slice(5,10)+'</text>';
+        }
+
+    if(nowMark){
+      var nx=Date.now();
+      if(nx>=t0 && nx<=t1){
+        g+='<line x1="'+X(nx).toFixed(1)+'" y1="'+PADT+'" x2="'+X(nx).toFixed(1)+'" y2="'+(H-PADB)+
+           '" stroke="#4ee39a" stroke-width="1.4" stroke-dasharray="2 2"/>'+
+           '<text x="'+(X(nx)+3).toFixed(1)+'" y="'+(PADT+8)+'" fill="#4ee39a" font-size="8">now</text>';
+        /* A month of pattern does not fit a phone, so the chart scrolls - and a scroller
+           that opens on the oldest day shows you the one part of it you did not ask about.
+           The fraction is stamped here and the container is scrolled to it after render. */
+        g=g.replace('<svg ','<svg data-nowfrac="'+(X(nx)/W).toFixed(4)+'" ');
+      }
+    }
+    g+='</svg>';
+    return g;
+  }
   function dpBodyClock(d, prev, bOff, F){
     if(!F || d.report==null || bOff==null) return null;
     var locOff=dpOff(d.from, d.report); if(locOff==null) locOff=bOff;
@@ -11941,6 +12162,21 @@
                row('Flight time, previous 7 days', (x.cum.d168.flightMin/60).toFixed(1)+' h');
                if(x.cum.free168) row('Longest break, previous 7 days', x.cum.free168.hours.toFixed(1)+' h');
                if(x.cum.criticalLandings168) row('Landings 0100–0459 base local, 7 days', String(x.cum.criticalLandings168)); }
+    /* The duty-hours chart lives HERE now, not on the tab. Cumulative exposure is not what
+       makes you tired on a given morning - the sleep behind it is - but it is exactly what a
+       fatigue report needs in front of it, because the pattern is the thing being reported.
+       The Part 117 line came off with the move: it is a passenger-flying figure and this is
+       flag all-cargo, so it was a limit you are not bound by drawn as though you were. */
+    try{
+      var _rl=dpRoster();
+      if(_rl.length){
+        var _dd=DUTY.buildDuties(_rl), _c=dpChartCum(_dd);
+        if(_c) h+='<div class="rptchart">'+_c+
+          '<div class="rptchartc">Duty hours in the rolling 168 hours before each report, across your imported schedule. '+
+          'No limit line is drawn — under Part 121 Subpart R there is no maximum duty period, and what does bind a given flight '+
+          'turns on its crew complement. This is the shape of the pattern, which is the part worth putting in a report.</div></div>';
+      }
+    }catch(e){}
     end();
 
     sec('Only you know these — think before you write');
@@ -12052,7 +12288,9 @@
     try{ if(DUTY.markConsecutive) DUTY.markConsecutive(duties, dpOff, offSet, dpCoverRanges()); }catch(e){}
     try{ if(F&&DUTY.simulateTrip) DUTY.simulateTrip(duties, rests, homeOff, dpOff, F); }catch(e){}
 
-    h+='__OVERVIEW__';        // filled once the display window below is known
+    /* The overview used to be here, above everything. It is now appended at the END of
+       this block: at wakeup the first thing you need is the duty in front of you, not a
+       month of bars. Charts are for understanding a pattern, the deck is for deciding. */
     var nowMs=Date.now();
     /* A duty with no debrief still has to be findable. Falling back to the report time
        stopped an in-progress duty being skipped and the one after it being called "next". */
@@ -12107,8 +12345,11 @@
       if(show && !show[i]) return false;
       return true;
     });
-    h=h.split('__OVERVIEW__').join(dpOverview(visible, duties, dpScope, BACK_D, FWD_D));
-    h+='<div class="scoperow"><span class="scopelab">Showing</span>'+
+    var ovHTML=dpOverview(visible, duties, dpScope, BACK_D, FWD_D);
+    /* The Showing / View controls used to sit above the deck. On a phone they wrap to three
+       rows, which put ~180px of buttons you rarely touch between the self-check and the
+       number you came for. They are settings, so they now follow the thing they configure. */
+    var ctlHTML='<div class="scoperow"><span class="scopelab">Showing</span>'+
        '<button class="scopebtn'+(dpScope==='near'?' on':'')+'" data-scope="near">Around now</button>'+
        '<button class="scopebtn'+(dpScope==='future'?' on':'')+'" data-scope="future">From now on</button>'+
        '<button class="scopebtn'+(dpScope==='all'?' on':'')+'" data-scope="all">Whole roster</button>'+
@@ -12119,6 +12360,7 @@
        '</div>'+
        (dpScope==='near'? '<div class="scopenote">Last '+BACK_D+' days and next '+FWD_D+
           '. <b>Every cumulative total still counts your whole imported history</b> — this only changes what is drawn.</div>':'');
+    ctlHTML='<div class="scopewrap">'+ctlHTML+'</div>';
     /* Said once, above the whole timeline, rather than on every card that happens to
        contain an inferred leg - which was most of them. */
     if(legs.some(function(l){ return l.dhg && !l.dhFix; }) || legs.some(function(l){ return l.gnd; }))
@@ -12231,6 +12473,7 @@
             return '<div class="dpscore"><div class="dpscoreval" style="color:#7f95b5">?</div>'+
                    '<div class="dpscorelab" style="color:#7f95b5">Not enough times</div></div>';
          })()+'</div><div class="dpbody">';
+      if(!d.allGateway) h+=dpVitals(d, bOff, F);
 
       /* ---- the front of the card: four numbers and, at most, what is wrong -------------
          Everything that used to sit here - the leg blocks, the two stat grids, the
@@ -12492,7 +12735,24 @@
       '<div class="scopenote">Swipe, or use ‹ › — one duty period at a time. <b>Table</b> shows the whole span at once.</div>';
     if(dpView==='table') h+='</tbody></table></div>'+
       '<div class="scopenote">Tap any row to open that duty period as a card.</div>';
+    h+=ctlHTML+ovHTML;
     out.innerHTML=h;
+    /* Same trap as the deck: dpRender runs while the Fatigue tab is still hidden, every
+       width is 0, and a scroller "positioned at now" quietly stays on the oldest day. So
+       this is a function, it refuses to run at zero width, and the tab handler calls it
+       again once the view is actually on screen. */
+    window.dpOvLand=function(){
+      try{
+        var sc=document.querySelector('#dpOut .ovscroll');
+        var sv=sc&&sc.querySelector('svg[data-nowfrac]');
+        if(!sc||!sv||!sc.clientWidth) return false;
+        var w=sv.getBoundingClientRect().width; if(!w) return false;
+        var f=parseFloat(sv.getAttribute('data-nowfrac'))||0;
+        sc.scrollLeft=Math.max(0, w*f - sc.clientWidth*0.62);
+        return true;
+      }catch(e){ return false; }
+    };
+    (function landOv(n){ if(window.dpOvLand()) return; if(n>0) setTimeout(function(){ landOv(n-1); },120); })(10);
 
     /* ---- the deck ------------------------------------------------------------------
        Everything below is navigation only: which slide is showing, and how to get to
@@ -12541,18 +12801,33 @@
         if(e.key==='ArrowLeft'){ e.preventDefault(); go(current()-1); }
         else if(e.key==='ArrowRight'){ e.preventDefault(); go(current()+1); }
       });
-      /* Land on the duty you are in, without animating there from slide one.
-         With a whole roster loaded there can be 150 slides, and offsetLeft is not final
-         until layout settles - one attempt landed on slide 1 and stayed there. So: keep
-         nudging until the deck is actually where it was told to go, then stop. */
+      /* Land on the duty you are in. Two things defeated the obvious version.
+
+         Layout: with a whole roster loaded there can be 150 slides and offsetLeft is not
+         final immediately, so one attempt landed on slide 1 and stayed.
+
+         Visibility: dpRender runs on import and on a cold start, and at that moment the
+         Fatigue tab is usually still HIDDEN. Every offsetLeft is then 0, so the code asked
+         to scroll to 0, arrived at 0, and congratulated itself - while the deck was in fact
+         sitting on the oldest duty in the roster. Hence the width check, and hence
+         dpDeckLand() below, which the tab switch calls once the deck can actually measure
+         itself. */
+      deck.setAttribute('data-home', homeIdx);
+      window.dpDeckLand=function(){
+        var d=document.getElementById('dpDeck'); if(!d || !d.clientWidth) return false;
+        var hi=+(d.getAttribute('data-home')||0), sl=d.children[hi]; if(!sl) return false;
+        d.scrollTo({left:sl.offsetLeft-d.offsetLeft, behavior:'auto'});
+        paint(); return true;
+      };
       (function land(n){
+        if(!deck.clientWidth){ if(n>0) setTimeout(function(){ land(n-1); },120); return; }
         go(homeIdx,false); paint();
         if(n<=0) return;
         setTimeout(function(){
           var want=slides[homeIdx].offsetLeft-deck.offsetLeft;
           if(Math.abs(deck.scrollLeft-want)>2) land(n-1); else paint();
         }, 80);
-      })(8);
+      })(10);
     })();
 
     Array.prototype.forEach.call(out.querySelectorAll('[data-drop]'),function(bt){
@@ -12677,7 +12952,30 @@
      Stored on the device only. Kept deliberately separate from the model's number: the
      two measure different things and there is no published conversion between them, so
      the app shows them side by side and reports whether they agree. */
+  /* One rule, in one place, for "is this rating still about today". Used by the fold, by
+     the restore below, and by the report check, so the three can never disagree about
+     whether a rating counts. Ten hours: long enough to cover a rating taken at the wake-up
+     call and read again at report, short enough that Tuesday's 6 cannot flag Thursday. */
+  var SC_FRESH_MS=10*3600000;
+  function scLatest(){
+    var all=scStore(), last=all[all.length-1];
+    if(!last || (Date.now()-last.t)>SC_FRESH_MS) return null;
+    if(last.sp==null && last.kss==null) return null;
+    return last;
+  }
   var scSP=null, scKSS=null;
+  var scOpen=false;
+  /* The two disclaimer boxes are now behind a fold. They are not decoration - the tab has no
+     business pretending to be a measurement - so they OPEN THEMSELVES the first time anyone
+     lands here, and only after that do they stay shut. Read once, available always. */
+  (function(){
+    function go(){
+      var d=document.getElementById('ftDisc'); if(!d) return;
+      var seen=false; try{ seen=localStorage.getItem('ad_ftdisc')==='1'; }catch(e){}
+      if(!seen){ d.open=true; try{ localStorage.setItem('ad_ftdisc','1'); }catch(e){} }
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+  })();
   function scStore(){ try{ return JSON.parse(localStorage.getItem('ad_selfcheck')||'[]'); }catch(e){ return []; } }
   function scBuild(){
     if(typeof FATIGUE==='undefined'||!FATIGUE.SAMN_PERELLI) return;
@@ -12703,8 +13001,36 @@
         $('#'+(kind==='sp'?'scSPt':'scKSSt')).innerHTML='<b style="color:'+col+'">'+v+'</b> — '+esc(pt.t)+
           (v>=S.high? ' <span style="color:'+col+';font-weight:700">· '+esc(S.highNote)+'</span>':'');
         var sv=$('#scSave'); if(sv) sv.disabled=(scSP==null&&scKSS==null);
+        /* The Samn-Perelli value is READ by ftCompute as one of the report-check factors.
+           Setting it without recomputing meant you could tap "6 - extremely tired" and watch
+           nothing at all happen: the factor only appeared later, when some unrelated field
+           was edited and forced a recompute by accident. */
+        try{ ftCompute(); }catch(e){}
       };
     });
+    /* Restore the last rating if it is still about today. Without this, scSP was a bare
+       in-memory variable: you rated yourself at the wake-up call, closed the app, opened it
+       again at report - and the Samn-Perelli factor had silently vanished from the check,
+       while the saved history on the same screen still showed the 6. The number was in
+       storage the whole time; nothing ever read it back. */
+    (function(){
+      var last=scLatest(); if(!last) return;
+      [['sp',last.sp,FATIGUE.SAMN_PERELLI,'scSPt'],['kss',last.kss,FATIGUE.KSS,'scKSSt']].forEach(function(r){
+        if(r[1]==null) return;
+        if(r[0]==='sp') scSP=r[1]; else scKSS=r[1];
+        var S=r[2], col=FATIGUE.scaleColor(r[1],S.high,S.points.length);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-sc="'+r[0]+'"]'),function(x){
+          var on=+x.getAttribute('data-v')===r[1];
+          x.classList.toggle('on',on);
+          x.style.background=on? col : 'rgba(6,14,28,.6)';
+          x.style.borderColor=on? col : 'rgba(120,160,220,.25)';
+        });
+        var pt=S.points.filter(function(q){return q.v===r[1];})[0], t=$('#'+r[3]);
+        if(pt&&t) t.innerHTML='<b style="color:'+col+'">'+r[1]+'</b> — '+esc(pt.t)+
+          (r[1]>=S.high? ' <span style="color:'+col+';font-weight:700">· '+esc(S.highNote)+'</span>':'');
+      });
+      var sv=$('#scSave'); if(sv) sv.disabled=(scSP==null&&scKSS==null);
+    })();
     Array.prototype.forEach.call(document.querySelectorAll('[data-scinfo]'),function(q){
       q.onclick=function(){
         var S=(q.getAttribute('data-scinfo')==='sp')?FATIGUE.SAMN_PERELLI:FATIGUE.KSS;
@@ -12723,14 +13049,39 @@
         while(all.length>30) all.shift();
         try{ localStorage.setItem('ad_selfcheck', JSON.stringify(all)); }catch(e){}
         sv.textContent='✓ Saved'; setTimeout(function(){ sv.textContent='Save this check'; },1600);
-        scRender();
+        scOpen=false; scRender();
+        try{ ftCompute(); }catch(e){}
       };
     }
     scRender();
   }
+  /* The self-check is first on the tab so that your rating is not a reading of the model's
+     number. That reason expires the moment you have answered: after that, keeping a
+     full-height form above the duty deck just puts three screens between you and the thing
+     you opened the app for. So once there is a check from the last 10 hours it collapses to
+     one line, with the deck immediately underneath. "Check again" reopens it. */
+  function scFold(){
+    var card=$('#scCard'), full=$('#scFull'), done=$('#scDone');
+    if(!card||!full||!done) return;
+    var all=scStore(), last=all[all.length-1];
+    var fresh = last && (Date.now()-last.t) < 10*3600000 && (last.sp!=null||last.kss!=null);
+    var hist=$('#scOut');
+    if(!fresh || scOpen){ full.hidden=false; done.hidden=true; if(hist) hist.hidden=false; return; }
+    if(hist) hist.hidden=true;   // the history is part of the form, not a headline
+    var SP=FATIGUE.SAMN_PERELLI, K=FATIGUE.KSS, bits=[];
+    if(last.sp!=null) bits.push('<span class="scdoneV" style="color:'+FATIGUE.scaleColor(last.sp,SP.high,7)+'">SP '+last.sp+'</span>');
+    if(last.kss!=null) bits.push('<span class="scdoneV" style="color:'+FATIGUE.scaleColor(last.kss,K.high,9)+'">KSS '+last.kss+'</span>');
+    var mins=Math.round((Date.now()-last.t)/60000);
+    var ago = mins<60? (mins+' min ago') : (Math.round(mins/60)+' h ago');
+    done.innerHTML='<b>You rated yourself</b> '+bits.join(' · ')+
+      ' <span style="color:var(--faint)">· '+ago+'</span>'+
+      '<span class="scdoneA" id="scAgain">Check again</span>';
+    done.hidden=false; full.hidden=true;
+    var a=$('#scAgain'); if(a) a.onclick=function(){ scOpen=true; scFold(); };
+  }
   function scRender(){
     var el=$('#scOut'); if(!el||typeof FATIGUE==='undefined') return;
-    var all=scStore(); if(!all.length){ el.innerHTML=''; return; }
+    var all=scStore(); if(!all.length){ el.innerHTML=''; scFold(); return; }
     var SP=FATIGUE.SAMN_PERELLI, K=FATIGUE.KSS;
     var h='<div style="font-weight:800;color:var(--ink);margin-bottom:4px">Your recent checks</div>';
     all.slice(-5).reverse().forEach(function(e){
@@ -12755,6 +13106,7 @@
          : 'You and the model agree this is a low-fatigue moment.')+'</div>';
     }
     el.innerHTML=h;
+    scFold();
   }
   function scModelAt(ms){
     try{
@@ -12801,6 +13153,60 @@
     g+='</svg>';
     return g;
   }
+  /* Sleep obtained in the rolling week, against the ~8 h a night the model is built on.
+     This replaced the duty-hours chart on the tab in v19.8, for a plain reason: duty hours
+     are not an input to the percentage and never were. The reservoir is. Sixty hours of duty
+     across a week of local-night sleep is far kinder than forty that all ran through the
+     WOCL, and only this picture can tell those apart.
+
+     The figures are the model's estimate of sleep in each rest opportunity, summed over the
+     duty periods reporting inside the previous 168 hours. They are estimates, not sleep you
+     actually got - which is why the caption says so and why the line is a NEED, not a limit. */
+  function dpChartSleep(duties){
+    var rep=duties.filter(function(d){ return d.report!=null; });
+    if(rep.length<2) return '';
+    /* A rolling-7-day figure needs 7 days behind it. Plotting the first duty in the roster
+       as "11 h of sleep this week" is not a finding, it is the import running out of history -
+       and it is a far more alarming number than the duty-hours chart's equivalent artefact,
+       which is exactly why it has to be dropped rather than drawn small. */
+    var t0=rep[0].report+168*3600000;
+    var pts=rep.filter(function(d){ return d.report>=t0; });
+    if(pts.length<2) return '';
+    var NEED=56;                                   // 7 nights x 8 h
+    var vals=pts.map(function(d){
+      var t=d.report, sum=0;
+      duties.forEach(function(o){
+        if(o.report==null || o.restSleepH==null) return;
+        if(o.report>t || o.report<=t-168*3600000) return;
+        sum+=o.restSleepH;
+      });
+      return sum;
+    });
+    if(!vals.some(function(v){ return v>0; })) return '';
+    var peak=Math.max(NEED+8, Math.ceil(Math.max.apply(null,vals)/10)*10+6);
+    var W=340,H=104,L=26,R=6,T=8,B=18, iw=W-L-R, ih=H-T-B;
+    var y=function(v){ return T+ih-(v/peak)*ih; }, step=iw/Math.max(1,vals.length-1);
+    var g='<svg class="cvz" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Estimated sleep in the previous 7 days">';
+    /* Shading starts a night's worth BELOW the need line, not at it. A wash of red across
+       four-fifths of the plot for a 3-hour shortfall reads as "everything is bad", which is
+       both wrong and the fastest way to make a person stop reading the chart at all. */
+    g+='<rect x="'+L+'" y="'+y(NEED-8)+'" width="'+iw+'" height="'+(y(0)-y(NEED-8))+'" fill="rgba(255,107,107,.10)"/>';
+    g+='<line x1="'+L+'" y1="'+y(NEED)+'" x2="'+(W-R)+'" y2="'+y(NEED)+'" stroke="rgba(78,227,154,.75)" stroke-width="1" stroke-dasharray="4 3"/>';
+    g+='<text x="'+(W-R)+'" y="'+(y(NEED)-3)+'" text-anchor="end" font-size="8" fill="#4ee39a">56 h &middot; seven nights at eight</text>';
+    [0,NEED,peak].forEach(function(v){ g+='<text x="'+(L-4)+'" y="'+(y(v)+3.5)+'" text-anchor="end" font-size="8.5" fill="#7f95b5">'+v+'</text>'; });
+    var dd='';
+    vals.forEach(function(v,i){ dd+=(i?' L':'M')+(L+step*i).toFixed(1)+' '+y(v).toFixed(1); });
+    g+='<path d="'+dd+'" fill="none" stroke="#5b93e8" stroke-width="1.8" stroke-linejoin="round"/>';
+    vals.forEach(function(v,i){
+      var short=NEED-v;   // hours behind seven nights at eight
+      g+='<circle cx="'+(L+step*i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.1" fill="'+(short>8?'#ff8a8a':'#a9c8f5')+'">'+
+         '<title>DP'+pts[i].n+': '+v.toFixed(1)+' h estimated sleep in the prior 168 h'+
+         (short>0? ' \u2014 '+short.toFixed(1)+' h short of seven nights at eight' : '')+'</title></circle>';
+    });
+    g+='<line x1="'+L+'" y1="'+y(0)+'" x2="'+(W-R)+'" y2="'+y(0)+'" stroke="rgba(160,190,230,.4)" stroke-width="1"/>';
+    g+='</svg>';
+    return g;
+  }
   function dpChartCum(duties){
     var pts=duties.filter(function(d){ return d.report!=null; });
     if(pts.length<2 || !DUTY.cumulative) return '';
@@ -12809,10 +13215,11 @@
     var W=340,H=104,L=26,R=6,T=8,B=18, iw=W-L-R, ih=H-T-B;
     var y=function(v){ return T+ih-(v/peak)*ih; }, step=iw/Math.max(1,vals.length-1);
     var g='<svg class="cvz" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Duty hours in the previous 7 days">';
-    g+='<rect x="'+L+'" y="'+y(peak)+'" width="'+iw+'" height="'+(y(60)-y(peak))+'" fill="rgba(255,107,107,.10)"/>';
-    g+='<line x1="'+L+'" y1="'+y(60)+'" x2="'+(W-R)+'" y2="'+y(60)+'" stroke="rgba(255,157,77,.7)" stroke-width="1" stroke-dasharray="4 3"/>';
-    g+='<text x="'+(W-R)+'" y="'+(y(60)-3)+'" text-anchor="end" font-size="8" fill="#ff9d4d">60 h · Part 117 reference</text>';
-    [0,60,peak].forEach(function(v){ g+='<text x="'+(L-4)+'" y="'+(y(v)+3.5)+'" text-anchor="end" font-size="8.5" fill="#7f95b5">'+v+'</text>'; });
+    /* The 60 h Part 117 line came off in v19.8. It is a passenger-flying figure; this is flag
+       all-cargo, where Subpart R sets no duty ceiling at all. A dashed line with red shading
+       above it reads as a limit no matter what the caption underneath says, so a limit you
+       are not bound by was being drawn as though you were. The hours are the fact; keep them. */
+    [0,30,60,peak].forEach(function(v){ g+='<text x="'+(L-4)+'" y="'+(y(v)+3.5)+'" text-anchor="end" font-size="8.5" fill="#7f95b5">'+v+'</text>'; });
     var dd='';
     vals.forEach(function(v,i){ dd+=(i?' L':'M')+(L+step*i).toFixed(1)+' '+y(v).toFixed(1); });
     g+='<path d="'+dd+'" fill="none" stroke="#5b93e8" stroke-width="1.8" stroke-linejoin="round"/>';
@@ -12845,8 +13252,24 @@
       anchorMs=real[real.length-1].release;                 // whole roster is in the past
     }
     var cum=DUTY.cumulative? DUTY.cumulative(allDuties, anchorMs, dpBaseOff(anchorMs), dpRegime, dpCrew) : null;
-    var a=dpChartAlert(duties), c=dpChartCum(duties);
+    var a=dpCurveSVG(duties, FATIGUE, true), c=dpChartSleep(duties);
     var h='<div class="ovcard"><div class="ovtitle">Trip overview</div>';
+    /* Before the charts, because it is the only line here that is about the next few hours
+       rather than the shape of a fortnight. */
+    var ttd=null; try{ ttd=dpTimeToDrop(allDuties, FATIGUE); }catch(e){}
+    if(ttd && ttd.now!=null){
+      var tb=FATIGUE.band(ttd.now), msg;
+      if(ttd.edge==null) msg='You are already below 65% on the model. There is no lower band to count down to.';
+      else if(ttd.h!=null) msg='On the model you have about <b>'+(ttd.h<1? Math.round(ttd.h*60)+' minutes' : ttd.h.toFixed(1)+' hours')+
+        '</b> before you are predicted to drop below <b>'+ttd.edge+'%</b>'+
+        (ttd.at? ' \u2014 around '+esc(new Date(ttd.at).toISOString().slice(11,16))+'Z' : '')+'.';
+      else msg='The model does not put you below <b>'+ttd.edge+'%</b> anywhere in the duty periods it can currently see.';
+      h+='<div class="ovttd"><div class="ovttdk">Right now, and how long it holds</div>'+
+         '<div class="ovttdv"><span style="color:'+tb.color+'">'+ttd.now+'<span class="pcs">%</span></span>'+
+         '<span class="ovttdb" style="color:'+tb.color+'">'+esc(tb.label)+'</span></div>'+
+         '<div class="ovttdt">'+msg+'</div>'+
+         '<div class="ovttdc">Counted only through duty periods \u2014 the model has no value for you while it thinks you are asleep, and inventing one to round the number off would be inventing the answer.</div></div>';
+    }
     if(worst&&worst.effWorst!=null){
       var b=FATIGUE.band(worst.effWorst);
       h+='<div class="ovhero"><div><div class="ovheroN" style="color:'+b.color+'">'+worst.effWorst+'<span>%</span></div>'+
@@ -12854,15 +13277,35 @@
          '<div class="ovheroT">Lowest predicted alertness in '+(windowed? esc(windowWord) : 'this roster')+' — <b>'+esc(dpDay(worst.report))+'</b>, '+esc(worst.from)+'→'+esc(worst.to)+
          (worst.effWhereShort? ', at the '+esc(worst.effWhereShort) : '')+'.</div></div>';
     }
-    if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness, duty period by duty period'+
-      (windowed? ' <span class="ovwin">'+esc(windowWord)+'</span>':'')+'</div>'+a+
-      '<div class="ovcap">One bar per duty period, in order. Green above 90%, amber to 77%, orange to 65%, red below. '+
-      'Only the 90% line comes from published research — the other two are model-vendor defaults, not rules. '+
+    if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness through time'+
+      (windowed? ' <span class="ovwin">'+esc(windowWord)+'</span>':'')+'</div>'+
+      '<div class="ovcurve">'+dpCurveAxis()+'<div class="ovscroll">'+a+'</div></div>'+
+      '<div class="ovcap">The curve is predicted effectiveness minute by minute, not one figure per duty. '+
+      'Blue shading is <b>modelled sleep</b>, lighter shading is <b>duty</b>, dots mark each duty period\'s low point, '+
+      'and the green dashed line is <b>now</b>. Reading it this way shows where the trough falls <i>inside</i> a duty '+
+      'and which sleep did or did not refill you beforehand \u2014 a pattern can be acceptable on every single day and still be a staircase downward. '+
+      'Dashed band lines at 90 / 77 / 65: only the 90 comes from published research, the other two are model-vendor defaults, not rules. '+
       '<span class="ovwhy" data-ov="bands">Where the bands come from</span></div></div>';
-    if(c) h+='<div class="ovsec"><div class="ovh">Duty hours in the previous 7 days</div>'+c+
-      '<div class="ovcap">Rolling 168 hours, measured back from each report time. The dashed line is the Part 117 figure for passenger flying, drawn purely as a familiar yardstick — '+
-      'all-cargo is not bound by it, and this tab does not check you against any limit. What binds your operation depends on the crew complement of each individual flight, '+
-      'which is why that lives on <b>Schedule Checks</b> and not here.</div></div>';
+    if(c) h+='<div class="ovsec"><div class="ovh">Sleep in the previous 7 days</div>'+c+
+      '<div class="ovcap">The model\'s estimate of the sleep each rest opportunity allowed, summed over the rolling 168 hours before every report. '+
+      'The dashed line is <b>seven nights at eight hours</b> — a physiological need, not a rule, and nothing checks you against it. '+
+      'Below it you are running a debt, and this is the picture that actually drives the percentage above: '+
+      'the same duty hours cost far more when the sleep behind them was short or fell outside your body night. '+
+      '<b>These are estimates from your schedule, not sleep you were measured getting.</b> '+
+      'Duty and flight hours are cumulative <i>exposure</i> rather than fatigue, so they live in the figures below and in the report notes.</div>'+
+      (function(){
+        var sd=[]; try{ sd=dpSleepDebt(allDuties, FATIGUE); }catch(e){ return ''; }
+        if(!sd.length || !sd.some(function(x){ return x.got!=null; })) return '';
+        var hm=function(v){ var m=Math.round(v*60); return Math.floor(m/60)+'h'+('0'+(m%60)).slice(-2)+'m'; };
+        return '<div class="ovdebt">'+sd.map(function(x){
+          var col=(x.debt==null)? '#7f95b5' : (x.debt<=0.5? '#4ee39a' : x.debt<=x.need*0.25? '#ffd166' : '#ff8a8a');
+          return '<div class="ovdebtc"><div class="ovdebtw">'+x.win+' h &middot; short by</div>'+
+                 '<div class="ovdebtv" style="color:'+col+'">'+(x.debt==null? '\u2014' : hm(x.debt))+'</div>'+
+                 '<div class="ovdebts">'+(x.got==null? 'no history' : hm(x.got)+' of '+x.need+' h')+'</div></div>';
+        }).join('')+'</div>'+
+        '<div class="ovcap" style="margin-top:5px">Sleep <b>short of eight hours a night</b> over the last 24, 48 and 72 hours. '+
+        'A rolling week smooths away the two bad nights that are usually the reason you are asking the question at all, which is why these sit next to the chart and not instead of it.</div>';
+      })()+'</div>';
     if(cum){
       h+='<div class="ovstats">'+
         /* The longest unbroken break is the best single indicator of whether there has been
