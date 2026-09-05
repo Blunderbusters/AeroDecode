@@ -7229,7 +7229,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v20.3 · 2026-09-05';
+  var BUILD='v20.6 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -11844,7 +11844,7 @@
      grinding me down" is actually visible. Same points, same arithmetic as the numbers -
      it reads what simulateTrip already stored rather than modelling anything again. */
   function dpCurveAxis(){
-    var H=128, PADB=16, PADT=8, W=22;
+    var RIB=17, H=150, PADB=30, PADT=8+RIB+4, W=22;
     var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
     var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block;flex:none">';
     [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
@@ -11856,65 +11856,115 @@
     if(!win || !win.length || typeof DUTY==='undefined' || !DUTY.alertnessCurve) return '';
     var pts=DUTY.alertnessCurve(win, F, 20);
     if(pts.length<=4) return '';
-        var W=Math.max(320, Math.min(1100, pts.length*3)), H=128, PADL=26, PADB=16, PADT=8;
-        var t0=pts[0].t, t1=pts[pts.length-1].t, span=Math.max(1,t1-t0);
-        var X=function(t){ return PADL+(t-t0)/span*(W-PADL-6); };
-        var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
-        var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block">';
-        // band lines
-        /* The numbers are NOT drawn here. This SVG scrolls, and a y-axis that scrolls away
-           leaves three unlabelled dashed lines, which is worse than no lines at all. They
-           are drawn once, in a fixed strip, by dpCurveAxis - two halves of one picture, so
-           if the geometry constants move here they move there too. */
-        [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
-          g+='<line x1="'+PADL+'" y1="'+Y(b[0]).toFixed(1)+'" x2="'+(W-6)+'" y2="'+Y(b[0]).toFixed(1)+
-             '" stroke="'+b[1]+'" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 3"/>';
-        });
-        // sleep and duty shading
-        var runStart=null, runKind=null;
-        function flush(endT){
-          if(runStart==null) return;
-          var x0=X(runStart), x1=X(endT);
-          if(runKind==='sleep') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#4d76d8" fill-opacity=".22"/>';
-          else if(runKind==='duty') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#ffffff" fill-opacity=".045"/>';
-          runStart=null;
-        }
-        pts.forEach(function(pt){
-          var kind=pt.sleep? 'sleep' : (pt.phase==='duty'? 'duty' : 'awake');
-          if(kind!==runKind){ flush(pt.t); runKind=kind; runStart=pt.t; }
-        });
-        flush(t1);
-        // the curve itself, only where there is a value (rest has none)
-        var seg=[], paths=[];
-        pts.forEach(function(pt){
-          if(pt.e==null){ if(seg.length>1) paths.push(seg); seg=[]; return; }
-          seg.push(X(pt.t).toFixed(1)+','+Y(pt.e).toFixed(1));
-        });
-        if(seg.length>1) paths.push(seg);
-        paths.forEach(function(sg){
-          g+='<polyline points="'+sg.join(' ')+'" fill="none" stroke="#8fb4ff" stroke-width="1.8" stroke-linejoin="round"/>';
-        });
-        // the low point of each duty in the window
-        win.forEach(function(dd){
-          if(dd.effWorst==null||dd.report==null) return;
-          var lp=null;
-          pts.forEach(function(pt){ if(pt.phase==='duty'&&pt.e!=null&&(lp==null||pt.e<lp.e)&&pt.t>=dd.report&&pt.t<=dd.release) lp=pt; });
-          if(!lp) return;
-          var col=F.band(lp.e).color;
-          g+='<circle cx="'+X(lp.t).toFixed(1)+'" cy="'+Y(lp.e).toFixed(1)+'" r="2.6" fill="'+col+'"/>';
-        });
-        // day marks
-        for(var dm=Math.ceil(t0/86400000)*86400000; dm<t1; dm+=86400000){
-          g+='<line x1="'+X(dm).toFixed(1)+'" y1="'+PADT+'" x2="'+X(dm).toFixed(1)+'" y2="'+(H-PADB)+'" stroke="#8fa3c4" stroke-opacity=".18"/>'+
-             '<text x="'+(X(dm)+2).toFixed(1)+'" y="'+(H-5)+'" fill="#8fa3c4" font-size="8">'+new Date(dm).toISOString().slice(5,10)+'</text>';
-        }
+    var HOUR=3600000, DAY=86400000;
+    var t0=pts[0].t, t1=pts[pts.length-1].t, span=Math.max(1,t1-t0);
+    /* Width is set by DURATION, not by sample count. At 20-minute samples a fortnight is
+       about a thousand points, and scaling off that put four days in a phone width with no
+       room to label anything. ~118px per day leaves room for a route and a time under every
+       duty; the chart already scrolls, so the cost of being legible is a swipe. */
+    var W=Math.max(340, Math.min(5200, Math.round(span/DAY*172)+60));
+    var RIB=17;                                  // the duty ribbon along the top
+    var H=150, PADL=26, PADB=30, PADT=8+RIB+4;
+    var X=function(t){ return PADL+(t-t0)/span*(W-PADL-6); };
+    var Y=function(e){ return PADT+(100-e)/100*(H-PADT-PADB); };
+    var hhmm=function(t){ var d=new Date(t); return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2); };
+    var g='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block">';
+
+    /* ---- Zulu time grid. Everything on this tab is Zulu and the chart never said so, which
+       is the one thing you cannot infer from a shape. Six-hourly ticks, labelled; midnight
+       gets the date. Hour ticks too if there is room for them to mean anything. */
+    var showHours = (W/(span/HOUR)) > 7;
+    for(var tk=Math.ceil(t0/(6*HOUR))*6*HOUR; tk<t1; tk+=6*HOUR){
+      var mid=(new Date(tk)).getUTCHours()===0;
+      g+='<line x1="'+X(tk).toFixed(1)+'" y1="'+PADT+'" x2="'+X(tk).toFixed(1)+'" y2="'+(H-PADB)+
+         '" stroke="#8fa3c4" stroke-opacity="'+(mid?'.30':'.13')+'" stroke-width="1"'+(mid?'':' stroke-dasharray="2 3"')+'/>';
+      g+='<text x="'+X(tk).toFixed(1)+'" y="'+(H-PADB+11)+'" text-anchor="middle" fill="'+(mid?'#a9c8f5':'#7f95b5')+
+         '" font-size="8">'+('0'+(new Date(tk)).getUTCHours()).slice(-2)+'</text>';
+      if(mid) g+='<text x="'+X(tk).toFixed(1)+'" y="'+(H-PADB+21)+'" text-anchor="middle" fill="#a9c8f5" font-size="8" font-weight="700">'+
+         new Date(tk).toISOString().slice(5,10)+'</text>';
+    }
+    if(showHours) for(var hk=Math.ceil(t0/HOUR)*HOUR; hk<t1; hk+=HOUR){
+      if((new Date(hk)).getUTCHours()%6===0) continue;
+      g+='<line x1="'+X(hk).toFixed(1)+'" y1="'+(H-PADB-3)+'" x2="'+X(hk).toFixed(1)+'" y2="'+(H-PADB)+'" stroke="#8fa3c4" stroke-opacity=".22"/>';
+    }
+    g+='<text x="'+PADL+'" y="'+(H-2)+'" fill="#7f95b5" font-size="8">all times Zulu</text>';
+
+    [[90,'#4ee39a'],[77,'#ffd166'],[65,'#ff6b6b']].forEach(function(b){
+      g+='<line x1="'+PADL+'" y1="'+Y(b[0]).toFixed(1)+'" x2="'+(W-6)+'" y2="'+Y(b[0]).toFixed(1)+
+         '" stroke="'+b[1]+'" stroke-opacity=".22" stroke-width="1" stroke-dasharray="3 3"/>';
+    });
+
+    var runStart=null, runKind=null;
+    function flush(endT){
+      if(runStart==null) return;
+      var x0=X(runStart), x1=X(endT);
+      if(runKind==='sleep') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#4d76d8" fill-opacity=".22"/>';
+      else if(runKind==='duty') g+='<rect x="'+x0.toFixed(1)+'" y="'+PADT+'" width="'+Math.max(1,x1-x0).toFixed(1)+'" height="'+(H-PADT-PADB)+'" fill="#ffffff" fill-opacity=".045"/>';
+      runStart=null;
+    }
+    pts.forEach(function(pt){
+      var kind=pt.sleep? 'sleep' : (pt.phase==='duty'? 'duty' : 'awake');
+      if(kind!==runKind){ flush(pt.t); runKind=kind; runStart=pt.t; }
+    });
+    flush(t1);
+
+    var seg=[], paths=[];
+    pts.forEach(function(pt){
+      if(pt.e==null){ if(seg.length>1) paths.push(seg); seg=[]; return; }
+      seg.push(X(pt.t).toFixed(1)+','+Y(pt.e).toFixed(1));
+    });
+    if(seg.length>1) paths.push(seg);
+    paths.forEach(function(sg){
+      g+='<polyline points="'+sg.join(' ')+'" fill="none" stroke="#8fb4ff" stroke-width="1.8" stroke-linejoin="round"/>';
+    });
+
+    /* ---- the duty ribbon: what each shaded block actually IS.
+       Shading told you "this is a duty". It did not tell you which one, where it went, or
+       when it started and stopped - so the trough sitting inside a block was unattributable
+       to a flight. Each duty now gets a labelled bar coloured by its own band, with report
+       and release stamped underneath it when the block is wide enough to carry them. */
+    win.forEach(function(dd){
+      if(dd.report==null || dd.release==null) return;
+      var x0=X(Math.max(dd.report,t0)), x1=X(Math.min(dd.release,t1));
+      if(x1<=x0) return;
+      var wpx=x1-x0;
+      var col=(F && dd.effWorst!=null)? F.band(dd.effWorst).color : '#7f95b5';
+      g+='<rect x="'+x0.toFixed(1)+'" y="8" width="'+Math.max(2,wpx).toFixed(1)+'" height="'+(RIB-4)+
+         '" rx="2.5" fill="'+col+'" fill-opacity=".85"><title>'+esc(dd.from+'→'+dd.to)+
+         '  report '+hhmm(dd.report)+'Z  release '+hhmm(dd.release)+'Z'+
+         (dd.effWorst!=null? '  — low '+dd.effWorst+'%':'')+'</title></rect>';
+      var label=dd.from+'→'+dd.to;
+      if(wpx > label.length*5.4+6)
+        g+='<text x="'+((x0+x1)/2).toFixed(1)+'" y="'+(8+RIB-8)+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="#08101f">'+esc(label)+'</text>';
+      /* Report and release times sit just under the ribbon, tied to the edges of the block
+         rather than centred, so a narrow duty still says when it began. */
+      if(wpx>44){
+        g+='<text x="'+(x0+1).toFixed(1)+'" y="'+(PADT-1)+'" font-size="7.5" fill="#a9c8f5">'+hhmm(dd.report)+'Z</text>'+
+           '<text x="'+(x1-1).toFixed(1)+'" y="'+(PADT-1)+'" text-anchor="end" font-size="7.5" fill="#a9c8f5">'+hhmm(dd.release)+'Z</text>';
+      }
+      g+='<line x1="'+x0.toFixed(1)+'" y1="'+PADT+'" x2="'+x0.toFixed(1)+'" y2="'+(H-PADB)+'" stroke="'+col+'" stroke-opacity=".45" stroke-width="1"/>'+
+         '<line x1="'+x1.toFixed(1)+'" y1="'+PADT+'" x2="'+x1.toFixed(1)+'" y2="'+(H-PADB)+'" stroke="'+col+'" stroke-opacity=".28" stroke-width="1" stroke-dasharray="2 2"/>';
+    });
+
+    // the low point of each duty, with its value when there is room
+    win.forEach(function(dd){
+      if(dd.effWorst==null||dd.report==null) return;
+      var lp=null;
+      pts.forEach(function(pt){ if(pt.phase==='duty'&&pt.e!=null&&(lp==null||pt.e<lp.e)&&pt.t>=dd.report&&pt.t<=dd.release) lp=pt; });
+      if(!lp) return;
+      var col=F.band(lp.e).color;
+      g+='<circle cx="'+X(lp.t).toFixed(1)+'" cy="'+Y(lp.e).toFixed(1)+'" r="2.8" fill="'+col+'"><title>low '+
+         lp.e+'% at '+hhmm(lp.t)+'Z</title></circle>';
+      if((X(Math.min(dd.release,t1))-X(Math.max(dd.report,t0)))>52)
+        g+='<text x="'+X(lp.t).toFixed(1)+'" y="'+(Y(lp.e)+11).toFixed(1)+'" text-anchor="middle" font-size="8" font-weight="700" fill="'+col+'">'+lp.e+'</text>';
+    });
 
     if(nowMark){
       var nx=Date.now();
       if(nx>=t0 && nx<=t1){
-        g+='<line x1="'+X(nx).toFixed(1)+'" y1="'+PADT+'" x2="'+X(nx).toFixed(1)+'" y2="'+(H-PADB)+
+        g+='<line x1="'+X(nx).toFixed(1)+'" y1="8" x2="'+X(nx).toFixed(1)+'" y2="'+(H-PADB)+
            '" stroke="#4ee39a" stroke-width="1.4" stroke-dasharray="2 2"/>'+
-           '<text x="'+(X(nx)+3).toFixed(1)+'" y="'+(PADT+8)+'" fill="#4ee39a" font-size="8">now</text>';
+           '<text x="'+(X(nx)+3).toFixed(1)+'" y="'+(PADT+8)+'" fill="#4ee39a" font-size="8">now '+hhmm(nx)+'Z</text>';
         /* A month of pattern does not fit a phone, so the chart scrolls - and a scroller
            that opens on the oldest day shows you the one part of it you did not ask about.
            The fraction is stamped here and the container is scrolled to it after render. */
@@ -13162,51 +13212,113 @@
      The figures are the model's estimate of sleep in each rest opportunity, summed over the
      duty periods reporting inside the previous 168 hours. They are estimates, not sleep you
      actually got - which is why the caption says so and why the line is a NEED, not a limit. */
+  /* ---- sleep in each break ---------------------------------------------------------
+     Two designs died before this one, and both failed the same way: they drew a pattern
+     that was an artefact of the display rather than anything about the schedule.
+
+     First was a rolling 168-hour SUM. A rolling sum of a repeating roster is flat by
+     construction - every week contains about the same sleep - so the line sat under the
+     reference and never moved. It smoothed away the only thing worth seeing.
+
+     Second was one bar per CALENDAR DAY. That looked right and was worse, because the model
+     plans ONE sleep into each rest, and a rest of 25-30 hours puts that sleep inside a
+     single calendar day. So the chart read 10.3 h, then 0.0 h, then 10.8 h, then 0.0 h -
+     an alternating catastrophe that was pure bucketing. A day with no modelled sleep is not
+     a day without sleep.
+
+     So the unit here is the REST PERIOD, which is what the model actually computes: one
+     break between two duties, with a modelled amount of sleep in it. To make breaks of
+     different lengths comparable the bar is sleep PER 24 HOURS of break, against the same
+     eight-hour line. A 30-hour break with 10 hours of sleep sits exactly on it. */
   function dpChartSleep(duties){
-    var rep=duties.filter(function(d){ return d.report!=null; });
-    if(rep.length<2) return '';
-    /* A rolling-7-day figure needs 7 days behind it. Plotting the first duty in the roster
-       as "11 h of sleep this week" is not a finding, it is the import running out of history -
-       and it is a far more alarming number than the duty-hours chart's equivalent artefact,
-       which is exactly why it has to be dropped rather than drawn small. */
-    var t0=rep[0].report+168*3600000;
-    var pts=rep.filter(function(d){ return d.report>=t0; });
-    if(pts.length<2) return '';
-    var NEED=56;                                   // 7 nights x 8 h
-    var vals=pts.map(function(d){
-      var t=d.report, sum=0;
-      duties.forEach(function(o){
-        if(o.report==null || o.restSleepH==null) return;
-        if(o.report>t || o.report<=t-168*3600000) return;
-        sum+=o.restSleepH;
-      });
-      return sum;
+    var H3=3600000, NEED=8, SHOW=12;
+    var rows=[];
+    for(var i=1;i<duties.length;i++){
+      var prev=duties[i-1], d=duties[i];
+      if(prev.release==null || d.report==null || d.restSleepH==null) continue;
+      var lenH=(d.report-prev.release)/H3;
+      if(lenH<=0) continue;
+      /* The frame is REPORT TO REPORT, not the break alone. Normalising by the break made a
+         nine-hour turn with 5.3 hours of sleep read as "10.6 h per 24" and paint it green,
+         which is the opposite of the truth: you cannot sleep during the duty, and pretending
+         the clock stops while you fly flatters every short turn on the roster. Cycle time
+         counts every hour of the pattern exactly once, with no gaps and no double counting.
+
+         The denominator is floored at one day so a sub-24h cycle reports ABSOLUTE hours -
+         5.3 h stays 5.3 h - rather than being scaled up into something that looks like plenty. */
+      var cycleH=(prev.report!=null)? (d.report-prev.report)/H3 : lenH;
+      var cycleD=cycleH/24, den=Math.max(1, cycleD);
+      rows.push({ t:prev.release, to:d.report, lenH:lenH, cycleH:cycleH, days:cycleD, den:den,
+                  got:d.restSleepH, rate:d.restSleepH/den,
+                  bunkRate:0, recovered:!!d.restRecovered,
+                  from:d.from, to2:d.to });
+    }
+    /* In-flight rest belongs to the duty, not to a break, but it is still sleep and leaving
+       it out understated a relief crew's week badly. It is added to the break BEFORE the
+       duty it was taken on, and marked, because a bunk restores less than a bed. */
+    duties.forEach(function(d,i2){
+      var bunk=0;
+      (d.legs||[]).forEach(function(l){ if(l.restH) bunk+=l.restH; });
+      if(!bunk) return;
+      var r=rows.filter(function(x){ return x.to===d.report; })[0];
+      if(!r) return;
+      r.got+=bunk; r.rate=r.got/r.den; r.bunkRate=bunk/r.den;
     });
-    if(!vals.some(function(v){ return v>0; })) return '';
-    var peak=Math.max(NEED+8, Math.ceil(Math.max.apply(null,vals)/10)*10+6);
-    var W=340,H=104,L=26,R=6,T=8,B=18, iw=W-L-R, ih=H-T-B;
-    var y=function(v){ return T+ih-(v/peak)*ih; }, step=iw/Math.max(1,vals.length-1);
-    var g='<svg class="cvz" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Estimated sleep in the previous 7 days">';
-    /* Shading starts a night's worth BELOW the need line, not at it. A wash of red across
-       four-fifths of the plot for a 3-hour shortfall reads as "everything is bad", which is
-       both wrong and the fastest way to make a person stop reading the chart at all. */
-    g+='<rect x="'+L+'" y="'+y(NEED-8)+'" width="'+iw+'" height="'+(y(0)-y(NEED-8))+'" fill="rgba(255,107,107,.10)"/>';
+    if(rows.length<3) return '';
+    rows=rows.slice(-SHOW);
+    /* Debt accrues per break: what eight hours a night would have wanted across the length
+       of that break, less what the model thinks you got. A break the model already calls
+       RECOVERED adds nothing - that is what recovered means - so a real string of days off
+       clears the board instead of scoring as a week of missed nights. */
+    var run=0;
+    rows.forEach(function(r){
+      r.short = r.recovered? 0 : Math.max(0, NEED*r.days - r.got);
+      run = r.recovered? 0 : run + r.short;
+      r.debt=run;
+    });
+    var maxDebt=Math.max(8, Math.ceil(Math.max.apply(null,rows.map(function(r){return r.debt;}))/4)*4);
+    var peak=Math.max(10, Math.ceil(Math.max.apply(null,rows.map(function(r){return r.rate;}))));
+    var W=Math.max(300, rows.length*30+56), H=126, L=24, R=28, T=10, B=28;
+    var iw=W-L-R, ih=H-T-B, step=iw/rows.length;
+    var y=function(v){ return T+ih-(v/peak)*ih; };
+    var yd=function(v){ return T+ih-(v/maxDebt)*ih; };
+    var g='<svg class="cvz" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Estimated sleep in each break">';
     g+='<line x1="'+L+'" y1="'+y(NEED)+'" x2="'+(W-R)+'" y2="'+y(NEED)+'" stroke="rgba(78,227,154,.75)" stroke-width="1" stroke-dasharray="4 3"/>';
-    g+='<text x="'+(W-R)+'" y="'+(y(NEED)-3)+'" text-anchor="end" font-size="8" fill="#4ee39a">56 h &middot; seven nights at eight</text>';
-    [0,NEED,peak].forEach(function(v){ g+='<text x="'+(L-4)+'" y="'+(y(v)+3.5)+'" text-anchor="end" font-size="8.5" fill="#7f95b5">'+v+'</text>'; });
-    var dd='';
-    vals.forEach(function(v,i){ dd+=(i?' L':'M')+(L+step*i).toFixed(1)+' '+y(v).toFixed(1); });
-    g+='<path d="'+dd+'" fill="none" stroke="#5b93e8" stroke-width="1.8" stroke-linejoin="round"/>';
-    vals.forEach(function(v,i){
-      var short=NEED-v;   // hours behind seven nights at eight
-      g+='<circle cx="'+(L+step*i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.1" fill="'+(short>8?'#ff8a8a':'#a9c8f5')+'">'+
-         '<title>DP'+pts[i].n+': '+v.toFixed(1)+' h estimated sleep in the prior 168 h'+
-         (short>0? ' \u2014 '+short.toFixed(1)+' h short of seven nights at eight' : '')+'</title></circle>';
+    [0,4,8].forEach(function(v){ g+='<text x="'+(L-4)+'" y="'+(y(v)+3.5)+'" text-anchor="end" font-size="8.5" fill="#7f95b5">'+v+'</text>'; });
+    rows.forEach(function(r,i3){
+      var cx=L+step*i3+step/2, bw=Math.min(17, step*0.62);
+      /* Colour follows the RATE even when the model calls the break recovered. A 34-hour
+         break with 8.5 hours of modelled sleep is long enough to reset the reservoir and
+         still thin on sleep; painting it green because of the reset hid the second half of
+         that. So recovery clears the running DEBT - which is what recovery means - and the
+         bar goes on reporting what was actually slept, tagged "rec". */
+      var col = r.rate>=NEED? '#4ee39a' : r.rate>=6? '#ffd166' : r.rate>=4? '#ff9d4d' : '#ff6b6b';
+      g+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+y(r.rate).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+
+         Math.max(1,y(0)-y(r.rate)).toFixed(1)+'" rx="1.5" fill="'+col+'" opacity=".9"><title>'+
+         new Date(r.t).toISOString().slice(5,16).replace('T',' ')+'Z — break of '+r.lenH.toFixed(1)+' h in a '+r.cycleH.toFixed(0)+' h cycle, '+
+         r.got.toFixed(1)+' h sleep ('+r.rate.toFixed(1)+' h per 24)'+
+         (r.bunkRate>0.05? ', including bunk or seat rest':'')+
+         (r.recovered? ' — long enough to count as recovered' : (r.short>0.5? ' — '+r.short.toFixed(1)+' h short':''))+
+         '</title></rect>';
+      if(r.bunkRate>0.05){
+        var bh=Math.max(1,y(0)-y(r.bunkRate));
+        g+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+(y(0)-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+
+           '" rx="1.5" fill="#0b1626" fill-opacity=".45"/>';
+      }
+      if(step>26) g+='<text x="'+cx.toFixed(1)+'" y="'+(H-16)+'" text-anchor="middle" font-size="7.5" fill="#7f95b5">'+
+         new Date(r.t).toISOString().slice(5,10)+'</text>';
+      if(r.recovered) g+='<text x="'+cx.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="7.5" fill="#4ee39a">rec</text>';
     });
+    var dd='';
+    rows.forEach(function(r,i3){ dd+=(i3?' L':'M')+(L+step*i3+step/2).toFixed(1)+' '+yd(r.debt).toFixed(1); });
+    g+='<path d="'+dd+'" fill="none" stroke="#8fb4ff" stroke-width="1.5" stroke-dasharray="3 2" opacity=".85"/>';
+    g+='<text x="'+(W-R+3)+'" y="'+(yd(maxDebt)+7)+'" font-size="8" fill="#8fb4ff">'+maxDebt+'h</text>';
+    g+='<text x="'+(W-R+3)+'" y="'+(yd(0)+3)+'" font-size="8" fill="#8fb4ff">0</text>';
     g+='<line x1="'+L+'" y1="'+y(0)+'" x2="'+(W-R)+'" y2="'+y(0)+'" stroke="rgba(160,190,230,.4)" stroke-width="1"/>';
     g+='</svg>';
     return g;
   }
+
   function dpChartCum(duties){
     var pts=duties.filter(function(d){ return d.report!=null; });
     if(pts.length<2 || !DUTY.cumulative) return '';
@@ -13280,19 +13392,23 @@
     if(a) h+='<div class="ovsec"><div class="ovh">Predicted alertness through time'+
       (windowed? ' <span class="ovwin">'+esc(windowWord)+'</span>':'')+'</div>'+
       '<div class="ovcurve">'+dpCurveAxis()+'<div class="ovscroll">'+a+'</div></div>'+
-      '<div class="ovcap">The curve is predicted effectiveness minute by minute, not one figure per duty. '+
-      'Blue shading is <b>modelled sleep</b>, lighter shading is <b>duty</b>, dots mark each duty period\'s low point, '+
-      'and the green dashed line is <b>now</b>. Reading it this way shows where the trough falls <i>inside</i> a duty '+
-      'and which sleep did or did not refill you beforehand \u2014 a pattern can be acceptable on every single day and still be a staircase downward. '+
-      'Dashed band lines at 90 / 77 / 65: only the 90 comes from published research, the other two are model-vendor defaults, not rules. '+
+      '<div class="ovcap"><b>Scroll it sideways</b> \u2014 it opens on now. The curve is predicted effectiveness minute by minute, not one figure per duty. '+
+      'The coloured bar along the top is the <b>duty</b>, labelled with its route and coloured by its own band; <b>report and release times sit under each end</b>, '+
+      'and the solid line down from a bar is report, the dotted one release. Blue shading is <b>modelled sleep</b>. '+
+      'Dots mark each duty\'s low point with its value. <b>The time axis is Zulu</b> \u2014 ticks every six hours, dates at 00Z \u2014 so you can read the trough against the clock you actually work to. '+
+      'Seeing it this way shows where the low point falls <i>inside</i> a duty and which sleep did or did not refill you beforehand: '+
+      'a pattern can be acceptable on every single day and still be a staircase downward. '+
+      'Band lines at 90 / 77 / 65 \u2014 only the 90 comes from published research, the other two are model-vendor defaults, not rules. '+
       '<span class="ovwhy" data-ov="bands">Where the bands come from</span></div></div>';
-    if(c) h+='<div class="ovsec"><div class="ovh">Sleep in the previous 7 days</div>'+c+
-      '<div class="ovcap">The model\'s estimate of the sleep each rest opportunity allowed, summed over the rolling 168 hours before every report. '+
-      'The dashed line is <b>seven nights at eight hours</b> — a physiological need, not a rule, and nothing checks you against it. '+
-      'Below it you are running a debt, and this is the picture that actually drives the percentage above: '+
-      'the same duty hours cost far more when the sleep behind them was short or fell outside your body night. '+
-      '<b>These are estimates from your schedule, not sleep you were measured getting.</b> '+
-      'Duty and flight hours are cumulative <i>exposure</i> rather than fatigue, so they live in the figures below and in the report notes.</div>'+
+    if(c) h+='<div class="ovsec"><div class="ovh">Sleep in each break</div>'+
+      '<div class="ovscroll">'+c+'</div>'+
+      '<div class="ovcap">One bar per <b>rest period</b> \u2014 the break between two duties, which is the unit the model actually plans sleep into. '+
+      'Height is sleep <b>per 24 hours from one report to the next</b> \u2014 the whole cycle, because you cannot sleep during the duty and a chart that stopped the clock while you flew would flatter every short turn. '+
+      'Under a day that is simply the hours you got. The green dashed line is eight. '+
+      'The darker block at the base is <b>bunk or seat</b> rest, which restores less than the same hours in a bed. '+
+      'The faint dotted line is your <b>running debt</b> in hours, and a break the model calls <b>rec</b> \u2014 long enough to count as recovered \u2014 clears it. '+
+      'This is not one bar per night on purpose: the model puts one sleep in each break, so a per-day chart read 10 h, 0 h, 11 h, 0 h and that alternation was the chart, not your week. '+
+      'These are estimates from your rest opportunities, not sleep you were measured getting.</div>'+
       (function(){
         var sd=[]; try{ sd=dpSleepDebt(allDuties, FATIGUE); }catch(e){ return ''; }
         if(!sd.length || !sd.some(function(x){ return x.got!=null; })) return '';
