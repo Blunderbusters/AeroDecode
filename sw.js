@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v41';
+var V='cargodecode-v42';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
@@ -63,7 +63,21 @@ self.addEventListener('fetch', function(e){
      would have been stored and every later pull would have returned that same stored copy.
      The roster would have looked like it was refreshing while silently never changing
      again, which is a far harder problem to notice than an error message. */
-  if(url.origin!==self.location.origin) return;
+  /* One exception, and it is the reason a flight log vanished at altitude. The PDF reader
+     and the OCR engine are loaded from a CDN on demand, and the app tells the crew member
+     they need internet "once" and then work offline. That was not true: this early return
+     fired first, so those files never reached this cache and the only thing holding them
+     was the browser's own HTTP cache - which is exactly what the note at the top of this
+     file says collapses airborne. Relaunch the app over the Atlantic and the OFP could no
+     longer be read at all.
+
+     Narrow on purpose. The relay and the sign-in beacon must stay network-only: caching a
+     calendar pull would freeze the roster, which is the quiet failure described above. */
+  /* unpkg serves these WITHOUT the /npm/ segment that jsdelivr uses, and it is the fallback
+     the OCR loader falls back TO - so a pattern that only matched jsdelivr would have left
+     the fallback uncached, which is the exact case it exists for. */
+  var CDN_CACHE=/^https:\/\/(cdn\.jsdelivr\.net\/npm|unpkg\.com)\/(pdfjs-dist|tesseract\.js)/;
+  if(url.origin!==self.location.origin && !CDN_CACHE.test(req.url)) return;
 
   var isDoc = req.mode==='navigate' || req.destination==='document';
 

@@ -568,6 +568,9 @@
   .wheelnote{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5;margin-top:14px}
   /* Fatigue tab */
   .ftgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  /* Grid and flex children default to min-width:auto, so a monospace input refuses to
+     shrink below its intrinsic width and pushes the whole tab 15px wider than the phone. */
+  .ftgrid>*,.catgrid>*,.cgrid>*{min-width:0}
   .ftgrid .full{grid-column:1/-1}
   .ftk{font-size:12px;font-weight:700;color:var(--dim);margin-bottom:4px}
   .ftin{width:100%;padding:11px;border-radius:11px;background:rgba(6,14,28,.7);color:var(--ink);
@@ -669,8 +672,11 @@
   .dpflag b{font-weight:800}
   .dpmini{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
   .dpmini td{padding:5px 0;border-bottom:1px solid rgba(120,160,220,.09);color:var(--dim);vertical-align:top}
-  .dpmini td:first-child{color:var(--ink);font-weight:700;white-space:nowrap;padding-right:10px}
-  .dpmini td:last-child{text-align:right;font-family:var(--mono);white-space:nowrap}
+  .dpmini td:first-child{color:var(--ink);font-weight:700;padding-right:10px;overflow-wrap:anywhere}
+  /* Values wrap instead of pushing the table wider than the card it sits in. */
+  .dpmini{table-layout:fixed}
+  .dpmini td:last-child{text-align:right;font-family:var(--mono);white-space:normal;overflow-wrap:anywhere}
+  .dpmini td:first-child{width:44%}
   .dpmini tr:last-child td{border-bottom:none}
   .dpbtnrow{display:flex;gap:8px;margin-top:10px}
   .dpbtnrow .whybtn,.dpbtnrow .rptbtn{margin-top:0;flex:1;padding:10px 6px;font-size:12px}
@@ -937,8 +943,6 @@
   .impdup b{color:#ffe0c2}
   .impclear{background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.45);color:#ff9d9d;
     border-radius:7px;padding:2px 9px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit}
-  .resthotel{display:block;margin-top:4px;font-size:11.5px;color:var(--dim);line-height:1.45}
-  .resthotel b{color:var(--ink)}
   .effcard{margin-top:12px;padding:10px 12px;border-radius:12px;cursor:pointer;
     border:1px solid rgba(120,160,220,.28);background:linear-gradient(180deg,rgba(10,24,46,.75),rgba(6,14,28,.6))}
   .effhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -1034,7 +1038,11 @@
   .dpsec.warn{border-color:rgba(255,157,77,.4)}
   .dpflag{font-size:9.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;padding:1px 6px;border-radius:5px;
     background:rgba(255,107,107,.2);border:1px solid rgba(255,107,107,.5);color:#ffb3b3}
-  .dpsecb{padding:0 11px 10px}
+  .dpsecb{padding:0 11px 10px;min-width:0}
+  /* A summary is a flex row, and its text refused to wrap - so "Why 82% - lowest at the
+     landing in ICN" rode straight off the right edge of a phone. */
+  .dpsec summary{min-width:0;white-space:normal;overflow-wrap:anywhere}
+  .dpcard,.dpbody,.dphead,.dpmain{min-width:0}
   .dpsecb .rf{margin-top:2px}
   .dpsecb .effcard{margin-top:10px}
   .caps{margin-top:6px}
@@ -1861,9 +1869,9 @@
             <li>Come back here and tap <b>Upload schedule</b> above. You can select <b>several files at once</b>, or add them one at a time.</li>
           </ol>
           <p><b>Covering more than one month:</b> every upload <b>adds to</b> what is already stored — nothing is replaced. Export each month, upload them all, and the fatigue model runs continuously across the whole span, carrying your sleep debt and body clock from one month into the next. Re-uploading a month you already have just refreshes it rather than duplicating it. The stored span is shown under the button, with a Clear control if you want to start over.</p>
-          <p><b>Why XLS is better:</b> the CSV export is written in a character set that cannot hold the superscript <b>+1</b> / <b>−1</b> day markers, so both come out as the same character and a westbound date-line arrival is indistinguishable from an eastbound one. The XLS keeps the sign. The app resolves the CSV case by picking the reading that yields a believable block time, but the XLS never has to guess. The XLS also carries your <b>hotels</b>, which the CSV omits entirely.</p>
+          <p><b>Why XLS is better:</b> the CSV export is written in a character set that cannot hold the superscript <b>+1</b> / <b>−1</b> day markers, so both come out as the same character and a westbound date-line arrival is indistinguishable from an eastbound one. The XLS keeps the sign. The app resolves the CSV case by picking the reading that yields a believable block time, but the XLS never has to guess.</p>
           <p><b>UTC or Local Station?</b> Both are supported — the export writes which one it used on line 2 of the file, so the app reads it and never has to guess. <b>UTC is recommended:</b> on duties that cross midnight or the date line, the Local export dates the row in a way that can be ambiguous, and UTC removes that entirely.</p>
-          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically. From an XLS the app also reads the <b>hotel</b> for each layover and shows it on the matching rest period.</p>
+          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically.</p>
           <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
         </details>
       </div>
@@ -7009,7 +7017,7 @@
 
   function parse(pages){
     var R={ tz:null, tzOk:false, from:null, to:null, crew:null,
-            legend:{duty:{}, ind:{}}, duties:[], hotels:[], rests:[], memos:[],
+            legend:{duty:{}, ind:{}}, duties:[], rests:[], memos:[],
             totals:null, warnings:[] };
     var col=null, section='head', cur=null, legendCols=null;
 
@@ -7369,7 +7377,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v18.2 · 2026-09-05';
+  var BUILD='v18.5 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -8408,7 +8416,11 @@
     flEta.forEach(function(w,i){ L.push(col(i,4)+col(w.wpt,12)+col(w.nm,5)+col(w.legt,7)+col(w.tot,7)+w.eta); });
     return L.join('\n');
   }
-  function flStatus(m,busy){ flStatusEl.textContent=m; flStatusEl.className='pill'+(busy?' busy':''); flSpin.style.display=busy?'inline-block':'none'; }
+  /* innerHTML, not textContent. Callers here already pass markup - the amber "no departure
+     time in the OFP" warning has for a long time - and it was being printed as literal tags
+     rather than rendered. Every string reaching this is built in the app from numbers and
+     fixed text; nothing from a file lands here. */
+  function flStatus(m,busy){ flStatusEl.innerHTML=m; flStatusEl.className='pill'+(busy?' busy':''); flSpin.style.display=busy?'inline-block':'none'; }
 
   Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
     t.onclick=function(){
@@ -9140,10 +9152,12 @@
         else if(f==='nm'){ w.nm=val; }
         else if(f==='legt'){ w.legt=val; }
         flRender();
+        flSave();                 // a hand correction is the one thing re-parsing cannot recover
       });
     });
   }
-  flDep.addEventListener('input',flRender);
+  flDep.addEventListener('input',function(){ flRender(); flSave(); });
+
   // One entry point: parse the OFP once and cascade it into Flight Log, LABT/LATT and Crew Rest.
   function ofpIngest(text){
     ingest(text);
@@ -9151,7 +9165,66 @@
     try{ crLoadFromLog(); }catch(e){}
     try{ catLoadFromOfp(); }catch(e){}
     try{ ftLoadFromOfp(); }catch(e){}
+    flSave();
   }
+  /* ---- the flight log has to survive the app being thrown away ------------------------
+     Everything the nav log is built from - the OFP text, the waypoints, the trip and taxi
+     times, the departure - lived in plain variables and nowhere else. On iOS a web app in
+     the background is routinely discarded and started again from scratch, which is exactly
+     what happens when you load the OFP at the gate, put the phone down and pick it up in
+     the cruise: the tab comes back empty. This app already knew that about iOS - it is why
+     the setup guide keeps its place in storage - and the flight log was never given the
+     same treatment.
+
+     The EDITED waypoints are stored, not just the raw text, because corrections made in
+     the table are the part that cannot be recovered by parsing the OFP again. */
+  var FL_KEY='ad_ofpstate';
+  function flSave(){
+    try{
+      if(!flTextRaw){ localStorage.removeItem(FL_KEY); return; }
+      var pack=JSON.stringify({v:1, t:flTextRaw, w:flWpts, trip:flTrip, taxi:flTaxi,
+        orig:flOrig, id:flId, dep:(flDep&&flDep.value)||'', fromOfp:!!flDepFromOfp, at:Date.now()});
+      /* A very long OFP could blow the quota and take the roster down with it. Drop the raw
+         text first - the table survives without it, only the Jeppesen points need it. */
+      try{ localStorage.setItem(FL_KEY, pack); }
+      catch(e){
+        try{ localStorage.setItem(FL_KEY, JSON.stringify({v:1, t:'', w:flWpts, trip:flTrip,
+          taxi:flTaxi, orig:flOrig, id:flId, dep:(flDep&&flDep.value)||'',
+          fromOfp:!!flDepFromOfp, at:Date.now(), trimmed:1})); }catch(_){}
+      }
+    }catch(e){}
+  }
+  function flRestore(){
+    var st=null; try{ st=JSON.parse(localStorage.getItem(FL_KEY)||'null'); }catch(e){}
+    if(!st || !st.w || !st.w.length) return false;
+    flTextRaw=st.t||''; flWpts=st.w; flTrip=st.trip||null; flTaxi=st.taxi||null;
+    flOrig=st.orig||null; flId=st.id||null; flDepFromOfp=!!st.fromOfp;
+    if(flDep && st.dep) flDep.value=st.dep;
+    try{ renderFpInfo(); }catch(e){}
+    try{ flRender(); }catch(e){}
+    try{ renderJepp(); }catch(e){}
+    var mins=Math.round((Date.now()-(st.at||Date.now()))/60000);
+    var when = mins<2? 'just now' : (mins<90? mins+' min ago'
+              : (mins<2880? Math.round(mins/60)+' h ago' : Math.round(mins/1440)+' days ago'));
+    flStatus('Flight log restored — '+flWpts.length+' waypoints, loaded '+when+'.'+
+      (st.trimmed? ' (The OFP text was too large to keep, so the Jeppesen points are not available until you load it again.)':'')+
+      ' <b id="flForget" style="color:#8fb4ff;cursor:pointer;text-decoration:underline">Clear it</b>', false);
+    var fg=document.getElementById('flForget');
+    if(fg) fg.onclick=function(){
+      flTextRaw=''; flWpts=[]; flTrip=null; flTaxi=null; flOrig=null; flId=null;
+      try{ localStorage.removeItem(FL_KEY); }catch(e){}
+      if(flDep) flDep.value='';
+      try{ renderFpInfo(); }catch(e){}
+      flQC.innerHTML=''; flSum.innerHTML=''; flTable.innerHTML='';
+      var jb=$('#flJepp'); if(jb) jb.innerHTML='';
+      flStatus('Cleared. Load an OFP to start again.', false);
+    };
+    return true;
+  }
+  /* Called here and not earlier: FL_KEY is a var, so hoisting gives the name but not the
+     value, and a restore attempted above this line looked up localStorage[undefined],
+     found nothing and reported success at having nothing to do. */
+  try{ flRestore(); }catch(e){}
   function goFlightLog(){ var t=document.querySelector('.tab[data-view="flightlog"]'); if(t) t.click(); }
   $('#flPasteGo').onclick=function(){ var t=$('#flPaste').value||''; if(t.trim()){ ofpIngest(t); goFlightLog(); } };
   // Demo OFP — a real ORD→ZHEC flight plan to experiment with on first use
@@ -10143,20 +10216,11 @@
     }catch(e){}
   }
   function dpCoverRanges(){ try{ return JSON.parse(localStorage.getItem('ad_offcover')||'[]'); }catch(e){ return []; } }
-  /* Hotels come from the XLS only; keyed by port + the date the room is held. */
-  function impSaveHotels(list){
-    if(!list||!list.length) return;
-    try{
-      var all=JSON.parse(localStorage.getItem('ad_hotels')||'[]');
-      list.forEach(function(h){
-        if(!h.port||!h.date) return;
-        var hit=-1;
-        for(var i=0;i<all.length;i++) if(all[i].port===h.port && all[i].date===h.date){ hit=i; break; }
-        if(hit<0) all.push(h); else all[hit]=h;
-      });
-      localStorage.setItem('ad_hotels', JSON.stringify(all));
-    }catch(e){}
-  }
+  /* Hotels are no longer stored or shown. Which hotel you were in is not an input to any
+     calculation here, and a fatigue tool that carries it is carrying it for its own sake.
+     Kept as a one-line purge so a phone that imported them before does not keep them. */
+  function impSaveHotels(){ try{ localStorage.removeItem('ad_hotels'); }catch(e){} }
+  impSaveHotels();   // clears what earlier builds stored on phones that already imported
   function impHandle(parsed, name){
     if(typeof AIMSCSV==='undefined'){ impSay('Parser unavailable.','impbad'); return null; }
     var legs=parsed.rows.filter(function(r){ return r.from && r.utc && r.utc.blockOut!=null; });
@@ -10173,7 +10237,6 @@
       }
       return {err:'No flight legs found in <b>'+esc(name)+'</b>. Make sure it is the <b>Personal Crew Schedule Report</b>.'};
     }
-    impSaveHotels(parsed.hotels);
     impSaveOffDays(parsed.rows);
     if(parsed.offDays) impSaveOffDaysList(parsed.offDays);
     impSaveCover(parsed.period);
@@ -10198,7 +10261,7 @@
     return { name:name, legs:legs.length, ops:ops.length, dh:legs.length-ops.length-gndN,
              from:f(a), to:f(b), mode:parsed.mode, src:parsed.source||'report', blk:blk, total:total,
              sup:(parsed.superseded||[]).length, clash:(parsed.clashes||[]).length, gnd:gndN,
-             hotels:(parsed.hotels||[]).length, bad:uniq };
+             hotels:0, bad:uniq };
   }
   /* Same flight, same route, close together but not close enough to merge. Usually two
      exports disagreeing about a date-line duty by a whole day; occasionally a genuine
@@ -10223,10 +10286,9 @@
     if(!r.length){ el.innerHTML=''; return; }
     var outs=r.map(function(x){return x.out;}).filter(function(v){return v!=null;});
     var f=function(ms){ return new Date(ms).toISOString().slice(0,10); };
-    var hn=0; try{ hn=JSON.parse(localStorage.getItem('ad_hotels')||'[]').length; }catch(e){}
     var sus=impSuspects();
     el.innerHTML='<b>Stored roster:</b> '+r.length+' legs, '+esc(f(Math.min.apply(null,outs)))+
-      ' → '+esc(f(Math.max.apply(null,outs)))+(hn? ' · '+hn+' hotel nights':'')+
+      ' → '+esc(f(Math.max.apply(null,outs)))+
       ' <button id="impClear" class="impclear">Clear</button>'+
       (sus.length? '<div class="impdup">⚠ <b>'+sus.length+' possible duplicate'+(sus.length>1?'s':'')+'.</b> '+
         sus.slice(0,3).map(function(x){ return esc(x.flight)+' '+esc(x.route)+' appears on '+
@@ -10882,7 +10944,7 @@
       var legs=0, ops=0, dhs=0, blk=0, hot=0, total=null, bad=[];
       var lo=null, hi=null, modes={};
       done.forEach(function(d){
-        legs+=d.legs; ops+=d.ops; dhs+=(d.dh||0); blk+=d.blk; hot+=d.hotels; total=d.total; modes[d.mode]=1;
+        legs+=d.legs; ops+=d.ops; dhs+=(d.dh||0); blk+=d.blk; total=d.total; modes[d.mode]=1;
         if(lo==null||d.from<lo) lo=d.from; if(hi==null||d.to>hi) hi=d.to;
         d.bad.forEach(function(x){ if(bad.indexOf(x)<0) bad.push(x); });
       });
@@ -10894,7 +10956,7 @@
         (gnd? ', '+gnd+' ground or training':'')+') from <b>'+
         esc(lo)+'</b> to <b>'+esc(hi)+'</b>'+(done.length>1? ' across <b>'+done.length+'</b> files':'')+'.<br>'+
         'Times in file: <b>'+esc(Object.keys(modes).map(function(m){return m==='UTC'?'UTC':'Local Station';}).join(' + '))+
-        '</b> · operating block <b>'+(blk/60).toFixed(1)+'h</b>'+(hot? ' · <b>'+hot+'</b> hotel nights':'')+
+        '</b> · operating block <b>'+(blk/60).toFixed(1)+'h</b>'+
         (total!=null? '<br><span style="color:var(--faint)">Roster now holds <b>'+total+'</b> legs across all imports.</span>':'');
       if(bad.length) msg+='<br><span class="impwarn">⚠ Unknown station'+(bad.length>1?'s':'')+': <b>'+esc(bad.join(', '))+
         '</b> — those legs were skipped rather than guessed. Re-export in <b>UTC</b> and they will import fine.</span>';
@@ -11840,20 +11902,6 @@
                              precedesFlight: !!(nextDuty && nextDuty.legs.some(function(l){return !l.dh;})) });
     return DUTY.controllingRest(far.min, far.cite, cb.h, cb.cite);
   }
-  /* The hotel AIMS booked for a layover: same port, room held on a date inside the rest. */
-  function dpHotel(station, fromMs, toMs){
-    var list=[]; try{ list=JSON.parse(localStorage.getItem('ad_hotels')||'[]'); }catch(e){ return null; }
-    if(!list.length||!station) return null;
-    var off=dpOff(station, fromMs); if(off==null) off=0;
-    var best=null;
-    list.forEach(function(h){
-      if(h.port!==station||!h.date) return;
-      var m=h.date.match(/(\d{2})\/(\d{2})\/(\d{4})/); if(!m) return;
-      var mid=Date.UTC(+m[3], +m[1]-1, +m[2], 12) - off*3600000;   // local midday of that date
-      if(mid>=fromMs-12*3600000 && mid<=toMs+12*3600000) best=h;
-    });
-    return best;
-  }
   /* One instant shown as station local AND Zulu — never one without the other. */
   function dpBoth(ms,code){
     if(ms==null) return '—';
@@ -11913,6 +11961,30 @@
      means designated by the Company". So this does not try to be the form. It lays out the
      facts such a report asks for, leaves the ones only the crew member knows blank, and
      stops there. Deliberately no copy button: the report has to be in his own words. */
+  /* ---- the questions the app cannot answer -------------------------------------------
+     Written out ONCE. The on-screen checklist and the copyable draft had drifted apart -
+     six prompts on screen, five in the draft - because each was typed by hand in its own
+     place, and nothing made them agree. `q` is what the crew member reads; `a` is the
+     label it becomes in the draft, in the first person.
+
+     Two earlier prompts are deliberately gone. One asked what stopped you sleeping; the
+     other asked what was going on outside work. Both invite a NON-SCHEDULE cause in
+     writing, and a fatigue call under Paragraph F does not require you to justify it -
+     hand the company "the room was noisy" and the pairing stops being the problem. The
+     second of them even carried its own warning not to answer it fully, which is a fair
+     sign it should not have been asked. What is left points at the schedule, or at what
+     you did about it. The FRMC may still ask you these things; the app just will not
+     write your answer down before anybody has. */
+  var FPREP_ASKS=[
+    {q:'Transport and delays either side of the rest — did the rest really start when it was logged?',
+     a:'Whether the rest really started when it was logged'},
+    {q:'Anything on the day that added workload: weather, a maintenance issue, a diversion, a long sit, a reroute.',
+     a:'What added workload on the day'},
+    {q:'How you felt, and when it started. Be specific about the point in the flight rather than describing the whole duty.',
+     a:'How I felt and at what point in the flight it started'},
+    {q:'What you did about it: controlled rest, extra crew, calling scheduling, declining an extension.',
+     a:'What I did about it'}
+  ];
   function dpRptShow(n){
     var x=dpWhy[n]; if(!x) return;
     var hm=function(m){ if(m==null) return '—'; var g=m<0?'-':''; m=Math.abs(m);
@@ -11950,7 +12022,6 @@
     sec('Sleep and time awake — check these against what actually happened');
     row('Rest before this duty', (x.restMin!=null? hm(x.restMin)+' at '+esc(x.restStation||'') : '—'));
     if(x.restFromBoth) row('Rest ran', esc(x.restFromBoth)+' → '+esc(x.restToBoth));
-    if(x.hotel) row('Hotel', esc(x.hotel.name||''));
     row('Sleep the schedule allowed', (x.restSleepH!=null? x.restSleepH.toFixed(1)+' h (estimate)':'—'));
     row('Sleep you ACTUALLY got', '__________ h', true);
     row('Sleep in the previous 24 h', '__________ h', true);
@@ -11976,12 +12047,7 @@
     end();
 
     sec('Only you know these — think before you write');
-    ask('What actually stopped you sleeping? Hotel noise, room not ready, heat, street, alarm, a late room change.');
-    ask('Transport and delays either side of the rest — did the rest really start when it was logged?');
-    ask('Anything on the day that added workload: weather, a maintenance issue, a diversion, a long sit, a reroute.');
-    ask('How you felt, and when it started. Be specific about the point in the flight rather than describing the whole duty.');
-    ask('Anything outside work that mattered — you are not obliged to volunteer private detail, but do not state something untrue.');
-    ask('What you did about it: controlled rest, extra crew, calling scheduling, declining an extension.');
+    FPREP_ASKS.forEach(function(x){ ask(x.q); });
     h+='<div class="rptask" style="padding-left:0;color:var(--faint);font-size:11.5px;margin-top:6px">'+
        'The contract sets the deadline: the Fatigue Event Report goes in within <b>48 hours after the rest period</b> associated with the call — FRMS Letter of Agreement, Article 35, CBA p. 318, paragraph F.6. The form itself is whatever the Company designates; the contract does not specify one.</div>';
 
@@ -12022,7 +12088,6 @@
     P.push('SLEEP AND TIME AWAKE   (replace the estimates with what actually happened)');
     if(x.restMin!=null) P.push('  '+pad('Rest before duty')+hm(x.restMin)+' at '+(x.restStation||''));
     if(x.restFromBoth)  P.push('  '+pad('Rest ran')+x.restFromBoth+' -> '+x.restToBoth);
-    if(x.hotel&&x.hotel.name) P.push('  '+pad('Hotel')+x.hotel.name);
     P.push('  '+pad('Sleep schedule allowed')+((x.restSleepH!=null? x.restSleepH.toFixed(1):'?'))+' h  (estimate only)');
     P.push('  '+pad('Sleep I actually got')+'______ h');
     P.push('  '+pad('Sleep in previous 24 h')+'______ h');
@@ -12046,11 +12111,7 @@
     }
     P.push('');
     P.push('IN MY OWN WORDS   (answer these, then delete the questions)');
-    P.push('  - What actually stopped me sleeping:');
-    P.push('  - Whether the rest really started when it was logged:');
-    P.push('  - What added workload on the day:');
-    P.push('  - How I felt and at what point in the flight it started:');
-    P.push('  - What I did about it:');
+    FPREP_ASKS.forEach(function(x){ P.push('  - '+x.a+':'); });
     P.push('');
     P.push('Submitted within 48 hours of the rest period.');
     fprepPlain=P.join('\n');
@@ -12466,7 +12527,6 @@
           legs:d.legs.map(function(l){ return {flight:l.flight, from:l.from, to:l.to, dh:!!l.dh, dhg:!!l.dhg, dhFix:!!l.dhFix,
                  out:dpBoth(l.out,l.from), inn:dpBoth(l['in'],l.to), blk:dpHM(l.blk)}; }),
           restFromBoth:(rp? dpBoth(rp.from, rp.station):null), restToBoth:(rp? dpBoth(rp.to, rp.station):null),
-          hotel:(rp? dpHotel(rp.station, rp.from, rp.to):null)
         };
         h+='<div class="dpbtnrow">'+
            '<button class="whybtn" data-why="'+d.n+'">⚠︎ Why am I fatigued?</button>'+
@@ -12506,13 +12566,7 @@
                 (duties[i+1].restInBodyNight!=null? ' ('+duties[i+1].restInBodyNight.toFixed(1)+' h of it in your body night)':''))+
               ' → reservoir <b>'+duties[i+1].resAfterRest+'%</b> at the wake-up call'+
               (duties[i+1].wakeMs!=null? ' ('+dpBoth(duties[i+1].wakeMs, duties[i+1].from)+')':'') : '')+
-           (function(){
-             var ht=dpHotel(r.station, r.from, r.to);
-             if(ht) return '<br><span class="resthotel">🏨 <b>'+esc(ht.name)+'</b>'+
-               (ht.phone? ' · '+esc(ht.phone):'')+(ht.locator? ' · conf '+esc(ht.locator):'')+
-               (ht.address? '<br><span style="color:var(--faint)">'+esc(ht.address)+'</span>':'')+'</span>';
-             return '<br><span style="color:var(--faint)">Hotel: none found — the <b>XLS</b> export carries hotels, the CSV does not.</span>';
-           })()+
+
            '</div></div></div>';
       }
     });
