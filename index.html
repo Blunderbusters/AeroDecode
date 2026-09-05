@@ -640,6 +640,40 @@
   .dproute{font-size:12.5px;color:var(--dim);margin-top:4px;line-height:1.4}
   .dpscore{text-align:right;flex:0 0 100px;max-width:100px}
   .dpscoreval{font-family:var(--mono);font-size:26px;font-weight:800;line-height:1}
+  /* Compressed duty card. One card answered one question in 191 words, 45 numbers and six
+     stat tiles - measured, not guessed - so the front of the card now carries only what you
+     scan for and everything else sits behind a disclosure. */
+  .dptblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--edge);
+    border-radius:12px;background:var(--glass);margin-top:10px}
+  .dptbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .dptbl th{position:sticky;top:0;background:rgba(10,20,40,.96);text-align:left;font-size:9px;font-weight:800;
+    letter-spacing:.5px;text-transform:uppercase;color:#8fa3c4;padding:8px 7px;white-space:nowrap;
+    border-bottom:1px solid rgba(120,160,230,.25)}
+  .dptbl td{padding:8px 7px;border-bottom:1px solid rgba(120,160,220,.09);white-space:nowrap;color:var(--dim)}
+  .dptbl tr:last-child td{border-bottom:none}
+  .dptbl tr[data-goto]{cursor:pointer}
+  .dptbl tr[data-goto]:active{background:rgba(120,160,230,.12)}
+  .dptbl .dy{color:var(--ink);font-weight:700}
+  .dptbl .rte{color:var(--ink);font-family:var(--mono)}
+  .dptbl .num{font-family:var(--mono);text-align:right}
+  .dptbl .sc{font-family:var(--mono);font-weight:800;text-align:right}
+  .dptbl tr.now td{background:rgba(78,163,255,.10)}
+  .dpchips{display:flex;flex-wrap:wrap;gap:6px}
+  .dpchip{font-family:var(--mono);font-size:11.5px;background:rgba(8,16,32,.55);
+    border:1px solid rgba(120,160,230,.18);border-radius:999px;padding:4px 9px;color:var(--dim);white-space:nowrap}
+  .dpchip b{color:var(--ink);font-weight:700}
+  .dpchip.warn{border-color:rgba(255,157,77,.45);color:#ffbe7a}
+  .dpflag{display:flex;gap:7px;align-items:flex-start;margin-top:9px;font-size:12px;line-height:1.4;color:#ffbe7a}
+  .dpflag .fd{width:6px;height:6px;border-radius:50%;background:#ff9d4d;flex:0 0 auto;margin-top:5px}
+  .dpflag.info{color:#8fb4ff} .dpflag.info .fd{background:#5b93e8}
+  .dpflag b{font-weight:800}
+  .dpmini{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  .dpmini td{padding:5px 0;border-bottom:1px solid rgba(120,160,220,.09);color:var(--dim);vertical-align:top}
+  .dpmini td:first-child{color:var(--ink);font-weight:700;white-space:nowrap;padding-right:10px}
+  .dpmini td:last-child{text-align:right;font-family:var(--mono);white-space:nowrap}
+  .dpmini tr:last-child td{border-bottom:none}
+  .dpbtnrow{display:flex;gap:8px;margin-top:10px}
+  .dpbtnrow .whybtn,.dpbtnrow .rptbtn{margin-top:0;flex:1;padding:10px 6px;font-size:12px}
   .dpscorelab{font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;margin-top:3px;line-height:1.2}
   .dpscorewhen{font-size:9.5px;font-weight:600;color:#8fa3c4;margin-top:4px;line-height:1.25;max-width:120px}
   .dpbody{padding:11px 13px}
@@ -7335,7 +7369,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v18.1 · 2026-09-05';
+  var BUILD='v18.2 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -11649,6 +11683,10 @@
 
   /* ---------- duty-period timeline, limits, rest and risk ---------- */
   var dpRegime='FLAG', dpCrew=3, dpArt33=false, dpReserve=false;
+  /* Cards answer "what about this duty"; the table answers "how does my month look".
+     Different questions, so both exist rather than one being a compromise. */
+  var dpView='cards';
+  try{ var _v=localStorage.getItem('ad_dpview'); if(_v==='table'||_v==='cards') dpView=_v; }catch(e){}
   /* The complement actually on the aeroplane for THIS duty, when the roster knows it.
      Deadheaders are excluded - a fourth pilot riding in a seat does not augment anybody.
      Falls back to the tab-wide setting for legs that came from a calendar, which never
@@ -11826,8 +11864,22 @@
     return String(l.getUTCHours()).padStart(2,'0')+String(l.getUTCMinutes()).padStart(2,'0')+'L / '+z+'Z';
   }
   function dpDay(ms){ return ms==null?'':new Date(ms).toISOString().slice(0,10); }
+  /* "Thu 3 Sep" rather than "2026-09-03". The ISO form is right in a report that gets
+     pasted to the company; on a card you are scanning, the weekday is the thing you
+     actually navigate by. */
+  var DPDOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+      DPMON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function dpDayShort(ms){ if(ms==null) return '';
+    var t=new Date(ms); return DPDOW[t.getUTCDay()]+' '+t.getUTCDate()+' '+DPMON[t.getUTCMonth()]; }
   function dpHM(min){ if(min==null) return '—'; var s=min<0?'-':''; min=Math.abs(min);
     return s+Math.floor(min/60)+':'+String(min%60).padStart(2,'0'); }
+  /* A rest of 281:14 is eleven days off, and nobody reads it as that. Past two days the
+     hours stop carrying information and the unit should change with them. */
+  function dpRest(min){
+    if(min==null) return '—';
+    if(Math.abs(min)>=48*60){ var d=min/1440; return (d>=10? Math.round(d) : d.toFixed(1))+'d'; }
+    return dpHM(min);
+  }
 
   function dpOvExplain(k){
     var t='', d='';
@@ -12102,7 +12154,11 @@
        '<button class="scopebtn'+(dpScope==='near'?' on':'')+'" data-scope="near">Around now</button>'+
        '<button class="scopebtn'+(dpScope==='future'?' on':'')+'" data-scope="future">From now on</button>'+
        '<button class="scopebtn'+(dpScope==='all'?' on':'')+'" data-scope="all">Whole roster</button>'+
-       (hidden? '<span class="scopeh">'+hidden+' duty period'+(hidden>1?'s':'')+' hidden</span>':'')+'</div>'+
+       (hidden? '<span class="scopeh">'+hidden+' duty period'+(hidden>1?'s':'')+' hidden</span>':'')+
+       '<span class="scopelab" style="margin-left:auto">View</span>'+
+       '<button class="scopebtn'+(dpView==='cards'?' on':'')+'" data-dpview="cards">Cards</button>'+
+       '<button class="scopebtn'+(dpView==='table'?' on':'')+'" data-dpview="table">Table</button>'+
+       '</div>'+
        (dpScope==='near'? '<div class="scopenote">Last '+BACK_D+' days and next '+FWD_D+
           '. <b>Every cumulative total still counts your whole imported history</b> — this only changes what is drawn.</div>':'');
     /* Said once, above the whole timeline, rather than on every card that happens to
@@ -12115,6 +12171,15 @@
          (legs.some(function(l){ return l.gnd; })
            ? 'Sims, ground school, briefings and reserve show their name instead of a flight number; they count as duty and carry no block time. ' : '')+
          'The <b>&times;</b> sets a leg aside if it never happened.</div>';
+    if(dpView==='table'){
+      h+='<div class="dptblwrap"><table class="dptbl"><thead><tr>'+
+         /* The score comes third, not last. At phone width the far columns scroll off, and
+            the one number worth scanning a month for must not be the one that disappears. */
+         '<th>Date</th><th>Route</th><th style="text-align:right">Low</th>'+
+         '<th style="text-align:right">Duty</th><th style="text-align:right">Rest before</th>'+
+         '<th style="text-align:right">Report</th><th style="text-align:right">Block</th>'+
+         '</tr></thead><tbody>';
+    }
     duties.forEach(function(d,i){
       if(i<startAt) return;
       if(show && !show[i]) return;
@@ -12156,12 +12221,30 @@
       var bc=DUTY.bandColor(score);
 
       if(d.allGateway){ score=0; bc={c:'#8ba0bf',l:'Gateway'}; }
+
+      if(dpView==='table'){
+        var rB=(i>0 && rests[i-1])? rests[i-1] : null;
+        var rQ=(i>0)? dpReqRest(duties[i-1], d, duties) : null;
+        var rShort=!!(rB && rQ && rB.min<rQ.min);
+        var eb2=(F && d.effWorst!=null)? F.band(d.effWorst) : null;
+        h+='<tr data-goto="'+d.n+'"'+(isNow||isNext?' class="now"':'')+'>'+
+           '<td class="dy">'+esc(dpDayShort(d.report))+'</td>'+
+           '<td class="rte">'+esc(d.from)+'→'+esc(d.to)+'</td>'+
+           '<td class="sc" style="color:'+(eb2?eb2.color:'#7f95b5')+'">'+
+             (d.effWorst!=null? d.effWorst+'%' : '?')+'</td>'+
+           '<td class="num">'+dpHM(d.effDutyMin!=null?d.effDutyMin:d.dutyMin)+'</td>'+
+           '<td class="num"'+(rShort?' style="color:#ff9d4d"':'')+'>'+(rB? dpRest(rB.min):'—')+'</td>'+
+           '<td class="num">'+(d.report!=null? new Date(d.report).toISOString().slice(11,16)+'Z':'—')+'</td>'+
+           '<td class="num">'+dpHM(d.blockMin)+'</td></tr>';
+        return;
+      }
+
       h+='<div class="dpcard'+(isNow?' dpnow':(isNext?' dpnext':''))+'"'+(d.allGateway?' style="opacity:.62"':'')+
          (isNow||isNext? ' id="dpAnchor"':'')+'><div class="dphead">'+
          (isNow? '<div class="nowrow"><span class="nowtag">In progress now</span></div>'
-               : (isNext? '<div class="nowrow"><span class="nowtag next">Next duty period</span></div>':''))+'<div class="dpmain"><div class="dpn">'+esc(dpDay(d.report))+
-         '<span class="dpdate">'+(d.consecN>1? 'Day '+d.consecN+' of this pattern':'First duty of this pattern')+'</span></div>'+
-         '<div class="dproute">'+dpAirport(d.from)+' → '+dpAirport(d.to)+'</div></div>'+
+               : (isNext? '<div class="nowrow"><span class="nowtag next">Next duty period</span></div>':''))+'<div class="dpmain"><div class="dpn">'+esc(dpDayShort(d.report))+
+         '<span class="dpdate">'+esc(d.from)+' → '+esc(d.to)+
+           (d.consecN>1? ' · day '+d.consecN : ' · first of this pattern')+'</span></div></div>'+
          (function(){
             if(d.allGateway) return '<div class="dpscore"><div class="dpscoreval" style="color:'+bc.c+'">—</div>'+
                                     '<div class="dpscorelab" style="color:'+bc.c+'">Gateway</div></div>';
@@ -12171,15 +12254,63 @@
                  will be on this trip", which is the one thing it is not. The Fatigue tab
                  has always labelled it "Projected low point"; this makes the two agree. */
               return '<div class="dpscore"><div class="dpscoreval" style="color:'+eb.color+'">'+d.effWorst+'<span class="pcs">%</span></div>'+
-                     '<div class="dpscorelab" style="color:'+eb.color+'">'+esc(eb.label)+'</div>'+
-                     '<div class="dpscorewhen">Lowest point of this duty'+
-                       (d.effWorstLeg? ', at the landing in '+esc(String(d.effWorstLeg).split('→').pop().trim()) : '')+
-                     '</div></div>'; }
+                     '<div class="dpscorelab" style="color:'+eb.color+'">'+esc(eb.label)+'</div></div>'; }
             /* No alertness figure could be computed. Showing the inverted risk score in the
                same slot and the same colours would read as an alertness percentage. */
             return '<div class="dpscore"><div class="dpscoreval" style="color:#7f95b5">?</div>'+
                    '<div class="dpscorelab" style="color:#7f95b5">Not enough times</div></div>';
          })()+'</div><div class="dpbody">';
+
+      /* ---- the front of the card: four numbers and, at most, what is wrong -------------
+         Everything that used to sit here - the leg blocks, the two stat grids, the
+         paragraph explaining a clock shift - is still on the card, one tap down. The
+         difference is that you can now see three duties at once instead of scrolling
+         through one. */
+      var bclk=dpBodyClock(d, (i>0? duties[i-1] : null), bOff, F);
+      var restBefore=(i>0 && rests[i-1])? rests[i-1] : null;
+      var reqBefore =(i>0)? dpReqRest(duties[i-1], d, duties) : null;
+      var shortBefore=!!(restBefore && reqBefore && restBefore.min<reqBefore.min);
+      var nDh=d.legs.filter(function(l){ return l.dh; }).length;
+      var chips=[];
+      chips.push('<span class="dpchip">duty <b>'+dpHM(d.effDutyMin!=null?d.effDutyMin:d.dutyMin)+'</b></span>');
+      if(d.blockMin) chips.push('<span class="dpchip">block <b>'+dpHM(d.blockMin)+'</b></span>');
+      if(restBefore) chips.push('<span class="dpchip'+(shortBefore?' warn':'')+'">rest before <b>'+
+        dpRest(restBefore.min)+'</b></span>');
+      chips.push('<span class="dpchip">'+d.legs.length+' leg'+(d.legs.length>1?'s':'')+
+        (nDh? ' · <b>'+(nDh===d.legs.length?'DH':nDh+' DH')+'</b>':'')+'</span>');
+      h+='<div class="dpchips">'+chips.join('')+'</div>';
+
+      /* One line each, and only when there is something to say. The full wording of every
+         one of these is still reachable - the rotation note under "Why", the itinerary
+         clash inside the legs list. */
+      function flag(cls,txt){ h+='<div class="dpflag '+(cls||'')+'"><span class="fd"></span><span>'+txt+'</span></div>'; }
+      if(shortBefore) flag('', '<b>Rest below the minimum</b> — '+dpHM(reqBefore.min-restBefore.min)+
+        ' short of the '+dpHM(reqBefore.min)+' required');
+      if(bclk && bclk.swing!=null && bclk.overAsk>0.5)
+        flag('', '<b>'+(bclk.backward?'Backward rotation':'Clock pushed later')+'</b> — '+
+             bclk.overAsk.toFixed(1)+' h of clock change your body cannot absorb before this duty');
+      if(d.legs.some(function(l){ return l.cl; }))
+        flag('', '<b>Two itineraries here</b> — one did not happen. Open the legs below and strike it out.');
+      if(d.legs.some(function(l){ return l.fz; }))
+        flag('info', 'One leg had contradictory times in the calendar — treat its block as close, not exact.');
+      if(d.allGateway)
+        flag('info', '<b>Gateway duty period</b> — positioning to or from base, excluded from duty time and not scored.');
+
+      h+='<details class="dpsec"><summary>Times, legs and crew</summary><div class="dpsecb">';
+      h+='<table class="dpmini"><tr><td>Report</td><td>'+dpBoth(d.report,d.from)+'</td></tr>'+
+         '<tr><td>Release</td><td>'+dpBoth(d.release,d.to)+'</td></tr>'+
+         (d.flightMin!=null && d.flightMin!==d.blockMin?
+           '<tr><td>Flight time</td><td>'+dpHM(d.flightMin)+'</td></tr>':'')+
+         (d.effDutyMin!=null&&d.effDutyMin!==d.dutyMin?
+           '<tr><td>Duty excl. gateway</td><td>'+dpHM(d.effDutyMin)+'</td></tr>':'')+
+         (function(){
+            /* Crew complement, where a schedule report supplied it. The calendar never
+               carried crew at all, so this row simply does not appear for those legs. */
+            var c=null; d.legs.forEach(function(l){ if(l.crewOp!=null && c==null) c={op:l.crewOp,n:l.crewN}; });
+            return c? '<tr><td>Crew</td><td>'+c.op+' operating'+
+              (c.n>c.op? ' · '+(c.n-c.op)+' DH':'')+'</td></tr>' : '';
+         })()+
+         '</table>';
 
       d.legs.forEach(function(l){
         /* Ground and training activities are duty, so they belong on the timeline, but they
@@ -12208,67 +12339,44 @@
            (l.fz? '  ·  <span style="color:var(--gold)">Times reconstructed</span>':'')+'</div>'+
            '</div></div>';
       });
-      /* Two itineraries for the same afternoon. The app will not choose between them,
-         because choosing wrong either invents duty or deletes it. */
-      if(d.legs.some(function(l){ return l.cl; }))
-        h+='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">Two itineraries here — one of them did not happen.</b><br>'+
-           'Your calendar holds legs that overlap or that leave from somewhere you could not have reached in time. That is what a rebooked deadhead, or a departure that taxied back, looks like once the old entry is left behind. '+
-           'Both are counted until you say otherwise, which overstates this duty period. Tap the <b>&times;</b> on the leg that did not happen and everything recalculates.</div>';
-      if(d.legs.some(function(l){ return l.fz; }))
-        h+='<div class="dpcite" style="border-left-color:#5b93e8">The calendar entry for one leg here contradicted itself — the stated block times could not sit inside the duty they belong to. '+
-           'The duration was kept and hung off the report and debrief times, which the calendar had resolved properly. Treat those block times as close, not exact.</div>';
+      h+='</div></details>';                       // close "Times, legs and crew"
 
-      h+='<div class="dpstats">'+
-         '<div class="dpstat"><div class="k">Report</div><div class="v">'+dpBoth(d.report,d.from)+'</div></div>'+
-         '<div class="dpstat"><div class="k">Release</div><div class="v">'+dpBoth(d.release,d.to)+'</div></div>'+
-         '<div class="dpstat"><div class="k">Duty</div><div class="v">'+dpHM(d.dutyMin)+'</div></div>'+
-         '<div class="dpstat"><div class="k">Block</div><div class="v">'+dpHM(d.blockMin)+
-           (d.flightMin!=null && d.flightMin!==d.blockMin? '<div class="dpsub">'+dpHM(d.flightMin)+' flight time</div>':'')+'</div></div>'+
-         (d.effDutyMin!=null&&d.effDutyMin!==d.dutyMin? '<div class="dpstat"><div class="k">Duty excl. gateway</div><div class="v" style="color:var(--gold)">'+dpHM(d.effDutyMin)+'</div></div>':'')+
-         '</div>';
-
-      var bc=dpBodyClock(d, (i>0? duties[i-1] : null), bOff, F);
-      if(bc){
-        var dCol=DUTY.bandColor(DUTY.pct(Math.abs(bc.disp),0,6)).c;
-        var dVal=(Math.abs(bc.disp)<0.25)? 'In step'
-               : Math.abs(bc.disp).toFixed(1)+'h '+(bc.disp>0? 'behind':'ahead');
-        var dSub=(Math.abs(bc.disp)<0.25)? 'matches local time here'
-               : (bc.daysToClose!=null? bc.daysToClose.toFixed(1)+' days to close at '+
-                   (bc.disp>0? F.CFG.eastRatePerDay:F.CFG.westRatePerDay)+' h/day' : '');
-        var bh='<div class="dpstats">'+
-          '<div class="dpstat"><div class="k">Body clock</div><div class="v" style="color:'+dCol+'">'+dVal+'</div>'+
-            (dSub? '<div class="dpsub">'+esc(dSub)+'</div>':'')+'</div>';
-        if(bc.swing!=null){
-          var sCol=DUTY.bandColor(DUTY.pct(Math.max(0,bc.overAsk),0,3)).c;
-          var sVal=(Math.abs(bc.swing)<0.5)? 'Steady'
-                 : Math.abs(bc.swing).toFixed(1)+'h '+(bc.swing<0? 'earlier':'later');
-          bh+='<div class="dpstat"><div class="k">Report moved</div><div class="v" style="color:'+sCol+'">'+sVal+'</div>'+
-              '<div class="dpsub">'+(bc.gapDays<0.05? 'same day as the last release'
-                 : bc.absorbable.toFixed(1)+' h absorbable in '+bc.gapDays.toFixed(1)+' d off')+'</div></div>';
+      /* The body clock belongs with the other drivers, not on the front of the card. It
+         explains the score rather than summarising the duty, and it was pushing the two
+         numbers people actually open the card for below the fold. */
+      var bcRows='';
+      if(bclk){
+        var dCol=DUTY.bandColor(DUTY.pct(Math.abs(bclk.disp),0,6)).c;
+        var dVal=(Math.abs(bclk.disp)<0.25)? 'in step with local'
+               : Math.abs(bclk.disp).toFixed(1)+' h '+(bclk.disp>0? 'behind':'ahead')+
+                 (bclk.daysToClose!=null? ' · '+bclk.daysToClose.toFixed(1)+' d to close' : '');
+        bcRows+='<tr><td>Body clock</td><td style="color:'+dCol+'">'+esc(dVal)+'</td></tr>';
+        if(bclk.swing!=null){
+          var sCol=DUTY.bandColor(DUTY.pct(Math.max(0,bclk.overAsk),0,3)).c;
+          var sVal=(Math.abs(bclk.swing)<0.5)? 'steady'
+                 : Math.abs(bclk.swing).toFixed(1)+' h '+(bclk.swing<0? 'earlier':'later')+
+                   (bclk.gapDays>=0.05? ' · '+bclk.absorbable.toFixed(1)+' h absorbable' : '');
+          bcRows+='<tr><td>Report moved</td><td style="color:'+sCol+'">'+esc(sVal)+'</td></tr>';
         }
-        bh+='</div>';
-        h+=bh;
-        if(bc.swing!=null && bc.overAsk>0.5){
-          h+='<div class="dpcite" style="border-left-color:'+(bc.backward?'#ff9d4d':'#5b93e8')+'">'+
-             '<b style="color:'+(bc.backward?'#ff9d4d':'#8fb4ff')+'">'+
-             (bc.backward? 'Backward rotation — this asks your clock to move earlier faster than it can.'
-                         : 'This moves your clock later faster than it can follow.')+'</b><br>'+
-             'Report is '+Math.abs(bc.swing).toFixed(1)+' h '+(bc.swing<0?'earlier':'later')+
-             ' in body time than the last duty, with '+bc.gapDays.toFixed(1)+' day'+(bc.gapDays===1?'':'s')+
-             ' between them. At the model’s '+bc.rate+' h/day the clock can absorb about '+
-             bc.absorbable.toFixed(1)+' h of that, leaving roughly <b>'+bc.overAsk.toFixed(1)+' h unadjusted</b> '+
-             'going into this duty.'+
-             (bc.backward? ' Advancing is the slow direction — about '+F.CFG.eastRatePerDay+
-                ' h/day against '+F.CFG.westRatePerDay+' for delays — so an earlier report costs more than a later one of the same size, and the shortfall carries into the next duty rather than clearing.' : '')+
+      }
+      if(!d.allGateway){
+        var lowAt=(F && d.effWorst!=null && d.effWorstLeg)
+          ? ' — lowest at the landing in '+esc(String(d.effWorstLeg).split('\u2192').pop().trim()) : '';
+        h+='<details class="dpsec"><summary>'+
+           (d.effWorst!=null? 'Why '+d.effWorst+'%'+lowAt : 'Why this number')+
+           '</summary><div class="dpsecb">';
+        if(bcRows) h+='<table class="dpmini">'+bcRows+'</table>';
+        if(bclk && bclk.swing!=null && bclk.overAsk>0.5){
+          h+='<div class="dpcite" style="border-left-color:'+(bclk.backward?'#ff9d4d':'#5b93e8')+';margin-top:8px">'+
+             'Report is '+Math.abs(bclk.swing).toFixed(1)+' h '+(bclk.swing<0?'earlier':'later')+
+             ' in body time than the last duty, with '+bclk.gapDays.toFixed(1)+' day'+(bclk.gapDays===1?'':'s')+
+             ' between them. At the model\u2019s '+bclk.rate+' h/day the clock absorbs about '+
+             bclk.absorbable.toFixed(1)+' h of that, leaving roughly <b>'+bclk.overAsk.toFixed(1)+' h unadjusted</b>.'+
+             (bclk.backward? ' Advancing is the slow direction \u2014 '+F.CFG.eastRatePerDay+
+                ' h/day against '+F.CFG.westRatePerDay+' for delays \u2014 so an earlier report costs more than a later one of the same size, and the shortfall carries into the next duty rather than clearing.' : '')+
              '</div>';
         }
       }
-
-      if(d.allGateway){
-        h+='<div class="dpcite" style="border-left-color:#ffd166"><b style="color:var(--gold)">Gateway duty period — excluded from duty time.</b><br>'+
-           'Every leg here is marked as a gateway flight, so this period is positioning to or from base rather than working. It is shown for context and its risk is not scored.</div>';
-      }
-      if(!d.allGateway) h+='<details class="dpsec"><summary>Why this number</summary><div class="dpsecb">';
       h+='<div class="rf"'+(d.allGateway?' style="display:none"':'')+'>'+
          '<div class="rfhint">Every bar runs the same way — <b>shorter and greener is better</b>. Tap any row for what good looks like.</div>';
       facs.forEach(function(f){
@@ -12360,12 +12468,13 @@
           restFromBoth:(rp? dpBoth(rp.from, rp.station):null), restToBoth:(rp? dpBoth(rp.to, rp.station):null),
           hotel:(rp? dpHotel(rp.station, rp.from, rp.to):null)
         };
-        h+='<button class="whybtn" data-why="'+d.n+'">⚠︎ Why am I fatigued? — what to tell scheduling</button>'+
-           '<button class="rptbtn" data-rpt="'+d.n+'">📝 Fatigue report prep — the facts, in your hands</button>';
+        h+='<div class="dpbtnrow">'+
+           '<button class="whybtn" data-why="'+d.n+'">⚠︎ Why am I fatigued?</button>'+
+           '<button class="rptbtn" data-rpt="'+d.n+'">📝 Report prep</button></div>';
       }
       h+='</div></div>';
 
-      if(i<duties.length-1 && rests[i]){
+      if(dpView!=='table' && i<duties.length-1 && rests[i]){
         var r=rests[i], req=dpReqRest(d, duties[i+1], duties);
         var shortRest=r.min<req.min;
         var badRest=r.min<0;      // overlapping duty periods: report before the previous release
@@ -12407,6 +12516,8 @@
            '</div></div></div>';
       }
     });
+    if(dpView==='table') h+='</tbody></table></div>'+
+      '<div class="scopenote">Tap any row to open that duty period as a card.</div>';
     out.innerHTML=h;
 
     Array.prototype.forEach.call(out.querySelectorAll('[data-drop]'),function(bt){
@@ -12421,6 +12532,28 @@
     });
     Array.prototype.forEach.call(out.querySelectorAll('[data-gw]'),function(cb){
       cb.onchange=function(){ dpSetGw(cb.getAttribute('data-gw'), cb.checked); dpRender(); };
+    });
+    Array.prototype.forEach.call(out.querySelectorAll('[data-dpview]'),function(btn){
+      btn.onclick=function(){ dpView=btn.getAttribute('data-dpview');
+        try{ localStorage.setItem('ad_dpview', dpView); }catch(e){}
+        dpRender();
+        var a=$('#dpAnchor'); if(a) a.scrollIntoView({block:'start'});
+      };
+    });
+    /* A row in the table is a way INTO the duty, not a dead end: it switches back to cards
+       and opens the one you tapped, rather than making you find it again by eye. */
+    Array.prototype.forEach.call(out.querySelectorAll('tr[data-goto]'),function(tr){
+      tr.onclick=function(){
+        var n=tr.getAttribute('data-goto');
+        dpView='cards'; try{ localStorage.setItem('ad_dpview','cards'); }catch(e){}
+        dpRender();
+        var card=out.querySelector('[data-why="'+n+'"]');
+        var box=card? card.closest('.dpcard') : null;
+        if(box){
+          box.scrollIntoView({block:'start'});
+          Array.prototype.forEach.call(box.querySelectorAll('details.dpsec'),function(dt,ix){ if(ix===0) dt.open=true; });
+        }
+      };
     });
     Array.prototype.forEach.call(out.querySelectorAll('[data-scope]'),function(btn){
       btn.onclick=function(){ dpScope=btn.getAttribute('data-scope');
