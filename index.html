@@ -646,6 +646,27 @@
   /* Compressed duty card. One card answered one question in 191 words, 45 numbers and six
      stat tiles - measured, not guessed - so the front of the card now carries only what you
      scan for and everything else sits behind a disclosure. */
+  /* One duty at a time, swiped. Built on CSS scroll-snap rather than a JS gesture handler:
+     the browser does the momentum, the rubber-banding and the snap itself, and none of it
+     has to be re-implemented or debugged on a phone at altitude.
+
+     The container is left to grow to its tallest slide. An overflow-x container computes
+     overflow-y to auto whether you ask for it or not, so a fixed height here would trap
+     the vertical scroll INSIDE the deck and clip every long card. */
+  .dpdeck{display:flex;align-items:flex-start;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .dpdeck::-webkit-scrollbar{display:none}
+  .dpslide{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+  .dpnav{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .dpnavb{appearance:none;flex:0 0 auto;width:40px;height:40px;border-radius:12px;font-size:17px;
+    border:1px solid rgba(120,160,230,.35);background:rgba(120,160,230,.12);color:var(--ink)}
+  .dpnavb:disabled{opacity:.3}
+  .dpnavb:active{background:rgba(120,160,230,.26)}
+  .dpnavlab{flex:1;min-width:0;text-align:center;font-size:12.5px;color:var(--dim);line-height:1.3}
+  .dpnavlab b{display:block;color:var(--ink);font-size:14px;font-weight:800}
+  .dpnavnow{appearance:none;flex:0 0 auto;padding:0 11px;height:40px;border-radius:12px;font-size:12px;font-weight:700;
+    border:1px solid rgba(120,160,230,.35);background:rgba(120,160,230,.12);color:var(--ink)}
+  .dpnavnow:disabled{opacity:.3}
   .dptblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--edge);
     border-radius:12px;background:var(--glass);margin-top:10px}
   .dptbl{width:100%;border-collapse:collapse;font-size:12.5px}
@@ -1052,6 +1073,8 @@
   .dpsec.warn{border-color:rgba(255,157,77,.4)}
   .dpflag{font-size:9.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;padding:1px 6px;border-radius:5px;
     background:rgba(255,107,107,.2);border:1px solid rgba(255,107,107,.5);color:#ffb3b3}
+  /* No overflow-x here on purpose: everything inside wraps now, and a nested horizontal
+     scroller sitting inside the swipe deck would swallow the swipe. */
   .dpsecb{padding:0 11px 10px;min-width:0}
   /* A summary is a flex row, and its text refused to wrap - so "Why 82% - lowest at the
      landing in ICN" rode straight off the right edge of a phone. */
@@ -7390,7 +7413,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v18.6 · 2026-09-05';
+  var BUILD='v18.7 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -12245,6 +12268,14 @@
          (legs.some(function(l){ return l.gnd; })
            ? 'Sims, ground school, briefings and reserve show their name instead of a flight number; they count as duty and carry no block time. ' : '')+
          'The <b>&times;</b> sets a leg aside if it never happened.</div>';
+    if(dpView==='cards'){
+      h+='<div class="dpnav">'+
+         '<button class="dpnavb" id="dpPrev" aria-label="Previous duty period">‹</button>'+
+         '<div class="dpnavlab" id="dpNavLab"></div>'+
+         '<button class="dpnavnow" id="dpNow">Now</button>'+
+         '<button class="dpnavb" id="dpNext" aria-label="Next duty period">›</button>'+
+         '</div><div class="dpdeck" id="dpDeck">';
+    }
     if(dpView==='table'){
       h+='<div class="dptblwrap"><table class="dptbl"><thead><tr>'+
          /* The score comes third, not last. At phone width the far columns scroll off, and
@@ -12313,6 +12344,7 @@
         return;
       }
 
+      if(dpView==='cards') h+='<div class="dpslide">';
       h+='<div class="dpcard'+(isNow?' dpnow':(isNext?' dpnext':''))+'"'+(d.allGateway?' style="opacity:.62"':'')+
          (isNow||isNext? ' id="dpAnchor"':'')+'><div class="dphead">'+
          (isNow? '<div class="nowrow"><span class="nowtag">In progress now</span></div>'
@@ -12582,10 +12614,68 @@
 
            '</div></div></div>';
       }
+      /* The rest that FOLLOWS a duty travels on the same slide as that duty - it is the
+         layover you are about to be in, and splitting them would make the swipe alternate
+         between a duty and a gap. */
+      if(dpView==='cards') h+='</div>';
     });
+    if(dpView==='cards') h+='</div>'+
+      '<div class="scopenote">Swipe, or use ‹ › — one duty period at a time. <b>Table</b> shows the whole span at once.</div>';
     if(dpView==='table') h+='</tbody></table></div>'+
       '<div class="scopenote">Tap any row to open that duty period as a card.</div>';
     out.innerHTML=h;
+
+    /* ---- the deck ------------------------------------------------------------------
+       Everything below is navigation only: which slide is showing, and how to get to
+       another one. The scrolling itself is the browser's. */
+    (function(){
+      var deck=out.querySelector('#dpDeck'); if(!deck) return;
+      var slides=Array.prototype.slice.call(deck.children);
+      if(!slides.length) return;
+      var lab=out.querySelector('#dpNavLab'), pv=out.querySelector('#dpPrev'),
+          nx=out.querySelector('#dpNext'), nw=out.querySelector('#dpNow');
+      /* The slide holding the duty you are in, or the next one - the same anchor the list
+         used to scroll to. */
+      var anchorEl=out.querySelector('#dpAnchor');
+      var homeIdx=0;
+      slides.forEach(function(sl,ix){ if(anchorEl && sl.contains(anchorEl)) homeIdx=ix; });
+      function current(){
+        var x=deck.scrollLeft, best=0, bd=1e9;
+        slides.forEach(function(sl,ix){ var d=Math.abs(sl.offsetLeft-deck.offsetLeft-x);
+          if(d<bd){ bd=d; best=ix; } });
+        return best;
+      }
+      function paint(){
+        var i=current(), card=slides[i].querySelector('.dpcard');
+        var head=card? card.querySelector('.dpn') : null;
+        var title=head? (head.firstChild&&head.firstChild.nodeValue||'').trim() : '';
+        /* The card's subtitle is "ICN → ANC · day 7". The day-of-pattern is already on the
+           card an inch below, and next to "7 of 10" it read as two counters disagreeing. */
+        var sub=head? String((head.querySelector('.dpdate')||{}).textContent||'').split(' · ')[0] : '';
+        lab.innerHTML='<b>'+esc(title||('Duty '+(i+1)))+'</b>'+
+          esc(sub)+(sub?' · ':'')+(i+1)+' of '+slides.length;
+        if(pv) pv.disabled=(i<=0);
+        if(nx) nx.disabled=(i>=slides.length-1);
+        if(nw) nw.disabled=(i===homeIdx);
+      }
+      function go(i,smooth){
+        i=Math.max(0,Math.min(slides.length-1,i));
+        deck.scrollTo({left:slides[i].offsetLeft-deck.offsetLeft, behavior:smooth===false?'auto':'smooth'});
+      }
+      if(pv) pv.onclick=function(){ go(current()-1); };
+      if(nx) nx.onclick=function(){ go(current()+1); };
+      if(nw) nw.onclick=function(){ go(homeIdx); };
+      var t=null;
+      deck.addEventListener('scroll',function(){ if(t) clearTimeout(t); t=setTimeout(paint,90); },{passive:true});
+      deck.setAttribute('tabindex','0');
+      deck.addEventListener('keydown',function(e){
+        if(e.key==='ArrowLeft'){ e.preventDefault(); go(current()-1); }
+        else if(e.key==='ArrowRight'){ e.preventDefault(); go(current()+1); }
+      });
+      /* Land on today without animating there from slide one. */
+      go(homeIdx,false); paint();
+      setTimeout(function(){ go(homeIdx,false); paint(); },60);
+    })();
 
     Array.prototype.forEach.call(out.querySelectorAll('[data-drop]'),function(bt){
       bt.onclick=function(){ dpSetDrop(bt.getAttribute('data-drop'), true); dpRender(); impSpan(); };
