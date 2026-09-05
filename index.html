@@ -593,6 +593,9 @@
   .ovdebts{font-size:10px;color:var(--faint);margin-top:2px}
   .ovcurve{display:flex;align-items:flex-start;gap:2px}
   .ovscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;min-width:0}
+  .ovdup{margin:10px 0 4px;padding:10px 12px;border:1px solid rgba(255,157,77,.5);border-radius:12px;
+         background:rgba(60,34,10,.5);font-size:12.5px;line-height:1.5;color:#ffd9b8}
+  .ovdup b{color:#ffd166}
   .dpvit{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 0 2px;border-bottom:1px solid var(--edge);margin-bottom:9px;padding-bottom:11px}
   .dpvitb{display:flex;align-items:center;gap:9px}
   .dpbatt{flex:none}
@@ -6846,25 +6849,51 @@
    hours while looking perfectly plausible. */
 (function(root){
   'use strict';
-  var TIME =/^(A?)(\d{1,2}):(\d{2})(⁺¹|\+1)?$/;
+  /* A day marker after the clock time. eCrew prints ⁺¹ (or +1) for "next day" and ⁻¹ (or -1)
+     for "the day before the date on this row" - which happens on a duty that reports late on
+     one day and is filed under the next, most often on a date-line pairing out of Asia.
+
+     Only the plus form was handled until v20.8, and the failure was SILENT: a time carrying
+     a minus marker did not match this pattern at all, so mkTime returned null, the token was
+     skipped, and whatever was read for that field came from somewhere else on the row. A
+     debrief pushed a day late that way makes the following rest read TWENTY-FOUR HOURS SHORT
+     while looking entirely plausible - a 27-hour Anchorage layover shown as three and a half.
+     Both signs are read now, and more than one day either way, because a marker exists to say
+     the clock has wrapped and there is no reason it can only wrap once. */
+  var TIME =/^(A?)(\d{1,2}):(\d{2})\s*([⁺⁻+-]\s*[¹²³123])?$/;
+  var SUP  ={'¹':1,'²':2,'³':3,'1':1,'2':2,'3':3};
+  /* Deliberately loose: anything a human would read as a clock time. Used only to tell
+     "this column held a time I could not parse" apart from "this column was empty", so a
+     notation this parser has not met announces itself instead of vanishing. */
+  var TIMEISH=/^A?\d{1,2}:\d{2}/;
   var DATE =/^(\d{2})\/(\d{2})\/(\d{4})\s+([A-Z][a-z]{2})$/;
   var ROUTE=/^(\*?)([A-Z0-9]{3})-([A-Z0-9]{3})$/;
   var CREW =/^(CA|FO|FE|SO|FA)\s*-\s*(DH\s*-\s*)?(\d{2,8})\s*-\s*(.+)$/;
   var HDR  =['Date','Duties','Details','Report times','Actual times/Delays','Debrief times','Indicators','Crew'];
 
   function mkTime(s){ var m=TIME.exec(String(s||'').trim());
-    return m? {actual:m[1]==='A', h:+m[2], m:+m[3], next:!!m[4]} : null; }
+    if(!m) return null;
+    var day=0;
+    if(m[4]){
+      var mk=m[4].replace(/\s+/g,'');
+      day=(SUP[mk.slice(1)]||1) * ((mk.charAt(0)==='⁻'||mk.charAt(0)==='-')? -1 : 1);
+    }
+    return {actual:m[1]==='A', h:+m[2], m:+m[3], day:day, next:day>0}; }
   function splitActual(s){
     s=String(s||'').trim(); if(!s) return null;
     var delay=null, dm=s.match(/\/(\d{1,2}:\d{2})\s*$/);
     if(dm){ delay=dm[1]; s=s.slice(0,dm.index).trim(); }
-    var p=s.split(/\s*-\s*/);
-    if(p.length!==2) return null;
+    /* The separator is a hyphen and so is a minus-one day marker, so a naive split on "-"
+       tears "23:50-1 - 07:20" into three pieces. Split on the hyphen that has spaces round
+       it, which is the one between the two times. */
+    var p=s.split(/\s+-\s+/);
+    if(p.length!==2) p=s.split(/\s*-\s*(?=A?\d{1,2}:)/);
+    if(p.length!==2) return {bad:s};
     var a=mkTime(p[0]), b=mkTime(p[1]);
-    return (a&&b)? {out:a, in:b, delay:delay} : null;
+    return (a&&b)? {out:a, in:b, delay:delay} : {bad:s};
   }
   function hm(s){ var m=/^(\d{1,4}):(\d{2})$/.exec(String(s||'')); return m? (+m[1])*60+(+m[2]) : null; }
-  function utc(y,mo,d,t,carry){ return t? Date.UTC(y,mo-1,d+(t.next?1:0)+(carry||0),t.h,t.m) : null; }
+  function utc(y,mo,d,t,carry){ return t? Date.UTC(y,mo-1,d+(t.day||0)+(carry||0),t.h,t.m) : null; }
   function near(x,c){ return c!=null && Math.abs(x-c)<14; }
 
   function parse(pages){
@@ -6948,8 +6977,16 @@
 
         if(near(it.x,col.Duties))      { row(it.y).duty=s; return; }
         if(near(it.x,col.Details))     { row(it.y).det=s;  return; }
-        if(near(it.x,col['Report times']))  { cur.report=mkTime(s)||cur.report;   return; }
-        if(near(it.x,col['Debrief times'])) { cur.debrief=mkTime(s)||cur.debrief; return; }
+        /* An unreadable time is REPORTED, not skipped. Skipping is how a debrief carrying a
+           day marker this parser did not know silently became a same-day debrief, and a
+           27-hour layover was displayed as three and a half. A wrong number that looks
+           reasonable is worse than a missing one, so the file says so and the app can too. */
+        if(near(it.x,col['Report times']))  { var tr=mkTime(s);
+          if(!tr && TIMEISH.test(s)) R.warnings.push('Could not read a report time: "'+s+'"');
+          cur.report=tr||cur.report;   return; }
+        if(near(it.x,col['Debrief times'])) { var td=mkTime(s);
+          if(!td && TIMEISH.test(s)) R.warnings.push('Could not read a debrief time: "'+s+'"');
+          cur.debrief=td||cur.debrief; return; }
         if(near(it.x,col['Actual times/Delays'])) { row(it.y).act=s; return; }
         if(near(it.x,col.Indicators))  { cur.ind=(cur.ind? cur.ind+' ':'')+s; return; }
         if(near(it.x,col.Crew)){
@@ -6971,7 +7008,9 @@
         if(rr && r.duty){
           var ac=r.duty.match(/^(\S+)\s*\[([^\]]+)\]$/);
           d.legs.push({flight:ac?ac[1]:r.duty, ac:ac?ac[2]:null, comm:rr[1]==='*',
-                       from:rr[2], to:rr[3], act:splitActual(r.act)});
+                       from:rr[2], to:rr[3], act:(function(){ var A=splitActual(r.act);
+                         if(A&&A.bad){ R.warnings.push('Could not read the block times for '+rr[2]+'-'+rr[3]+': "'+A.bad+'"'); return null; }
+                         return A; })()});
         } else if(r.duty && !rr){
           d.code=r.duty; d.label=r.det||null;          // X, GDO, $, NOGO with no route ...
         }
@@ -7229,7 +7268,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v20.6 · 2026-09-05';
+  var BUILD='v20.8 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -10440,6 +10479,20 @@
     if(!res.tzOk) throw new Error('this export is in <b>'+esc(res.tz||'an unknown time base')+
       '</b>. Re-run it with <b>All Times In UTC</b> — mixed local times cannot be read safely');
 
+    /* A time the parser could not read is now SAID OUT LOUD. It used to be dropped, and the
+       app then fell back to the block-out time on the printed date - which can be a whole day
+       from the truth and shows up as a rest that is 24 hours short while looking ordinary.
+       If the report ever uses a notation this parser has not met, that has to arrive as a
+       question rather than as a number. */
+    if((res.warnings||[]).length){
+      var wl=res.warnings.slice(0,4).map(function(w){ return '<li>'+esc(w)+'</li>'; }).join('');
+      impSay('<b class="impwarn">Some times in this report could not be read.</b> They have been left '+
+             'blank rather than guessed, so any duty involving them may be missing a report or debrief time. '+
+             '<ul style="margin:6px 0 0 16px;padding:0">'+wl+
+             (res.warnings.length>4? '<li>and '+(res.warnings.length-4)+' more</li>':'')+'</ul>'+
+             'Please send this report to CargoAeroData@gmail.com so the notation can be added.','');
+    }
+
     var me=(res.crew&&res.crew.id)||null;
     var store=[], offs=[], nOff=0;
     res.duties.forEach(function(d){
@@ -12791,6 +12844,13 @@
        width is 0, and a scroller "positioned at now" quietly stays on the oldest day. So
        this is a function, it refuses to run at zero width, and the tab handler calls it
        again once the view is actually on screen. */
+    var _pb=out.querySelector('#ovPreferRpt');
+    if(_pb) _pb.onclick=function(){
+      try{ var n=impReportWins(true);
+        alert(n+' duplicate leg'+(n===1?'':'s')+' set aside. The schedule report is now the record for those duties. Nothing was deleted — "Bring them back" in Schedule import undoes it.');
+        impSpan(); dpRender();
+      }catch(e){}
+    };
     window.dpOvLand=function(){
       try{
         var sc=document.querySelector('#dpOut .ovscroll');
@@ -13366,6 +13426,20 @@
     var cum=DUTY.cumulative? DUTY.cumulative(allDuties, anchorMs, dpBaseOff(anchorMs), dpRegime, dpCrew) : null;
     var a=dpCurveSVG(duties, FATIGUE, true), c=dpChartSleep(duties);
     var h='<div class="ovcard"><div class="ovtitle">Trip overview</div>';
+    /* The duplicate warning used to live only inside the Schedule import fold. In v19.8 that
+       fold was collapsed by default and moved to the bottom of the tab, which meant the one
+       notice that explains a wrong REST NUMBER was three screens below the wrong rest number.
+
+       A calendar and a schedule report describing the same trip produce two copies of each
+       leg. The report states report and debrief times; a calendar can only infer them. Two
+       copies an hour or two apart become two duty periods with a short gap between them, and
+       that gap is then displayed as your rest. So the warning now appears here, next to the
+       figures it invalidates, and carries the same one-tap fix. */
+    var dupN=0; try{ dupN=impReportWins(false); }catch(e){}
+    if(dupN) h+='<div class="ovdup">⚠ <b>'+dupN+' leg'+(dupN>1?'s are':' is')+' in here twice</b> — once from a calendar and once from a schedule report. '+
+      'Two copies of the same flight become two duty periods with a gap between them, and that gap is shown as <b>rest</b>. '+
+      'Any rest figure that looks far too short is probably this. The report is the better record: it <i>states</i> report and debrief times where a calendar only infers them. '+
+      '<button id="ovPreferRpt" class="impclear">Set the calendar copies aside</button> Nothing is deleted.</div>';
     /* Before the charts, because it is the only line here that is about the next few hours
        rather than the shape of a fortnight. */
     var ttd=null; try{ ttd=dpTimeToDrop(allDuties, FATIGUE); }catch(e){}
