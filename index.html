@@ -958,9 +958,6 @@
   .suNote{font-size:12px;color:var(--faint);line-height:1.65;margin-top:10px}
   .suCode{font-family:var(--mono);font-size:11px;line-height:1.6;white-space:pre-wrap;background:rgba(4,10,22,.75);
     border:1px solid rgba(120,160,220,.25);border-radius:9px;padding:10px;margin-top:7px;color:#bcd6ff;overflow-x:auto}
-  .pasteta{width:100%;box-sizing:border-box;min-height:150px;margin-top:10px;padding:10px;border-radius:10px;
-    background:rgba(4,10,22,.8);border:1px solid rgba(120,160,220,.4);color:var(--ink);
-    font-family:var(--mono);font-size:12px;line-height:1.45;resize:vertical}
   .impspan{font-size:11px;color:var(--faint);margin-top:7px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .impspan b{color:var(--dim)}
   .impdup{flex:0 0 100%;width:100%;margin-top:6px;font-size:10.5px;line-height:1.5;color:#ffcf9d;
@@ -1858,11 +1855,10 @@
       <div class="impcard">
         <button id="impBtn" class="impbtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-          Upload schedule (schedule report PDF, calendar, CSV or XLS)
+          Upload schedule — the eCrew report PDF, or a calendar file
         </button>
-        <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,.pdf,text/csv,text/calendar,application/vnd.ms-excel,application/zip,application/pdf" multiple hidden>
+        <input type="file" id="impFile" accept=".pdf,.ics,.zip,text/calendar,application/zip,application/pdf" multiple hidden>
         <button id="impLinkBtn" class="impbtn4">🔗 Link my calendar — set up once, then it updates itself</button>
-        <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
         <button id="impSetupBtn" class="impbtn3">🧭 First time? Step-by-step setup for your phone</button>
         <button id="impRawBtn" class="impbtn2">🔍 See and correct the schedule data</button>
         <div id="impStat" class="impstat"></div>
@@ -1892,23 +1888,6 @@
           <p style="color:var(--faint);font-size:11.5px">Export the month you are in and the one before it — fatigue is
              built on the days behind you, so a single month on its own starts cold. A pairing that crosses a month end
              is listed complete in the earlier report, so nothing falls down the gap.</p>
-        </details>
-        <details class="imphow">
-          <summary>Where do I get this file? (step by step)</summary>
-          <ol>
-            <li>On a computer or phone browser, go to <b>aims.atlasair.com/eCrew</b> and log in with your normal eCrew credentials.</li>
-            <li>Open <b>My Schedule</b>.</li>
-            <li>Set the <b>date range</b> you want — one month at a time is easiest.</li>
-            <li>Choose <b>UTC</b> for the times. Local Station also works, but UTC is unambiguous — see the note below.</li>
-            <li>Click <b>PRINT</b>.</li>
-            <li>Save the file as <b>CSV</b> or <b>XLS</b> — both are read. On a phone eCrew usually only offers <b>XLS</b>, and that is fine: the XLS is actually the <i>better</i> file (see below).</li>
-            <li>Come back here and tap <b>Upload schedule</b> above. You can select <b>several files at once</b>, or add them one at a time.</li>
-          </ol>
-          <p><b>Covering more than one month:</b> every upload <b>adds to</b> what is already stored — nothing is replaced. Export each month, upload them all, and the fatigue model runs continuously across the whole span, carrying your sleep debt and body clock from one month into the next. Re-uploading a month you already have just refreshes it rather than duplicating it. The stored span is shown under the button, with a Clear control if you want to start over.</p>
-          <p><b>Why XLS is better:</b> the CSV export is written in a character set that cannot hold the superscript <b>+1</b> / <b>−1</b> day markers, so both come out as the same character and a westbound date-line arrival is indistinguishable from an eastbound one. The XLS keeps the sign. The app resolves the CSV case by picking the reading that yields a believable block time, but the XLS never has to guess.</p>
-          <p><b>UTC or Local Station?</b> Both are supported — the export writes which one it used on line 2 of the file, so the app reads it and never has to guess. <b>UTC is recommended:</b> on duties that cross midnight or the date line, the Local export dates the row in a way that can be ambiguous, and UTC removes that entirely.</p>
-          <p><b>What gets read:</b> report and debrief times, block out/in, stations, flight numbers, aircraft, deadhead legs, and OFF/GDO days. Multi-leg duty days are split into separate legs automatically.</p>
-          <p><b>Privacy:</b> the file is read <b>on your device only</b> and never uploaded anywhere. Note the export also contains your crewmates' names and employee numbers — that stays on your phone, but bear it in mind before sharing the file itself.</p>
         </details>
       </div>
       <div class="secthead">
@@ -2308,14 +2287,6 @@
   </div>
   <div id="suBody"></div>
   <button class="tipC" id="setupC">Close</button>
-</div></div>
-<div class="tipModal" id="pasteModal"><div class="tipBox">
-  <div class="whyT">Paste a schedule</div>
-  <div class="whySub" style="color:var(--dim)">Anything text-based: a CSV opened and copied, or a calendar (.ics) feed. Saves the download-and-upload round trip.</div>
-  <textarea id="pasteTA" class="pasteta" placeholder="Paste here…" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
-  <div id="pasteMsg" class="impstat"></div>
-  <button class="whyCopy" id="pasteGo">Import what I pasted</button>
-  <button class="tipC" id="pasteC">Close</button>
 </div></div>
 <div class="tipModal" id="fprepModal"><div class="tipBox">
   <div class="whyT">Fatigue report prep</div>
@@ -4057,241 +4028,6 @@
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
-/* CargoDecode — legacy .xls (BIFF8 inside an OLE2/CFB container) reader, offline and
-   dependency-free. AIMS eCrew on mobile only offers XLS, and that file is a real
-   Compound Document, not an HTML table with an .xls name, so it has to be decoded
-   properly: CFB sector chains, then BIFF records, then the shared-string table.
-
-   Returns a plain grid of strings: grid[row][col]. Empty cells are ''. */
-(function(root){
-  'use strict';
-
-  /* A spreadsheet from a crew portal is a few hundred rows and a few dozen columns. These
-     are not format limits, they are sanity limits: they exist so a truncated or corrupt
-     download cannot turn a single bad cell reference into a multi-gigabyte allocation on a
-     phone. Anything beyond them is discarded rather than trusted. */
-  var MAXROW=20000, MAXCOL=255, MAXCELLS=1500000;
-
-  /* ---------- OLE2 / Compound File Binary container ---------- */
-  function readCFB(buf){
-    var dv=new DataView(buf), u8=new Uint8Array(buf);
-    var SIG=[0xD0,0xCF,0x11,0xE0,0xA1,0xB1,0x1A,0xE1];
-    for(var i=0;i<8;i++) if(u8[i]!==SIG[i]) throw new Error('Not a compound document (.xls) file.');
-    var ssz=1<<dv.getUint16(30,true), msz=1<<dv.getUint16(32,true);
-    var dirStart=dv.getUint32(48,true), miniCut=dv.getUint32(56,true),
-        miniFatStart=dv.getUint32(60,true), difatStart=dv.getUint32(68,true);
-    var FREE=0xFFFFFFFA;
-    function off(n){ return (n+1)*ssz; }
-
-    var fatSecs=[], v;
-    for(i=0;i<109;i++){ v=dv.getUint32(76+i*4,true); if(v<FREE) fatSecs.push(v); }
-    var ds=difatStart, per=(ssz/4)-1, guard=0;
-    while(ds<FREE && guard++<65536){
-      var b=off(ds);
-      for(i=0;i<per;i++){ v=dv.getUint32(b+i*4,true); if(v<FREE) fatSecs.push(v); }
-      ds=dv.getUint32(b+per*4,true);
-    }
-    var fat=new Uint32Array(fatSecs.length*(ssz/4)), k=0;
-    for(var f=0;f<fatSecs.length;f++){ var fb=off(fatSecs[f]);
-      for(i=0;i<ssz/4;i++) fat[k++]=dv.getUint32(fb+i*4,true); }
-
-    function readChain(start,size){
-      var out=[], s=start, g=0, total=0;
-      while(s<FREE && g++<1048576){ out.push(s); total+=ssz; s=fat[s]; if(s===undefined) break; }
-      var res=new Uint8Array(total), o=0;
-      for(i=0;i<out.length;i++){ res.set(u8.subarray(off(out[i]), off(out[i])+ssz), o); o+=ssz; }
-      return size!=null&&size<res.length? res.subarray(0,size) : res;
-    }
-
-    var dirB=readChain(dirStart,null);
-    var ddv=new DataView(dirB.buffer, dirB.byteOffset, dirB.byteLength);
-    var entries=[], rootE=null;
-    for(var p=0;p+128<=dirB.length;p+=128){
-      var nlen=ddv.getUint16(p+64,true);
-      if(nlen<2){ entries.push(null); continue; }
-      var nm='';
-      for(i=0;i<nlen-2;i+=2){ var ch=ddv.getUint16(p+i,true); if(ch) nm+=String.fromCharCode(ch); }
-      var e={name:nm, type:dirB[p+66], start:ddv.getUint32(p+116,true), size:ddv.getUint32(p+120,true)};
-      entries.push(e); if(e.type===5) rootE=e;
-    }
-
-    var miniFat=null, miniData=null;
-    function readStream(e){
-      if(e.size>=miniCut || e===rootE) return readChain(e.start, e.size);
-      if(!miniFat){
-        var mb=readChain(miniFatStart,null);
-        var mdv=new DataView(mb.buffer,mb.byteOffset,mb.byteLength);
-        miniFat=new Uint32Array(mb.length>>2);
-        for(i=0;i<miniFat.length;i++) miniFat[i]=mdv.getUint32(i*4,true);
-        miniData=(rootE? readChain(rootE.start, rootE.size) : new Uint8Array(0));
-      }
-      var out=new Uint8Array(e.size), o=0, s=e.start, g=0;
-      while(s<FREE && o<e.size && g++<1048576){
-        var n=Math.min(msz, e.size-o);
-        out.set(miniData.subarray(s*msz, s*msz+n), o); o+=n; s=miniFat[s];
-      }
-      return out;
-    }
-    return { find:function(nm){ for(var j=0;j<entries.length;j++) if(entries[j]&&entries[j].name===nm) return entries[j]; return null; },
-             read:readStream };
-  }
-
-  /* ---------- BIFF8 ---------- */
-  function rkToNum(rk){
-    var n;
-    if(rk & 2) n = rk>>2;                                  // integer, already signed by >>
-    else {
-      var b=new ArrayBuffer(8), d=new DataView(b);
-      d.setUint32(0, rk & 0xFFFFFFFC); d.setUint32(4,0);   // high word carries sign/exponent/mantissa
-      n=d.getFloat64(0);                                   // big-endian read: high word first
-    }
-    return (rk & 1)? n/100 : n;
-  }
-  function numStr(n){
-    if(!isFinite(n)) return '';
-    var s=(Math.round(n*1e10)/1e10).toString();
-    return s;
-  }
-
-  function readBIFF(bytes){
-    var dv=new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    var recs=[], p=0;
-    while(p+4<=bytes.length){
-      var t=dv.getUint16(p,true), len=dv.getUint16(p+2,true);
-      if(p+4+len>bytes.length) break;
-      recs.push({t:t, p:p+4, len:len});
-      p+=4+len;
-    }
-
-    /* Shared string table. Strings may be split across CONTINUE records, and when the
-       split falls inside the characters the CONTINUE restarts with a fresh flags byte
-       saying whether the remainder is 8- or 16-bit. Getting that wrong shreds the text. */
-    var sst=[];
-    for(var i=0;i<recs.length;i++){
-      if(recs[i].t!==0x00FC) continue;
-      var chunks=[recs[i]];
-      for(var j=i+1;j<recs.length && recs[j].t===0x003C;j++) chunks.push(recs[j]);
-      var ci=0, off=8, count=dv.getUint32(recs[i].p+4,true);
-      function avail(){ return chunks[ci].len-off; }
-      function roll(){ while(ci<chunks.length && off>=chunks[ci].len){ ci++; off=0; } return ci<chunks.length; }
-      function u8r(){ if(!roll()) return 0; return dv.getUint8(chunks[ci].p+off++); }
-      /* roll() only guarantees ONE byte remains, so a 2- or 4-byte field straddling the
-         SST/CONTINUE boundary was read across it: the wrong bytes, the wrong byte count
-         consumed, and every subsequent string in the table shifted by the difference. No
-         exception - the import "succeeds". The SST holds every date, flight number, station
-         pair and clock time in the sheet, so the whole roster arrives as plausible-looking
-         garbage, which is the worst failure mode available. Read wide fields byte by byte
-         so a boundary is crossed correctly rather than ignored. */
-      function u16r(){ var a=u8r(), b=u8r(); return a|(b<<8); }
-      function u32r(){ var a=u8r(), b=u8r(), c=u8r(), d=u8r(); return (a|(b<<8)|(c<<16))+(d*16777216); }
-      function skip(n){ while(n>0 && roll()){ var take=Math.min(n, avail()); off+=take; n-=take; } }
-      for(var s=0; s<count && roll(); s++){
-        var cch=u16r(), flags=u8r();
-        var high=flags&1, ext=flags&4, rich=flags&8;
-        var cRun=rich? u16r():0, cbExt=ext? u32r():0;
-        var str='', got=0;
-        while(got<cch){
-          if(avail()<=0){
-            ci++; off=0;
-            if(ci>=chunks.length) break;
-            high=dv.getUint8(chunks[ci].p+off)&1; off++;    // fresh flags byte on the continuation
-          }
-          var room=avail(), n=high? Math.min(cch-got, room>>1) : Math.min(cch-got, room);
-          if(n<=0){ if(high && room===1){ off++; continue; } break; }
-          var base=chunks[ci].p+off;
-          for(var x=0;x<n;x++) str+=String.fromCharCode(high? dv.getUint16(base+x*2,true) : dv.getUint8(base+x));
-          off+=high? n*2 : n; got+=n;
-        }
-        if(cRun) skip(cRun*4);
-        if(cbExt) skip(cbExt);
-        sst.push(str);
-      }
-      break;
-    }
-
-    /* Cells from the first worksheet substream. */
-    var cells={}, maxR=-1, maxC=-1, inSheet=false, seenSheet=false;
-    function put(r,c,v){
-      if(v==null||v==='') return;
-      (cells[r]||(cells[r]={}))[c]=v;
-      if(r>maxR) maxR=r; if(c>maxC) maxC=c;
-    }
-    function inlineStr(pos){
-      if(pos+3>bytes.length) return '';
-      var cch=dv.getUint16(pos,true), fl=dv.getUint8(pos+2), h=fl&1, out='';
-      /* cch is trusted up to 65535; clamp it to what is actually there. */
-      var room=Math.floor((bytes.length-(pos+3))/(h?2:1));
-      if(cch>room) cch=room;
-      for(var x=0;x<cch;x++) out+=String.fromCharCode(h? dv.getUint16(pos+3+x*2,true) : dv.getUint8(pos+3+x));
-      return out;
-    }
-    for(i=0;i<recs.length;i++){
-      var R=recs[i];
-      if(R.t===0x0809){                       // BOF — 0x0010 marks a worksheet substream
-        var dt=R.len>=4? dv.getUint16(R.p+2,true):0;
-        if(dt===0x0010){ if(seenSheet){ break; } inSheet=true; seenSheet=true; }
-        else inSheet=false;
-        continue;
-      }
-      if(R.t===0x000A){ if(inSheet) break; continue; }   // EOF of the sheet
-      if(!inSheet) continue;
-      /* Read past the end of the DataView and the whole import dies with a RangeError that
-         surfaces as "Could not read ..." and no diagnosis. The record loop only guarantees
-         the record HEADER is in bounds, not that the record has four bytes of body. */
-      if(R.len<4 || R.p+4>bytes.length) continue;
-      var r0=dv.getUint16(R.p,true), c0=dv.getUint16(R.p+2,true);
-      /* Row and column arrive as raw uint16 and are trusted all the way to a materialised
-         grid below. One NUMBER record claiming row 65535 built a 65536-row array from a
-         single real cell; with a corrupt column index too that is 65536 x 65536 slots. An
-         out-of-memory kill is not a catchable exception, so the caller's try/catch does not
-         save the tab - the bound has to be here. A crew roster export is nowhere near
-         these. */
-      if(r0>MAXROW || c0>MAXCOL) continue;
-      if(R.t===0x00FD)      put(r0,c0, sst[dv.getUint32(R.p+6,true)]);      // LABELSST
-      else if(R.t===0x0204) put(r0,c0, inlineStr(R.p+6));                   // LABEL
-      else if(R.t===0x0203) put(r0,c0, numStr(dv.getFloat64(R.p+6,true)));  // NUMBER
-      else if(R.t===0x027E) put(r0,c0, numStr(rkToNum(dv.getUint32(R.p+6,true))));  // RK
-      else if(R.t===0x00BD){                                               // MULRK
-        var n=(R.len-6)/6;
-        for(var m=0;m<n;m++) put(r0, c0+m, numStr(rkToNum(dv.getUint32(R.p+4+m*6+2,true))));
-      }
-      else if(R.t===0x0006){                                               // FORMULA w/ string result
-        var isStr=dv.getUint16(R.p+12,true)===0xFFFF && dv.getUint8(R.p+6)===0;
-        if(isStr && recs[i+1] && recs[i+1].t===0x0207) put(r0,c0, inlineStr(recs[i+1].p));
-        else if(!isStr) put(r0,c0, numStr(dv.getFloat64(R.p+6,true)));
-      }
-    }
-
-    var grid=[];
-    if(maxR>MAXROW) maxR=MAXROW;
-    if(maxC>MAXCOL) maxC=MAXCOL;
-    /* Last line of defence on the allocation itself. maxR and maxC are each individually
-       plausible and still multiply into something that will not fit. */
-    while((maxR+1)*(maxC+1) > MAXCELLS && maxR>0) maxR=Math.floor(MAXCELLS/(maxC+1))-1;
-    for(var rr=0;rr<=maxR;rr++){
-      var row=new Array(maxC+1), have=cells[rr]||{};
-      for(var cc=0;cc<=maxC;cc++) row[cc]=have[cc]!=null? have[cc] : '';
-      grid.push(row);
-    }
-    return grid;
-  }
-
-  /* ArrayBuffer -> grid of strings */
-  function toGrid(buf){
-    var cfb=readCFB(buf);
-    var wb=cfb.find('Workbook') || cfb.find('Book');
-    if(!wb) throw new Error('No Workbook stream in that .xls file.');
-    return readBIFF(cfb.read(wb));
-  }
-  function isXls(buf){
-    var u=new Uint8Array(buf);
-    return u.length>8 && u[0]===0xD0 && u[1]===0xCF && u[2]===0x11 && u[3]===0xE0;
-  }
-
-  var API={toGrid:toGrid, isXls:isXls};
-  if(typeof module!=='undefined'&&module.exports) module.exports=API;
-  root.XLSREAD=API;
-})(typeof window!=='undefined'?window:globalThis);
 /* CargoDecode — AIMS eCrew "Personal Crew Schedule Report" CSV parser (deterministic).
    Handles BOTH export modes; the file declares its own on line 2, so nothing is guessed:
        "08/01/2026 - 08/31/2026 (All times in Local Station)"
@@ -7413,7 +7149,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v18.7 · 2026-09-05';
+  var BUILD='v19.2 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -10132,7 +9868,7 @@
   })();
 
 
-  /* ---------- schedule import (AIMS eCrew CSV) ---------- */
+  /* ---------- schedule import (eCrew schedule report PDF, or a calendar) ---------- */
   function impSay(html,cls){ var e=$('#impStat'); if(e){ e.innerHTML=html||''; e.className='impstat '+(cls||''); } }
   function impOffsetFor(code, whenMs){
     return (typeof AIRTZ!=='undefined' && AIRTZ.iataOffsetAt)? AIRTZ.iataOffsetAt(code, whenMs) : null;
@@ -10141,6 +9877,7 @@
      route match and their block-out times are within 36h — that tolerance matters because
      a Local-Station export can date a date-line duty differently from the UTC export of the
      same trip. UTC-sourced entries win, since they need no timezone inference. */
+  function impFlightKey(f){ return String(f==null?'':f).replace(/\s+/g,'').toUpperCase(); }
   function impSaveRoster(rows){
     try{
       var all=JSON.parse(localStorage.getItem('ad_roster')||'[]');
@@ -10161,7 +9898,12 @@
           var tol=(o.gnd || n.gnd)? 30*60000
                  : (o.src==='UTC' && n.src==='UTC')? 6*3600000 : 12*3600000;
           var blkOk=(o.blk==null||n.blk==null)? true : Math.abs(o.blk-n.blk)<=30;
-          if(o.flight===n.flight && o.from===n.from && o.to===n.to && blkOk &&
+          /* Compared with the spaces and case taken out. A calendar writes "PO 947" where
+             a schedule report writes "PO947", and an exact string match let both survive -
+             two duty periods for one flight, each with its own report time, overlapping.
+             That is where a NEGATIVE rest period comes from: the second duty reports
+             before the first has released. */
+          if(impFlightKey(o.flight)===impFlightKey(n.flight) && o.from===n.from && o.to===n.to && blkOk &&
              Math.abs((o.out||0)-(n.out||0)) <= tol){ hit=i; break; }
         }
         if(hit<0) all.push(n);
@@ -10259,6 +10001,16 @@
   impSaveHotels();   // clears what earlier builds stored on phones that already imported
   function impHandle(parsed, name){
     if(typeof AIMSCSV==='undefined'){ impSay('Parser unavailable.','impbad'); return null; }
+    /* A backstop. Nothing routed here can be Local any more - a calendar carries its own
+       offsets and the schedule report checks its own header - but the guard costs a line
+       and the day it stops being true is the day it earns it. */
+    if(parsed.mode==='LOCAL'){
+      return {err:'<b>'+esc(name)+'</b> was exported in <b>Local Station</b> times, and the app '+
+        'no longer reads those. Every time in the file sits in the zone of a different airport, '+
+        'and a duty crossing the date line can be dated a whole day out — which arrives in your '+
+        'roster as the same duty twice.<br>Re-run it with <b>UTC</b> and it reads straight in. '+
+        'Nothing already imported is affected.'};
+    }
     var legs=parsed.rows.filter(function(r){ return r.from && r.utc && r.utc.blockOut!=null; });
     var tzBad=parsed.rows.filter(function(r){ return r.tzError; })
                          .map(function(r){ return r.tzError; });
@@ -10309,11 +10061,45 @@
     for(var i=0;i<r.length;i++) for(var j=i+1;j<r.length;j++){
       var a=r[i], b=r[j];
       if(a.gnd || b.gnd) continue;      // reserve two days running is not a duplicate
-      if(a.flight!==b.flight || a.from!==b.from || a.to!==b.to) continue;
+      if(impFlightKey(a.flight)!==impFlightKey(b.flight) || a.from!==b.from || a.to!==b.to) continue;
       var dh=Math.abs((a.out||0)-(b.out||0))/3600000;
       if(dh>12 && dh<=36) out.push({flight:a.flight, route:a.from+'→'+a.to, a:a.out, b:b.out, dh:dh});
     }
     return out;
+  }
+  /* A schedule report STATES report and debrief times; a calendar infers them. So when both
+     describe the same flight on the same route at nearly the same time, the report is the
+     better record and the other copy should stop counting.
+
+     This is offered as a button rather than done automatically. The app's own rule is that
+     it will not choose between two itineraries, because choosing wrong either invents duty
+     or deletes it - and a scheduled cargo flight really can run the same number on the same
+     route on consecutive days. So it finds the pairs, says how many, and waits.
+
+     Nothing is deleted. Legs are set aside through the same mechanism as the leg ✕, which
+     already has "Bring them back" next to it. */
+  function impReportWins(apply){
+    var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){ return 0; }
+    var drop={}; try{ drop=JSON.parse(localStorage.getItem('ad_legdrop')||'{}'); }catch(e){}
+    var rep=r.filter(function(l){ return l.src==='pcs' && !drop[l.k]; });
+    if(!rep.length) return 0;
+    var n=0;
+    r.forEach(function(l){
+      if(l.src==='pcs' || l.gnd || drop[l.k]) return;
+      for(var i=0;i<rep.length;i++){
+        var p=rep[i];
+        if(impFlightKey(p.flight)!==impFlightKey(l.flight)) continue;
+        if(p.from!==l.from || p.to!==l.to) continue;
+        /* 36 h, which is the window in which the same duty can be dated a day apart by a
+           Local Station export and a UTC one. Wider than that and a genuine daily
+           operation would be caught. */
+        if(Math.abs((p.out||0)-(l.out||0))>36*3600000) continue;
+        n++; if(apply) drop[l.k]=1;
+        break;
+      }
+    });
+    if(apply && n) try{ localStorage.setItem('ad_legdrop', JSON.stringify(drop)); }catch(e){}
+    return n;
   }
   /* One stored roster, however many files it came from. */
   function impSpan(){
@@ -10331,9 +10117,23 @@
           esc(f(x.a))+' and '+esc(f(x.b)); }).join('; ')+
         (sus.length>3? '; and '+(sus.length-3)+' more':'')+
         '.<br>Two exports of the same trip can date a date-line duty a whole day apart. If that flight only operated once, clear the roster and re-import in <b>UTC</b> only — otherwise every cumulative total counts it twice.</div>':'');
+    var dupN=impReportWins(false);
+    if(dupN) el.innerHTML+='<div class="impdup">⚠ <b>'+dupN+' leg'+(dupN>1?'s':'')+
+      ' also covered by a schedule report.</b> The report states your report and debrief '+
+      'times; a calendar can only infer them, and the two can date the same duty a '+
+      'day apart — which is what puts a <b>negative rest</b> in the table. '+
+      '<button id="impPreferRpt" class="impclear">Set the other copies aside</button></div>';
     var nd=0; try{ nd=Object.keys(JSON.parse(localStorage.getItem('ad_legdrop')||'{}')).length; }catch(e){}
     if(nd) el.innerHTML+='<div class="impdrop">'+nd+' leg'+(nd>1?'s':'')+' set aside and not counted. '+
       '<button id="impUndrop" class="impclear">Bring them back</button></div>';
+    var pb=$('#impPreferRpt');
+    if(pb) pb.onclick=function(){
+      var n=impReportWins(true);
+      impSay('<b class="impok">'+n+' duplicate leg'+(n===1?'':'s')+' set aside.</b> '+
+             'The schedule report is now the record for those duties. Nothing was deleted — '+
+             'use <b>Bring them back</b> if that was wrong.','');
+      impSpan(); try{ dpRender(); }catch(e){}
+    };
     var ub=$('#impUndrop');
     if(ub) ub.onclick=function(){ try{ localStorage.removeItem('ad_legdrop'); }catch(e){}
       impSpan(); try{ dpRender(); }catch(e){} };
@@ -10344,9 +10144,7 @@
       impSay('Roster cleared.',''); impSpan(); try{ dpRender(); }catch(e){}
     };
   }
-  /* eCrew hands out a CSV on desktop and a real BIFF8 .xls on mobile. Sniff the bytes
-     rather than trusting the extension, and decode the CSV as ISO-8859-1 because that is
-     what the export actually is - reading it as UTF-8 destroys the day markers. */
+
   /* ---------- linked calendar ---------------------------------------------------------
      The thirty-step Shortcut this replaced existed for one reason: a browser cannot fetch a calendar feed
      directly. Google serves its iCal endpoint without an Access-Control-Allow-Origin header,
@@ -10594,31 +10392,35 @@
             return;
           }
         }catch(_){}
+        /* Two sources now, and only two: the eCrew schedule report as a PDF, and a
+           calendar. The CSV and XLS exports are gone - they carried none of what makes the
+           report worth having (stated report and debrief times, deadhead status, crew) and
+           all of the ambiguity that put duplicate duties in the roster. */
         try{
-          var parsed;
-          if(typeof XLSREAD!=='undefined' && XLSREAD.isXls(buf)){
-            parsed=AIMSCSV.toUtc(AIMSCSV.parseXls(XLSREAD.toGrid(buf)), impOffsetFor);
-          } else {
-            var txt;
-            try{ txt=new TextDecoder('utf-8').decode(new Uint8Array(buf)); }
-            catch(_){ txt=null; }
-            if(txt==null || (/\uFFFD/.test(txt) && !/BEGIN:VCALENDAR/i.test(txt))){
-              try{ txt=new TextDecoder('iso-8859-1').decode(new Uint8Array(buf)); }
-              catch(_){ txt=String.fromCharCode.apply(null, new Uint8Array(buf)); }
-            }
-            parsed = /BEGIN:VCALENDAR/i.test(txt)
-              ? AIMSCSV.toUtc(AIMSCSV.parseIcs(txt), impOffsetFor)
-              : AIMSCSV.toUtc(AIMSCSV.parse(txt), impOffsetFor);
+          var txt;
+          try{ txt=new TextDecoder('utf-8').decode(new Uint8Array(buf)); }
+          catch(_){ txt=null; }
+          if(txt==null || /\uFFFD/.test(txt)){
+            try{ txt=new TextDecoder('iso-8859-1').decode(new Uint8Array(buf)); }
+            catch(_){ txt=String.fromCharCode.apply(null, new Uint8Array(buf)); }
           }
-          resolve(impHandle(parsed, file.name));
+          if(!/BEGIN:VCALENDAR/i.test(txt)){
+            resolve({err:'<b>'+esc(file.name)+'</b> is not something this reads. Two things '+
+              'work: the <b>Personal Crew Schedule Report</b> as a PDF, and a calendar file '+
+              '(<b>.ics</b>, or a <b>.zip</b> containing one). The old CSV and XLS exports '+
+              'are no longer accepted — the report carries your report and debrief times, '+
+              'which they never did.'});
+            return;
+          }
+          resolve(impHandle(AIMSCSV.toUtc(AIMSCSV.parseIcs(txt), impOffsetFor), file.name));
         }catch(err){ resolve({err:'Could not read <b>'+esc(file.name)+'</b> — '+esc(err.message)}); }
       };
       rd.readAsArrayBuffer(file);
     });
   }
-  /* Paste import. On a phone the file route means: log into eCrew, navigate, set a date
-     range, print, save as XLS, find it in Files, then upload — twice, once per month.
-     Text on the clipboard skips all of it. */
+  /* Paste import, calendar text only. It exists for the case where a feed can be opened in
+     a browser and copied but not conveniently saved as a file. A roster now comes from the
+     schedule report PDF, which cannot arrive this way. */
   /* ---------- the schedule data, as read and as corrected ----------------------------
      Every number the app shows is derived from this list, so when a duty period looks wrong
      this is the place the answer is. It shows what came out of the import unaltered, and
@@ -10780,7 +10582,7 @@
     {n:8, t:'Once the link is saved, your roster refreshes on its own. Nothing to re-export, nothing to paste, no computer.',
            s:'New trips are added to what is already stored, and an updated version of a trip you already have overwrites the old one — so re-importing is always safe.'},
     {h:'If you would rather not link anything'},
-    {n:9, t:'<b>📋 Paste a schedule instead</b> takes the text of a roster straight from your clipboard, and <b>Upload schedule</b> takes a <b>.ics</b>, <b>.csv</b>, <b>.xls</b> or <b>.zip</b> file.',
+    {n:9, t:'<b>Upload schedule</b> takes the eCrew <b>schedule report PDF</b> or a calendar file (<b>.ics</b>, or a <b>.zip</b> holding one). ',
            s:'Both are snapshots of the moment you took them — you repeat it whenever your roster changes. The link does not have that problem, which is the only reason to prefer it.'}
   ];
   var SU_COMP=[
@@ -10901,56 +10703,6 @@
     if(st.open) setTimeout(function(){ open(st.tab, st.scroll); }, 350);
   })();
 
-  function impSniffText(t){
-    if(/BEGIN:VCALENDAR/i.test(t)) return 'ics';
-    if(/All times in (UTC|Local Station)/i.test(t)) return 'csv';
-    if(/^\s*(\d{2}\/\d{2}\/\d{4})/m.test(t) && /,/.test(t)) return 'csv';
-    return null;
-  }
-  (function(){
-    var pb=$('#impPasteBtn'), pm=$('#pasteModal'), ta=$('#pasteTA'),
-        go=$('#pasteGo'), pc=$('#pasteC'), msg=$('#pasteMsg');
-    function say(h,cls){ if(msg){ msg.className='impstat '+(cls||''); msg.innerHTML=h; } }
-    if(pb) pb.onclick=function(){
-      if(ta) ta.value=''; say('');
-      if(pm) pm.classList.add('on');
-      // Offer the clipboard where the browser allows it; otherwise the user just pastes.
-      if(navigator.clipboard && navigator.clipboard.readText){
-        navigator.clipboard.readText().then(function(t){ if(t && ta && !ta.value) ta.value=t; }, function(){});
-      }
-      setTimeout(function(){ try{ ta.focus(); }catch(e){} }, 120);
-    };
-    if(pc) pc.onclick=function(){ pm.classList.remove('on'); };
-    if(pm) pm.addEventListener('click', function(e){ if(e.target===pm) pm.classList.remove('on'); });
-    if(go) go.onclick=function(){
-      var t=(ta&&ta.value||'').trim();
-      if(!t){ say('Nothing pasted yet.','impbad'); return; }
-      var kind=impSniffText(t);
-      if(kind==='csv'){
-        try{
-          var parsed=AIMSCSV.toUtc(AIMSCSV.parse(t), impOffsetFor);
-          var r=impHandle(parsed, 'pasted schedule');
-          if(!r){ say('Nothing readable in that text.','impbad'); return; }
-          if(r.err){ say(r.err,'impbad'); return; }
-          pm.classList.remove('on');
-          impReport([r],[]);
-        }catch(err){ say('Could not read that — '+esc(err.message),'impbad'); }
-        return;
-      }
-      if(kind==='ics'){
-        try{
-          var pc=AIMSCSV.toUtc(AIMSCSV.parseIcs(t), impOffsetFor);
-          var rr=impHandle(pc, 'pasted calendar');
-          if(!rr){ say('No eCrew entries found in that calendar.','impbad'); return; }
-          if(rr.err){ say(rr.err,'impbad'); return; }
-          pm.classList.remove('on');
-          impReport([rr],[]);
-        }catch(err){ say('Could not read that calendar — '+esc(err.message),'impbad'); }
-        return;
-      }
-      say('That does not look like an AIMS schedule export or a calendar feed. A CSV should have a line saying <b>All times in UTC</b> or <b>All times in Local Station</b> near the top.','impbad');
-    };
-  })();
   (function(){
     var b=$('#impBtn'), f=$('#impFile');
     if(b&&f) b.onclick=function(){ f.click(); };
@@ -11961,6 +11713,9 @@
      hours stop carrying information and the unit should change with them. */
   function dpRest(min){
     if(min==null) return '—';
+    /* "-13:56" as a rest period is not a short rest, it is two duty periods sitting on top
+       of each other. Reading it as a clock invites the wrong conclusion entirely. */
+    if(min<0) return 'overlap';
     if(Math.abs(min)>=48*60){ var d=min/1440; return (d>=10? Math.round(d) : d.toFixed(1))+'d'; }
     return dpHM(min);
   }
@@ -12338,7 +12093,8 @@
            '<td class="sc" style="color:'+(eb2?eb2.color:'#7f95b5')+'">'+
              (d.effWorst!=null? d.effWorst+'%' : '?')+'</td>'+
            '<td class="num">'+dpHM(d.effDutyMin!=null?d.effDutyMin:d.dutyMin)+'</td>'+
-           '<td class="num"'+(rShort?' style="color:#ff9d4d"':'')+'>'+(rB? dpRest(rB.min):'—')+'</td>'+
+           '<td class="num"'+((rB&&rB.min<0)? ' style="color:#ff6b6b"' : (rShort?' style="color:#ff9d4d"':''))+
+             '>'+(rB? dpRest(rB.min):'—')+'</td>'+
            '<td class="num">'+(d.report!=null? new Date(d.report).toISOString().slice(11,16)+'Z':'—')+'</td>'+
            '<td class="num">'+dpHM(d.blockMin)+'</td></tr>';
         return;
@@ -12390,7 +12146,11 @@
          one of these is still reachable - the rotation note under "Why", the itinerary
          clash inside the legs list. */
       function flag(cls,txt){ h+='<div class="dpalert '+(cls||'')+'"><span class="fd"></span><span>'+txt+'</span></div>'; }
-      if(shortBefore) flag('', '<b>Rest below the minimum</b> — '+dpHM(reqBefore.min-restBefore.min)+
+      if(restBefore && restBefore.min<0)
+        flag('', '<b>This duty overlaps the one before it</b> — report is '+dpHM(-restBefore.min)+
+             ' before the previous release. Usually the same flying imported twice; open '+
+             '<b>See and correct the schedule data</b> and drop whichever entry did not happen.');
+      else if(shortBefore) flag('', '<b>Rest below the minimum</b> — '+dpHM(reqBefore.min-restBefore.min)+
         ' short of the '+dpHM(reqBefore.min)+' required');
       if(bclk && bclk.swing!=null && bclk.overAsk>0.5)
         flag('', '<b>'+(bclk.backward?'Backward rotation':'Clock pushed later')+'</b> — '+
