@@ -7229,7 +7229,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v20.1 · 2026-09-05';
+  var BUILD='v20.3 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7660,11 +7660,30 @@
     }
     return found;
   }
+  /* Asking "is there a newer build" used to mean DOWNLOADING THE WHOLE PAGE - now over
+     1.2 MB - and reading one string out of it, with a four-second deadline on the transfer.
+     A phone on cellular misses four seconds routinely, and every miss returned null, which
+     this function cannot distinguish from being offline. So the app said "you appear to be
+     offline. The app still works fully offline" and stayed on an old build indefinitely,
+     while the connection was fine.
+
+     The build now writes version.txt next to index.html: one line, a few dozen bytes. That
+     is what gets fetched. The full-page scan is kept as a fallback for a deploy made before
+     version.txt existed, but with a deadline sized for the payload rather than for a small
+     API call - and it is still only a background check, so waiting is free. */
   async function getLatestBuild(){
     try{
       if(navigator.onLine===false) return null;            // definitely offline: skip it
+      var base=location.pathname.replace(/[^\/]*$/,'');
+      try{
+        var rv=await netFetch(base+'version.txt?ck='+Date.now(), 8000);
+        if(rv.ok){
+          var tv=((await rv.text())||'').replace(/\r/g,'').split('\n')[0].trim();
+          if(/^v\d/.test(tv)) return tv;
+        }
+      }catch(e){}                                          // no version.txt on this deploy → fall through
       var u=location.pathname+'?ck='+Date.now();
-      var r=await netFetch(u, 4000);                        // and never wait longer than this
+      var r=await netFetch(u, 45000);                      // sized for 1.2 MB, not for a ping
       if(!r.ok) return null;
       var t=await r.text();
       return buildStringIn(t);

@@ -10,10 +10,27 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v20-1';
+var V='cargodecode-v20-3';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
+/* A SEPARATE, much longer deadline for the page itself.
+
+   This is the bug that pinned phones to an old build. NET_MS exists to stop the app hanging
+   on a dead radio - the state of a phone left out of airplane mode at altitude, where a
+   fetch does not fail, it stalls on DNS and TCP. Eight seconds is right for the small
+   requests the UI actually waits on.
+
+   It was also being applied to index.html, which is now over 1.2 MB. Downloading that in
+   under eight seconds needs a sustained connection INCLUDING TLS setup and origin latency,
+   and a phone on cellular routinely misses it. Every miss rejected the promise, so the
+   c.put never ran and the cached page was never replaced - not "one launch behind", but
+   never, for as long as the app stayed installed. The app grew from about 1.0 MB to 1.25 MB
+   over a few days, so this got quietly worse with every release.
+
+   Nothing is waiting on the document refresh. It runs in waitUntil, in the background,
+   after a cached page has already gone back to the user. It can afford to be patient. */
+var PAGE_MS=60000;
 
 function timed(req, ms){
   return new Promise(function(resolve, reject){
@@ -28,7 +45,7 @@ self.addEventListener('install', function(e){
   // Pre-cache the shell so the FIRST launch after install is already flight-ready.
   e.waitUntil(caches.open(V).then(function(c){
     return Promise.all(SHELL.map(function(u){
-      return timed(new Request(u, {cache:'reload'}), 12000)
+      return timed(new Request(u, {cache:'reload'}), PAGE_MS)
         .then(function(r){ if(r && (r.ok || r.type==='opaque')) return c.put(u, r); })
         .catch(function(){});                       // a missing optional asset must not fail the install
     }));
@@ -88,13 +105,34 @@ self.addEventListener('fetch', function(e){
   var base=new URL('./', self.location).pathname;
   if(isDoc && url.pathname!==base && url.pathname!==base+'index.html') return;
 
+  /* An escape hatch that is a LINK rather than a reinstall.
+
+     When updates jam - and they did, for exactly the reason PAGE_MS documents above - the
+     only reliable recovery on an installed iOS app was deleting the home-screen icon and
+     adding it again, which also takes the roster with it. Opening the app's address with
+     ?fresh=1 now bypasses the cache for the document, takes whatever the server has, and
+     stores THAT as the cached page. Nothing else is touched, so nothing is lost. */
+  if(isDoc && /(^|[?&])fresh=1(&|$)/.test(url.search)){
+    e.respondWith(
+      caches.open(V).then(function(c){
+        return timed(new Request(url.pathname+'?fresh='+Date.now(), {cache:'no-store'}), PAGE_MS)
+          .then(function(resp){
+            if(resp && resp.ok){ try{ c.put('./index.html', resp.clone()); }catch(_){} }
+            return resp;
+          })
+          .catch(function(){ return c.match('./index.html').then(function(r){ return r || Response.error(); }); });
+      })
+    );
+    return;
+  }
+
   if(isDoc){
     e.respondWith(
       caches.open(V).then(function(c){
         return c.match('./index.html').then(function(hit){
           return (hit? Promise.resolve(hit) : c.match('./')).then(function(cached){
             cached = cached || hit;
-            var net = timed(new Request(url.pathname+'?sw='+Date.now(), {cache:'no-store'}), NET_MS)
+            var net = timed(new Request(url.pathname+'?sw='+Date.now(), {cache:'no-store'}), PAGE_MS)
               .then(function(resp){
                 if(resp && resp.ok){ try{ c.put('./index.html', resp.clone()); }catch(_){} }
                 return resp;
@@ -114,6 +152,11 @@ self.addEventListener('fetch', function(e){
     );
     return;
   }
+
+  /* The version probe is network-only. It exists to answer "is there a newer build", and a
+     cache-first answer to that question is worse than no answer: it would report the version
+     that was current when the app was installed, forever, and look authoritative doing it. */
+  if(/\/version\.txt$/.test(url.pathname)) return;
 
   // Everything else: cache-first, network time-boxed, opaque CDN responses cached too.
   e.respondWith(
