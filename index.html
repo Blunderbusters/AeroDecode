@@ -596,6 +596,10 @@
   .ovdup{margin:10px 0 4px;padding:10px 12px;border:1px solid rgba(255,157,77,.5);border-radius:12px;
          background:rgba(60,34,10,.5);font-size:12.5px;line-height:1.5;color:#ffd9b8}
   .ovdup b{color:#ffd166}
+  .rawscope{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .slpsrc{margin:12px 0 2px;padding:10px 12px;border:1px solid var(--edge);border-radius:12px;
+          background:rgba(6,14,28,.45);font-size:12.5px;line-height:1.55;color:var(--dim)}
+  .slpsrc b{color:var(--ink)}
   .dpvit{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 0 2px;border-bottom:1px solid var(--edge);margin-bottom:9px;padding-bottom:11px}
   .dpvitb{display:flex;align-items:center;gap:9px}
   .dpbatt{flex:none}
@@ -2118,6 +2122,14 @@
         <p class="slplead">You get a hotel room and a number of hours. This says when to be in bed, when to get up, and when to stop drinking coffee — and it tells you what it expects that to buy you.</p>
       </div>
 
+      <!-- This tab has NO import of its own and never did, which was invisible: a pilot who
+           had not used the Fatigue tab saw an empty list and no way to guess why. -->
+      <div class="slpsrc">
+        <b>Where these layovers come from.</b> This tab has no upload of its own — it reads the
+        <b>same schedule you import on the Fatigue tab</b>. Import the eCrew <i>Personal Crew Schedule
+        Report</i> there once and every layover in it appears below, here and on the Fatigue tab both.
+        Nothing imported yet? Use <b>Enter it myself</b> at the bottom of the list.
+      </div>
       <div class="slppick">
         <div class="slppicklab">Plan for</div>
         <div id="slpBreaks" class="slpbreaks"></div>
@@ -2346,6 +2358,16 @@
   <div class="whyT">Schedule data</div>
   <div class="whySub" style="color:var(--dim)">Everything the app is working from, exactly as it read it. Tap any line to correct it.</div>
   <input id="rawFind" class="ftin" style="margin-top:10px" placeholder="Filter — flight number, station or date">
+  <!-- A linked calendar hands over everything it has, which for a line pilot is years. This
+       list used to show all of it, so opening "check the schedule data" to verify tomorrow's
+       report time meant scrolling past two years of history to reach it. Same window as the
+       Fatigue tab by default, and the whole roster is still one tap away. -->
+  <div class="rawscope">
+    <span class="scopelab">Showing</span>
+    <button class="scopebtn on" data-rawscope="near">Around now</button>
+    <button class="scopebtn" data-rawscope="future">From now on</button>
+    <button class="scopebtn" data-rawscope="all">Everything</button>
+  </div>
   <div id="rawCount" class="impspan"></div>
   <div id="rawList" class="rawlist"></div>
   <button class="tipC" id="rawC">Close</button>
@@ -7268,7 +7290,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v20.8 · 2026-09-05';
+  var BUILD='v21.0 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -10596,7 +10618,8 @@
      Every number the app shows is derived from this list, so when a duty period looks wrong
      this is the place the answer is. It shows what came out of the import unaltered, and
      lets any field be corrected by the one person who was actually there. */
-  var rawSel=null, rawQ='';
+  var rawSel=null, rawQ='', rawScope='near';
+  var RAW_BACK_D=10, RAW_FWD_D=30;      // the same window the Fatigue tab opens on
 
   function rawZ(ms){ if(ms==null) return ''; var d=new Date(ms);
     return ('0'+d.getUTCHours()).slice(-2)+('0'+d.getUTCMinutes()).slice(-2); }
@@ -10615,7 +10638,18 @@
   function rawRender(){
     var box=$('#rawList'), cnt=$('#rawCount');
     if(!box) return;
-    var legs=dpRoster().slice().sort(function(a,b){ return (a.out||0)-(b.out||0); });
+    var all=dpRoster().slice().sort(function(a,b){ return (a.out||0)-(b.out||0); });
+    var now=Date.now(), D=86400000;
+    /* The window is a DISPLAY filter and nothing else - every total, check and score still
+       counts the whole imported history. Said out loud below, because a list that quietly
+       hides half your roster is indistinguishable from a roster that lost half its legs. */
+    var legs=all.filter(function(l){
+      if(rawScope==='all') return true;
+      var t=(l.out!=null? l.out : l.report);
+      if(t==null) return true;
+      if(rawScope==='future') return t>=now-12*3600000;
+      return t>=now-RAW_BACK_D*D && t<=now+RAW_FWD_D*D;
+    });
     var q=rawQ.trim().toUpperCase();
     var shown=legs.filter(function(l){
       if(!q) return true;
@@ -10623,10 +10657,14 @@
     });
     var nEd=0; legs.forEach(function(l){ if(l.edited) nEd++; });
     var nDrop=0; try{ nDrop=Object.keys(dpDrop()).length; }catch(e){}
+    var hiddenN=all.length-legs.length;
     if(cnt) cnt.innerHTML='<b>'+legs.length+'</b> entries'+(q? ' · showing '+shown.length:'')+
       (nEd? ' · <span style="color:var(--gold)">'+nEd+' corrected</span>':'')+
-      (nDrop? ' · '+nDrop+' set aside':'');
-    if(!legs.length){ box.innerHTML='<div class="rawhint">Nothing imported yet.</div>'; return; }
+      (nDrop? ' · '+nDrop+' set aside':'')+
+      (hiddenN? '<br><span style="color:var(--faint)">'+hiddenN+' older or later entr'+(hiddenN>1?'ies':'y')+
+                ' not listed — <b>still counted</b> in every total and score. Tap <b>Everything</b> to see them.</span>':'');
+    if(!all.length){ box.innerHTML='<div class="rawhint">Nothing imported yet.</div>'; return; }
+    if(!legs.length){ box.innerHTML='<div class="rawhint">Nothing in this window. Tap <b>Everything</b> above.</div>'; return; }
     var h='';
     shown.slice(0,400).forEach(function(l){
       var on=(rawSel===l.k);
@@ -10721,7 +10759,18 @@
 
   (function(){
     var rb=$('#impRawBtn'), rm=$('#rawModal'), rc=$('#rawC'), rf=$('#rawFind');
-    function open(){ rawSel=null; rawQ=''; if(rf) rf.value=''; rawRender(); if(rm) rm.classList.add('on'); }
+    function open(){ rawSel=null; rawQ=''; rawScope='near'; if(rf) rf.value='';
+      Array.prototype.forEach.call(document.querySelectorAll('[data-rawscope]'),function(b){
+        b.classList.toggle('on', b.getAttribute('data-rawscope')==='near'); });
+      rawRender(); if(rm) rm.classList.add('on'); }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-rawscope]'),function(b){
+      b.onclick=function(){
+        rawScope=b.getAttribute('data-rawscope'); rawSel=null;
+        Array.prototype.forEach.call(document.querySelectorAll('[data-rawscope]'),function(x){
+          x.classList.toggle('on', x===b); });
+        rawRender();
+      };
+    });
     if(rb) rb.onclick=open;
     window.rawOpen=open;
     if(rc) rc.onclick=function(){ rm.classList.remove('on'); };
@@ -11260,9 +11309,12 @@
     });
     h+='<button class="slpbrk'+(slpSel==='manual'?' on':'')+'" data-brk="manual"><b>Enter it myself</b>'+
        '<span class="sub">'+(brs.length? 'A break that is not in the roster yet':'Nothing imported yet — type the times in')+'</span></button>';
-    if(brs.length) h+='<div class="slpraw">These come straight from your imported schedule. '+
+    if(brs.length) h+='<div class="slpraw">These come straight from the schedule you imported on the <b>Fatigue</b> tab. '+
       'If a release or a report time here is wrong, everything below it will be wrong too — '+
       '<button type="button" id="slpRawLink">check the schedule data</button>.</div>';
+    if(!brs.length) h+='<div class="slpraw">No layovers to plan. Either nothing is imported yet — that happens on the '+
+      '<b>Fatigue</b> tab, there is no upload on this one — or your roster has no break between 3 and 72 hours still ahead of you. '+
+      '<button type="button" id="slpRawLink">Check the schedule data</button>.</div>';
     box.innerHTML=h;
     var rl=$('#slpRawLink');
     if(rl) rl.onclick=function(e){ e.stopPropagation(); try{ window.rawOpen(); }catch(err){} };
@@ -11352,17 +11404,31 @@
        base rail under the whole break and the chart stays compact. A station the app has no
        coordinates for gets no strip and no empty gap where one would have been. */
     var stn=inp.station, hasSun=(typeof SUN!=='undefined' && stn && SUN.has(stn));
+    /* The hour numbers on this chart are LOCAL AT THE LAYOVER STATION - which is the right
+       choice here, because a sleep plan is about the room you are in and the daylight
+       outside its window. But the Fatigue tab is Zulu throughout, and an unlabelled axis
+       that changes meaning between two tabs of one app is a trap. So it is stated on the
+       chart, with the Zulu offset spelled out. */
     /* Every label gets a row of its own. The wake-up call used to sit in the four-pixel gap
        between the hour numbers and the sleep blocks, where it collided with both. */
-    var W=360, L=6, R=6, dayY=10, hourY=24,
-        bandT=30, bandH=52, barY=40, barH=34,
-        wakeY=94, nowY=106, footY=120, sunY=127, sunH=12;
-    var H=hasSun? 143 : 127;
+    var TZY=9;                                   // the time-base caption, above everything
+    var W=360, L=6, R=6, dayY=10+11, hourY=24+11,
+        bandT=30+11, bandH=52, barY=40+11, barH=34,
+        wakeY=94+11, nowY=106+11, footY=120+11, sunY=127+11, sunH=12;
+    var H=(hasSun? 143 : 127)+11;
     var t0=inp.startMs, t1=inp.reportMs, span=t1-t0;
     var x=function(ms){ return L + (ms-t0)/span*(W-L-R); };
     var loc=(inp.localOff==null? 0 : inp.localOff), bod=(inp.bodyOff==null? 0 : inp.bodyOff);
     var spanH=span/3600000;
     var g='<svg class="slptl" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="where the sleep goes across this break">';
+    var offTxt=(inp.localOff==null)? 'UTC'
+             : ('UTC'+(inp.localOff<0?'−':'+')+
+                (Math.abs(inp.localOff)%1? (Math.floor(Math.abs(inp.localOff))+':'+('0'+Math.round(Math.abs(inp.localOff)%1*60)).slice(-2))
+                                         : String(Math.abs(inp.localOff))));
+    g+='<text x="'+L+'" y="'+TZY+'" fill="#9fb8d8" font-size="8.5" font-weight="700">All times '+
+       (stn? esc(stn)+' ' : '')+'LOCAL ('+offTxt+')</text>'+
+       '<text x="'+(W-R)+'" y="'+TZY+'" fill="#7f95b5" font-size="8.5" text-anchor="end">'+
+       'Release '+slpDayName(t0,0)+' '+slpZ(t0)+' · Report '+slpDayName(t1,0)+' '+slpZ(t1)+'</text>';
     /* The body's own night, which is the single most important thing on this chart and was
        also the hardest to see. A wash behind the timeline disappears exactly where it
        matters most, because that is where an opaque sleep block sits on top of it. So it is
@@ -11470,7 +11536,18 @@
          '" stroke="#e0b53a" stroke-width="1.4" stroke-dasharray="3 2.5"/>';
       /* Report now carries its time, so it is wider than it was and the last coffee label
          has to stand further clear of it. */
-      if(kx-lastLab>82 && kx<W-96){
+      /* "Release HHMM" occupies the left end of this row and "Report HHMM" the right end.
+         A coffee cut-off early in the break printed straight through the first of them -
+         two labels in the same eleven pixels, both unreadable. Keep clear of both ends as
+         well as of the previous coffee label. */
+      /* Measured, not guessed. The first attempt guarded the label's CENTRE and it still
+         printed through "Release 2100": the text is centre-anchored and about sixty units
+         wide, so a centre clear of the guard still put its left edge sixteen units inside
+         the other label. Guard the EDGES, and size the neighbours from their actual text. */
+      var CH=5.42, HALF=('Last coffee'.length*CH)/2;
+      var LEFT_GUARD  = L + ('Release '+slpL(t0,loc)).length*CH + 6 + HALF;
+      var RIGHT_GUARD = (W-R) - ('Report '+slpL(t1,loc)).length*CH - 6 - HALF;
+      if(kx-lastLab>82 && kx>LEFT_GUARD && kx<RIGHT_GUARD){
         g+='<text x="'+kx.toFixed(1)+'" y="'+footY+'" fill="#e0b53a" font-size="9" text-anchor="middle" font-family="ui-monospace,monospace">Last coffee</text>';
         lastLab=kx;
       }
