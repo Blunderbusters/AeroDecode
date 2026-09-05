@@ -21,3 +21,7 @@ Background App.png
 # Source backup archives — never publish these to the public repo.
 *.zip
 _source/
+
+# Where the Claude desktop app drops files it sends. They are copies of files that
+# already live in this folder, so publishing them uploads the whole 1.25 MB app twice.
+Claude outputs/
