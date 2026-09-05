@@ -567,6 +567,13 @@
   .wrsub{font-size:12.5px;color:#e0b4b4;margin-top:11px;font-style:italic}
   .wheelnote{font-size:12.5px;color:var(--faint);text-align:center;line-height:1.5;margin-top:14px}
   /* Fatigue tab */
+  /* The import card is scaffolding: you use it once a month and then never want to see it
+     again. Collapsed by default, with the state of the roster on the summary line so it
+     does not have to be opened to be checked. */
+  .impfold{margin-top:14px}
+  .impfold>summary{font-size:13px;font-weight:800;color:#a9c8f5}
+  .impfold .impcard{margin-top:0;border:none;background:none;padding:0}
+  .impsum{display:block;font-size:11px;font-weight:600;color:var(--faint);margin-top:2px;letter-spacing:0}
   .ftlead{font-size:13px;color:var(--dim);line-height:1.55;margin:8px 0 2px}
   .ftlead b{color:var(--ink)}
   .ftsecl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8fa3c4;margin-top:14px}
@@ -1865,8 +1872,8 @@
       <details class="dpsec" style="margin-top:12px"><summary>From your roster and flight plan</summary><div class="dpsecb">
         <p class="fthelp" style="margin:6px 0 2px">Filled in for you from the imported schedule and, if one is loaded, the OFP. Correct anything that is wrong — nothing here is locked.</p>
         <div class="ftgrid">
-          <div><div class="ftk">Home base (ICAO)</div><input id="ftHome" class="ftin" maxlength="4" autocapitalize="characters" placeholder="KJFK">
-            <div class="fthelp">Where your body clock is anchored.</div></div>
+          <div><div class="ftk">Home base</div><input id="ftHome" class="ftin" maxlength="4" autocapitalize="characters" placeholder="KJFK">
+            <div class="fthelp">ICAO or IATA — <b>KMIA</b> or <b>MIA</b> both work. Where your body clock is anchored.</div></div>
           <div><div class="ftk">Where you are now</div><input id="ftStn" class="ftin" maxlength="4" autocapitalize="characters" placeholder="ZHEC">
             <div class="fthelp">With the days below, this is how far your clock has drifted from local.</div></div>
           <div><div class="ftk">Days since you arrived (0 = today)</div><input id="ftDays" class="ftin" inputmode="decimal" value="0">
@@ -1884,7 +1891,9 @@
       </div></details>
       <div id="ftNote" class="hint" style="margin-top:10px;color:var(--good)"></div>
       <div id="ftOut"></div>
-      <div class="impcard">
+      <details class="dpsec impfold" id="impFold">
+        <summary>Schedule import<span class="impsum" id="impFoldSum"></span></summary>
+        <div class="impcard">
         <button id="impBtn" class="impbtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
           Upload schedule — the eCrew report PDF, or a calendar file
@@ -1921,7 +1930,8 @@
              built on the days behind you, so a single month on its own starts cold. A pairing that crosses a month end
              is listed complete in the earlier report, so nothing falls down the gap.</p>
         </details>
-      </div>
+        </div>
+      </details>
       <div class="secthead">
         <div class="secthead-t">Which rules apply to you</div>
         <div class="secthead-s">These four settings drive the <b>limits</b> — the FAR regime, the CBA duty ceiling, the required rest and the cumulative caps. They do <b>not</b> feed the alertness percentage, which is built only from your report and block times, the sleep the model thinks each rest allowed, and where your body clock is. <span class="ovwhy" data-ov="split">Why is crew complement here at all?</span></div>
@@ -7181,7 +7191,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v19.4 · 2026-09-05';
+  var BUILD='v19.6 · 2026-09-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -9198,7 +9208,15 @@
   // Current UTC offset (minutes) for an airport — honours a manual override if the user set one.
   function tzOffsetMin(icao){
     var ov=tzOverrideGet(icao); if(ov!=null) return Math.round(ov*60);
-    var tz=(typeof AIRTZ!=='undefined')? AIRTZ.icaoTz(icao) : null; if(!tz) return null;
+    /* ICAO first, then IATA. The label said ICAO and the lookup honoured it literally, so
+       "ICN" - which is what a crew member types, and what an imported roster stores -
+       resolved to nothing and the tab reported that it had no time zone for Incheon.
+       Length-guarded: a 4-letter ICAO is never run against the IATA table, which is the
+       collision the note in airtz.js warns about. */
+    var A=(typeof AIRTZ!=='undefined')? AIRTZ : null; if(!A) return null;
+    var tz=A.icaoTz(icao);
+    if(!tz && String(icao).length===3 && A.iataTz) tz=A.iataTz(icao);
+    if(!tz) return null;
     try{
       var now=new Date();
       var s=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(now);
@@ -10174,6 +10192,24 @@
   function impSpan(){
     var el=$('#impSpan'); if(!el) return;
     var r=[]; try{ r=JSON.parse(localStorage.getItem('ad_roster')||'[]'); }catch(e){}
+    /* The fold says what is stored without being opened, and opens itself when there is
+       nothing stored - at which point importing IS the thing you came to do. */
+    var fold=$('#impFold'), fsum=$('#impFoldSum');
+    if(fold && fsum){
+      /* The open/closed state is decided ONCE per page load. Snapping the card shut the
+         moment an import finishes would hide the result the crew member just asked for,
+         and re-opening it every time impSpan runs would fight anybody who closed it. */
+      var first=!fold.getAttribute('data-set'); fold.setAttribute('data-set','1');
+      if(!r.length){
+        fsum.textContent='Nothing imported yet — load your eCrew schedule report';
+        if(first) fold.open=true;
+      }else{
+        if(first) fold.open=false;
+        var os=r.map(function(x){return x.out;}).filter(function(v){return v!=null;});
+        var d=function(ms){ return new Date(ms).toISOString().slice(0,10); };
+        fsum.textContent=r.length+' legs · '+d(Math.min.apply(null,os))+' → '+d(Math.max.apply(null,os));
+      }
+    }
     if(!r.length){ el.innerHTML=''; return; }
     var outs=r.map(function(x){return x.out;}).filter(function(v){return v!=null;});
     var f=function(ms){ return new Date(ms).toISOString().slice(0,10); };
@@ -12505,9 +12541,18 @@
         if(e.key==='ArrowLeft'){ e.preventDefault(); go(current()-1); }
         else if(e.key==='ArrowRight'){ e.preventDefault(); go(current()+1); }
       });
-      /* Land on today without animating there from slide one. */
-      go(homeIdx,false); paint();
-      setTimeout(function(){ go(homeIdx,false); paint(); },60);
+      /* Land on the duty you are in, without animating there from slide one.
+         With a whole roster loaded there can be 150 slides, and offsetLeft is not final
+         until layout settles - one attempt landed on slide 1 and stayed there. So: keep
+         nudging until the deck is actually where it was told to go, then stop. */
+      (function land(n){
+        go(homeIdx,false); paint();
+        if(n<=0) return;
+        setTimeout(function(){
+          var want=slides[homeIdx].offsetLeft-deck.offsetLeft;
+          if(Math.abs(deck.scrollLeft-want)>2) land(n-1); else paint();
+        }, 80);
+      })(8);
     })();
 
     Array.prototype.forEach.call(out.querySelectorAll('[data-drop]'),function(bt){
