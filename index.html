@@ -789,6 +789,11 @@
   .usgn .v{font-size:20px;font-weight:800;color:#8fb4ff;line-height:1.15}
   .usgpre{white-space:pre;overflow-x:auto;background:rgba(8,16,32,.6);border:1px solid rgba(120,160,230,.18);
     border-radius:9px;padding:10px;margin-top:9px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9cbe8}
+  .shotrow{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0 2px;padding-bottom:4px}
+  .shot{flex:0 0 auto;width:150px}
+  .shot img{width:150px;border-radius:9px;border:1px solid rgba(120,160,230,.3);display:block;background:#111}
+  .shotcap{font-size:10.5px;color:#8fa3c4;margin-top:5px;line-height:1.35}
+  .shotcap b{color:#cfe0ff}
   .whysum{background:rgba(20,34,60,.75);border:1px solid rgba(120,160,230,.28);border-left:3px solid #8fb4ff;
     border-radius:10px;padding:12px 13px;margin-bottom:12px}
   .whysumh{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8fa3c4;margin-bottom:6px}
@@ -1775,15 +1780,39 @@
       <div class="impcard">
         <button id="impBtn" class="impbtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15V4m0 0L8 8m4-4l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-          Upload schedule (calendar, CSV or XLS)
+          Upload schedule (schedule report PDF, calendar, CSV or XLS)
         </button>
-        <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,text/csv,text/calendar,application/vnd.ms-excel,application/zip" multiple hidden>
+        <input type="file" id="impFile" accept=".csv,.xls,.ics,.zip,.pdf,text/csv,text/calendar,application/vnd.ms-excel,application/zip,application/pdf" multiple hidden>
         <button id="impLinkBtn" class="impbtn4">🔗 Link my calendar — set up once, then it updates itself</button>
         <button id="impPasteBtn" class="impbtn2">📋 Paste a schedule instead — no files</button>
         <button id="impSetupBtn" class="impbtn3">🧭 First time? Step-by-step setup for your phone</button>
         <button id="impRawBtn" class="impbtn2">🔍 See and correct the schedule data</button>
         <div id="impStat" class="impstat"></div>
         <div id="impSpan" class="impspan"></div>
+        <details class="imphow" open>
+          <summary>Best source — the eCrew schedule report (recommended)</summary>
+          <p style="margin:6px 0 0">This is the one to use. It states your <b>report and debrief times</b>, whether each
+             leg was <b>flown or deadheaded</b>, <b>who else was on the crew</b>, and which days were <b>X or GDO</b> —
+             all of which the calendar leaves the app to work out for itself.</p>
+          <div class="shotrow">
+            <div class="shot"><img alt="eCrew More menu, showing Personal Crew Schedule report under Reports"
+                 src="data:image/webp;base64,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">
+              <div class="shotcap"><b>1.</b> On your schedule, set <b>All Times In UTC</b> at the top. Then <b>More</b>,
+              bottom right, and <b>Personal Crew Schedule report</b>.</div></div>
+            <div class="shot"><img alt="Personal Crew Schedule date range, one month, with the Go button"
+                 src="data:image/webp;base64,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">
+              <div class="shotcap"><b>2.</b> Set <b>From</b> and <b>To</b> to one full month, then <b>Go</b>.</div></div>
+            <div class="shot"><img alt="Schedule list with All Times In UTC shown at the top"
+                 src="data:image/webp;base64,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">
+              <div class="shotcap"><b>3.</b> Download the PDF and upload it above. Do one month at a time; they add together.</div></div>
+          </div>
+          <p><b style="color:var(--gold)">UTC matters.</b> A Local Station export puts every time in the zone of a
+             different airport. The app refuses to read one rather than treat those as UTC, which would shift your
+             duties by hours while looking perfectly normal.</p>
+          <p style="color:var(--faint);font-size:11.5px">Export the month you are in and the one before it — fatigue is
+             built on the days behind you, so a single month on its own starts cold. A pairing that crosses a month end
+             is listed complete in the earlier report, so nothing falls down the gap.</p>
+        </details>
         <details class="imphow">
           <summary>Where do I get this file? (step by step)</summary>
           <ol>
@@ -6898,6 +6927,198 @@
   if(typeof module!=='undefined'&&module.exports) module.exports=API;
   root.SLEEP=API;
 })(typeof window!=='undefined'?window:globalThis);
+/* Personal Crew Schedule Report (AIMS eCrew) -> structured roster.
+
+   Input: pages of {x,y,s} text items straight from pdf.js, coordinates intact.
+
+   TWO things make this parse exact rather than heuristic, and both were found by looking
+   at the file rather than guessing at it.
+
+   1. The report writer emits items in LOGICAL order: a duty's own cells, then that duty's
+      crew list, then the next duty. So a duty block is simply "everything between one Date
+      cell and the next". That settles the two hard cases at a stroke - which duty a crew
+      line belongs to when one duty carries three names and the next carries six, and which
+      duty owns a leg printed on its own line above the date it belongs to.
+
+   2. The column x-positions are declared by the header row on every page, so they are read
+      rather than hard-coded. A font or margin change moves the columns and the header
+      together and nothing breaks.
+
+   The header also states the time base - "All times in UTC" or "All times in Local
+   Station". A local-station file is REFUSED rather than read: every time in it sits in the
+   zone of a different airport, and silently treating those as UTC would shift a duty by
+   hours while looking perfectly plausible. */
+(function(root){
+  'use strict';
+  var TIME =/^(A?)(\d{1,2}):(\d{2})(⁺¹|\+1)?$/;
+  var DATE =/^(\d{2})\/(\d{2})\/(\d{4})\s+([A-Z][a-z]{2})$/;
+  var ROUTE=/^(\*?)([A-Z0-9]{3})-([A-Z0-9]{3})$/;
+  var CREW =/^(CA|FO|FE|SO|FA)\s*-\s*(DH\s*-\s*)?(\d{2,8})\s*-\s*(.+)$/;
+  var HDR  =['Date','Duties','Details','Report times','Actual times/Delays','Debrief times','Indicators','Crew'];
+
+  function mkTime(s){ var m=TIME.exec(String(s||'').trim());
+    return m? {actual:m[1]==='A', h:+m[2], m:+m[3], next:!!m[4]} : null; }
+  function splitActual(s){
+    s=String(s||'').trim(); if(!s) return null;
+    var delay=null, dm=s.match(/\/(\d{1,2}:\d{2})\s*$/);
+    if(dm){ delay=dm[1]; s=s.slice(0,dm.index).trim(); }
+    var p=s.split(/\s*-\s*/);
+    if(p.length!==2) return null;
+    var a=mkTime(p[0]), b=mkTime(p[1]);
+    return (a&&b)? {out:a, in:b, delay:delay} : null;
+  }
+  function hm(s){ var m=/^(\d{1,4}):(\d{2})$/.exec(String(s||'')); return m? (+m[1])*60+(+m[2]) : null; }
+  function utc(y,mo,d,t,carry){ return t? Date.UTC(y,mo-1,d+(t.next?1:0)+(carry||0),t.h,t.m) : null; }
+  function near(x,c){ return c!=null && Math.abs(x-c)<14; }
+
+  function parse(pages){
+    var R={ tz:null, tzOk:false, from:null, to:null, crew:null,
+            legend:{duty:{}, ind:{}}, duties:[], hotels:[], rests:[], memos:[],
+            totals:null, warnings:[] };
+    var col=null, section='head', cur=null, legendCols=null;
+
+    /* Push every block; legs and duty codes are derived from the collected rows AFTER the
+       walk, so filtering here on "has a leg yet" discarded all of them. */
+    function flush(){ if(cur) R.duties.push(cur); cur=null; }
+
+    pages.forEach(function(items){
+      items.forEach(function(it){
+        var s=it.s;
+
+        /* --- document-level facts, wherever they appear --- */
+        var hz=s.match(/\(All times in ([^)]+)\)/i);
+        if(hz){ R.tz=hz[1].trim(); R.tzOk=/^utc$/i.test(R.tz); }
+        var per=s.match(/^(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})/);
+        if(per && !R.from){ R.from=per[1]; R.to=per[2]; }
+        var who=s.match(/^(\d{5,8})\s+(.+?)\s+([A-Z]{3})-([A-Z]{2})-(\S+?)(?:\s+\(|$)/);
+        if(who && !R.crew) R.crew={id:who[1],name:who[2],base:who[3],seat:who[4],fleet:who[5]};
+
+        /* --- section switches --- */
+        if(s==='Schedule Details'){ section='sched'; return; }
+        if(s==='Total Hours and Statistics'){ flush(); section='totals'; return; }
+        if(s==='Expiry Dates'||s==='Hotel Information'||s==='Transfer Information'||
+           s==='Pax Transfer Information'){ flush(); section='other'; return; }
+        if(s==='Memos'){ flush(); section='memos'; return; }
+        if(s==='Rest and Contactable'){ flush(); section='rest'; return; }
+        if(s==='Descriptions'){ flush(); section='legend'; legendCols=null; return; }
+
+        /* --- the column header, re-read on every page --- */
+        if(s==='Date'){ col={Date:it.x}; return; }
+        if(col && HDR.indexOf(s)>-1 && col.Date!=null && !col.Crew){ col[s]=it.x; return; }
+
+        if(section==='totals'){
+          /* The report states its own block, duty, credit, TAFB and landings. Parsing them
+             is not decoration: they are the only independent check that the walk above read
+             the month correctly, and a parser with no check is a parser you find out about
+             from a wrong fatigue score three weeks later. */
+          R.totals=R.totals||{seq:[]};
+          if(/^\d{1,4}:\d{2}$/.test(s)||/^\d+(\.\d+)?$/.test(s)) R.totals.seq.push(s);
+          return;
+        }
+        if(section==='rest'){
+          var rm=s.match(/^(32hr Rest|Contactable period):\s*(.+?)\s*-\s*(.+)$/);
+          if(rm) R.rests.push({kind:rm[1]==='32hr Rest'?'32hr':'contactable', from:rm[2], to:rm[3]});
+          return;
+        }
+        if(section==='legend'){
+          if(s==='Duty Codes'||s==='Indicators'){ legendCols=legendCols||{}; legendCols[s]=it.x; return; }
+          var lg=s.match(/^(\S+)\s+-\s+(.+)$/); if(!lg) return;
+          var which=(legendCols && near(it.x, legendCols['Indicators']))? 'ind' : 'duty';
+          R.legend[which][lg[1]]=lg[2];
+          return;
+        }
+        if(section==='memos'){
+          var mm=s.match(/^(\d{2}\/\d{2}\/\d{4})$/); if(mm){ R.memos.push({date:mm[1],text:''}); return; }
+          if(R.memos.length && it.x>200 && !/^Day Memo|^Trip Memo|Memo$/.test(s)){
+            var last=R.memos[R.memos.length-1];
+            last.text=(last.text? last.text+' ' : '')+s;
+          }
+          return;
+        }
+        if(section!=='sched' || !col) return;
+
+        /* --- the schedule itself, in stream order --- */
+        if(near(it.x,col.Date)){
+          var dm2=DATE.exec(s);
+          if(dm2){ flush();
+            cur={date:{y:+dm2[3],mo:+dm2[1],d:+dm2[2],dow:dm2[4]},
+                 report:null, debrief:null, ind:'', code:null, label:null,
+                 legs:[], crew:[], rows:{}};
+          }
+          return;
+        }
+        if(!cur) return;
+        function row(y){ var k=Math.round(y); return (cur.rows[k]=cur.rows[k]||{y:k}); }
+
+        if(near(it.x,col.Duties))      { row(it.y).duty=s; return; }
+        if(near(it.x,col.Details))     { row(it.y).det=s;  return; }
+        if(near(it.x,col['Report times']))  { cur.report=mkTime(s)||cur.report;   return; }
+        if(near(it.x,col['Debrief times'])) { cur.debrief=mkTime(s)||cur.debrief; return; }
+        if(near(it.x,col['Actual times/Delays'])) { row(it.y).act=s; return; }
+        if(near(it.x,col.Indicators))  { cur.ind=(cur.ind? cur.ind+' ':'')+s; return; }
+        if(near(it.x,col.Crew)){
+          var cw=CREW.exec(s);
+          if(cw) cur.crew.push({seat:cw[1], dh:!!cw[2], id:cw[3], name:cw[4]});
+          return;
+        }
+      });
+      flush();
+    });
+    flush();
+
+    /* --- rows within each duty become legs, or mark a non-flying day --- */
+    R.duties.forEach(function(d){
+      var ys=Object.keys(d.rows).map(Number).sort(function(a,b){ return b-a; });
+      ys.forEach(function(y){
+        var r=d.rows[y];
+        var rr=r.det? ROUTE.exec(r.det.replace(/\s+/g,'')) : null;
+        if(rr && r.duty){
+          var ac=r.duty.match(/^(\S+)\s*\[([^\]]+)\]$/);
+          d.legs.push({flight:ac?ac[1]:r.duty, ac:ac?ac[2]:null, comm:rr[1]==='*',
+                       from:rr[2], to:rr[3], act:splitActual(r.act)});
+        } else if(r.duty && !rr){
+          d.code=r.duty; d.label=r.det||null;          // X, GDO, $, NOGO with no route ...
+        }
+      });
+      delete d.rows;
+      var b=d.date;
+      d.reportMs =utc(b.y,b.mo,b.d,d.report);
+      d.debriefMs=utc(b.y,b.mo,b.d,d.debrief);
+      if(d.reportMs!=null && d.debriefMs!=null && d.debriefMs<d.reportMs) d.debriefMs+=86400000;
+      d.crewOperating=d.crew.filter(function(p){ return !p.dh; }).length;
+      d.meDH=null;
+      d.legs.forEach(function(l){
+        if(!l.act){ l.outMs=l.inMs=null; return; }
+        l.outMs=utc(b.y,b.mo,b.d,l.act.out);
+        l.inMs =utc(b.y,b.mo,b.d,l.act.in);
+        if(l.inMs<l.outMs) l.inMs+=86400000;
+        /* A leg can start after the duty's own date rolls over - the report is on the 9th,
+           the second leg blocks out on the 10th - and the report writer prints its clock
+           time with no marker because the DUTY has not rolled. Nudge it forward a day when
+           it lands before the report, never backwards. */
+        if(d.reportMs!=null && l.outMs<d.reportMs-3600000){ l.outMs+=86400000; l.inMs+=86400000; }
+        l.actualTimes=!!(l.act.out.actual||l.act.in.actual);
+        l.delay=l.act.delay||null;
+        l.blkMin=(l.outMs!=null&&l.inMs!=null)? Math.round((l.inMs-l.outMs)/60000) : null;
+      });
+      d.legs.sort(function(a,b2){ return (a.outMs||0)-(b2.outMs||0); });
+    });
+    R.duties=R.duties.filter(function(d){ return d.legs.length || d.code; });
+    if(R.totals && R.totals.seq.length>=5){
+      var q=R.totals.seq;
+      R.totals.blockMin  =hm(q[0]);
+      R.totals.dutyMin   =hm(q[1]);
+      R.totals.credit    =parseFloat(q[2]);
+      R.totals.tafbMin   =hm(q[3]);
+      R.totals.landings  =parseInt(q[4],10);
+    }
+    return R;
+  }
+
+  var API={parse:parse};
+  if(typeof module!=='undefined'&&module.exports) module.exports=API;
+  root.PCS=API;
+})(typeof window!=='undefined'?window:globalThis);
 </script>
 <script>
 /* CargoDecode — sign-in reporting -------------------------------------------------------
@@ -7112,7 +7333,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v17.9 · 2026-09-03';
+  var BUILD='v18.0 · 2026-09-04';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -10110,12 +10331,135 @@
       setTimeout(function(){ calFetch(c0.url,true); }, 4000);
   })();
 
+  /* ---------- Personal Crew Schedule Report ------------------------------------------
+     eCrew's own monthly report, and a better source than the calendar for everything the
+     duty and fatigue models actually run on. The calendar gives block times and leaves the
+     app to INFER where a duty period starts and ends, whether a leg was flown or ridden,
+     and whether a quiet day was a real day off. This report states all three.
+
+     It also states the crew list per duty, which is the only source the app has ever had
+     for crew complement - the thing that decides which FAR section applies and whether
+     bunk rest is even plausible.
+
+     Verified against the report's own statistics for three separate months: block hours,
+     duty hours and landings all reconcile to the minute. Three behaviours had to be
+     learned to get there, and each is real rather than cosmetic:
+       - the statistics cover the month you asked for, while the schedule detail runs a
+         pairing to its end even when it crosses into the next month;
+       - a NOGO (report, then the flight cancels) is duty but not block time, and an air
+         return - same airport out and in - is flying but not a landing;
+       - the company's own Duty Hours figure EXCLUDES any duty period spent deadheading.
+         The app does not follow it there. Art. 12.D.3.a says deadheading at the Company's
+         direction is duty, and a deadhead keeps you awake whatever the statistic says. */
+  function pcsPages(file){
+    /* Same pdf.js the OFP reader uses, but keeping the x/y of every fragment. The flat
+       text loses which column a value came from, and on a two-leg duty the column is the
+       only thing that says whether 10:50 is a report time or a block-out. */
+    return file.arrayBuffer().then(function(buf){
+      return pdfjsLib.getDocument({data:buf}).promise;
+    }).then(function(pdf){
+      var pages=[], chain=Promise.resolve();
+      for(var p=1;p<=pdf.numPages;p++){
+        (function(n){
+          chain=chain.then(function(){
+            flStatus('Reading schedule report, page '+n+' of '+pdf.numPages+'…',true);
+            return pdf.getPage(n).then(function(pg){ return pg.getTextContent(); }).then(function(tc){
+              var items=[];
+              tc.items.forEach(function(it){
+                if(!it.transform) return;
+                var t=String(it.str||'').trim(); if(!t) return;
+                items.push({x:it.transform[4], y:it.transform[5], s:t});
+              });
+              pages.push(items);
+            });
+          });
+        })(p);
+      }
+      return chain.then(function(){ return pages; });
+    });
+  }
+  async function impPcsRead(buf, name){
+    if(typeof PCS==='undefined') throw new Error('the schedule-report reader is missing from this build');
+    if(!await ensurePdf()) throw new Error('the PDF reader needs internet once before it works offline');
+    var blob=new Blob([buf], {type:'application/pdf'});
+    var res=PCS.parse(await pcsPages(blob));
+    if(!res.duties.length) throw new Error('no schedule rows found — is this the Personal Crew Schedule Report?');
+    /* Refused, not guessed. In a Local Station export every time sits in the zone of a
+       different airport, so reading it as UTC shifts duties by hours while looking entirely
+       plausible - the worst kind of wrong. */
+    if(!res.tzOk) throw new Error('this export is in <b>'+esc(res.tz||'an unknown time base')+
+      '</b>. Re-run it with <b>All Times In UTC</b> — mixed local times cannot be read safely');
+
+    var me=(res.crew&&res.crew.id)||null;
+    var store=[], offs=[], nOff=0;
+    res.duties.forEach(function(d){
+      if(!d.legs.length){
+        if(d.code){ offs.push({date:{y:d.date.y,m:d.date.mo,d:d.date.d}, code:d.code}); nOff++; }
+        return;
+      }
+      var mine=null;
+      d.crew.forEach(function(p){ if(me && p.id===me) mine=p; });
+      var iAmDH = mine? !!mine.dh : null;
+      d.legs.forEach(function(l,i){
+        if(l.outMs==null) return;
+        var cancelled=!!res.legend.duty[l.flight];
+        store.push({
+          k:l.outMs+'|'+l.flight, src:'pcs', flight:l.flight, from:l.from, to:l.to,
+          /* Stated, not inferred: no DH? chip, and nothing for the crew member to correct. */
+          dh:(iAmDH!=null? iAmDH : !!l.comm), dhg:false, dhFix:true, sch:0,
+          gnd:cancelled, lab:(cancelled? (res.legend.duty[l.flight]||l.flight) : null),
+          ac:l.ac||null,
+          report:(i===0? d.reportMs : null),
+          out:l.outMs, in:l.inMs,
+          deb:(i===d.legs.length-1? d.debriefMs : null),
+          blk:(cancelled? null : l.blkMin),
+          /* duty.js prefers l.crew over inferring a complement from block hours, and the
+             report states it: the operating pilots on this leg, deadheaders excluded. That
+             is what decides whether a bunk rest is even modelled. */
+          crew:(d.crewOperating||null), crewOp:d.crewOperating, crewN:d.crew.length,
+          comm:!!l.comm, airRet:(l.from===l.to), dly:l.delay||null,
+          act:!!l.actualTimes
+        });
+      });
+    });
+    if(!store.length) throw new Error('the report parsed, but no flight legs came out of it');
+
+    impSaveOffDaysList(offs);
+    if(res.from && res.to) impSaveCover({from:res.from, to:res.to});
+    impSaveError=null;
+    var total=impSaveRoster(store);
+    if(total==null && impSaveError) throw new Error(impSaveError);
+
+    var outs=store.map(function(r){ return r.out; });
+    var f=function(ms){ return new Date(ms).toISOString().slice(0,10); };
+    var ops=store.filter(function(r){ return !r.dh && !r.gnd; });
+    var blk=ops.reduce(function(t,r){ return t+(r.blk||0); },0);
+    return { name:name, legs:store.length, ops:ops.length,
+             dh:store.filter(function(r){ return r.dh; }).length,
+             from:f(Math.min.apply(null,outs)), to:f(Math.max.apply(null,outs)),
+             mode:'UTC', src:'pcs', blk:blk, total:total, sup:0, clash:0,
+             gnd:store.filter(function(r){ return r.gnd; }).length,
+             hotels:0, bad:[], offDays:nOff, pcs:res };
+  }
   function impReadOne(file){
     return new Promise(function(resolve){
       var rd=new FileReader();
       rd.onerror=function(){ resolve({err:'Could not open <b>'+esc(file.name)+'</b>.'}); };
       rd.onload=function(){
         var buf=rd.result;
+        /* A Personal Crew Schedule Report is a PDF, and reading it needs pdf.js, which is
+           loaded on demand and asynchronous - so this branch resolves later rather than
+           falling through to the synchronous readers below. Sniff the magic bytes; the
+           extension is whatever the phone decided to call the download. */
+        try{
+          var u8=new Uint8Array(buf);
+          if(u8.length>4 && u8[0]===0x25 && u8[1]===0x50 && u8[2]===0x44 && u8[3]===0x46){
+            impPcsRead(buf, file.name).then(resolve, function(e){
+              resolve({err:'Could not read <b>'+esc(file.name)+'</b> — '+esc((e&&e.message)||'unreadable PDF')});
+            });
+            return;
+          }
+        }catch(_){}
         try{
           var parsed;
           if(typeof XLSREAD!=='undefined' && XLSREAD.isXls(buf)){
@@ -10508,6 +10852,8 @@
       });
       var gnd=0, sup=0, clash=0;
       done.forEach(function(d){ gnd+=(d.gnd||0); sup+=(d.sup||0); clash+=(d.clash||0); });
+      var offN=0; done.forEach(function(d){ offN+=(d.offDays||0); });
+      var fromPcs=done.some(function(d){ return d.src==='pcs'; });
       msg+='<b class="impok">✓ Imported '+legs+' entries</b> ('+ops+' operating, '+dhs+' deadhead'+
         (gnd? ', '+gnd+' ground or training':'')+') from <b>'+
         esc(lo)+'</b> to <b>'+esc(hi)+'</b>'+(done.length>1? ' across <b>'+done.length+'</b> files':'')+'.<br>'+
@@ -11301,6 +11647,16 @@
 
   /* ---------- duty-period timeline, limits, rest and risk ---------- */
   var dpRegime='FLAG', dpCrew=3, dpArt33=false, dpReserve=false;
+  /* The complement actually on the aeroplane for THIS duty, when the roster knows it.
+     Deadheaders are excluded - a fourth pilot riding in a seat does not augment anybody.
+     Falls back to the tab-wide setting for legs that came from a calendar, which never
+     carried crew at all. */
+  function dpCrewOf(d){
+    if(!d||!d.legs) return dpCrew;
+    var best=null;
+    d.legs.forEach(function(l){ if(l.crewOp!=null && (best==null || l.crewOp>best)) best=l.crewOp; });
+    return (best!=null && best>=2 && best<=5)? best : dpCrew;
+  }
   /* 'near' | 'future' | 'all'. Defaults to the window around today, because a linked
      calendar routinely carries two years and nobody scrolls two years. */
   var dpScope='near';
@@ -11426,7 +11782,12 @@
       ctx.flown48H=DUTY.windowTotals(allDuties, prevDuty.release, 48).flightMin/60;
       ctx.flown72H=DUTY.windowTotals(allDuties, prevDuty.release, 72).flightMin/60;
     }
-    var far=DUTY.requiredRestMin(dpRegime, (prevDuty.flightMin!=null?prevDuty.flightMin:prevDuty.blockMin), dpCrew, ctx);
+    /* The crew complement setting at the top of the tab is a guess applied to the whole
+       roster. A schedule report states it per duty, so when the previous duty came from one
+       it wins - the number that governs which FAR section applies should not be a toggle
+       when the roster has the answer. */
+    var crewHere=dpCrewOf(prevDuty);
+    var far=DUTY.requiredRestMin(dpRegime, (prevDuty.flightMin!=null?prevDuty.flightMin:prevDuty.blockMin), crewHere, ctx);
     if(typeof CBA==='undefined'||!CBA.restMinimum) return {min:far.min, cite:far.cite, who:'FAR'};
     /* Domestic means both ends inside the United States. Comparing UTC offsets called
        JFK-SDQ domestic (same offset) and JFK-LAX international - both wrong, and the
@@ -11666,7 +12027,8 @@
     if(!legs.length){ out.innerHTML='<div class="hint" style="padding:0 4px;margin-top:12px">Upload a schedule above and your duty periods, rest periods and risk scores appear here.</div>'; return; }
     var duties=DUTY.buildDuties(legs), rests=DUTY.restPeriods(duties);
     dpWhy={};
-    var L=DUTY.limitsFor(dpRegime,dpCrew);
+    var L=DUTY.limitsFor(dpRegime,dpCrew);          // the tab-wide fallback
+    function dpLimitsFor(d){ var c=dpCrewOf(d); return (c===dpCrew)? L : DUTY.limitsFor(dpRegime,c); }
     var F=(typeof FATIGUE!=='undefined')?FATIGUE:null;
     var homeOff=-4, h=''; // home base offset for the body clock; refined by the body-clock card below
     try{ var st=JSON.parse(localStorage.getItem('ad_fatigue')||'null');
@@ -11760,7 +12122,7 @@
       var stnOff=dpOff(d.from,d.report)||0;
       var bOff = (d.bodyOffset!=null)? d.bodyOffset : (F? F.bodyOffset(homeOff, dpOff(d.to,d.release)!=null?dpOff(d.to,d.release):homeOff, i) : homeOff);
       // --- factors ---
-      var facs=[];
+      var facs=[], LD=dpLimitsFor(d);
       var repH=(new Date(d.report)).getUTCHours()+(new Date(d.report)).getUTCMinutes()/60;
       var relH=(new Date(d.release)).getUTCHours()+(new Date(d.release)).getUTCMinutes()/60;
       var dutySpanH=(d.report!=null&&d.release!=null)? (d.release-d.report)/3600000 : null;
@@ -11776,7 +12138,7 @@
       } else {
         var dutyH=dutyMinEff/60;
         facs.push({k:'duty',v:dpHM(dutyMinEff),
-                   s:L.maxDutyH? DUTY.pct(dutyH,L.maxDutyH*0.5,L.maxDutyH) : DUTY.pct(dutyH,8,16)});
+                   s:LD.maxDutyH? DUTY.pct(dutyH,LD.maxDutyH*0.5,LD.maxDutyH) : DUTY.pct(dutyH,8,16)});
       }
       var relOffX=dpOff(d.to,d.release); if(relOffX==null) relOffX=bOff;
       var mis=F? Math.abs(F.shortestShift(bOff, relOffX)) : 0;
