@@ -7387,7 +7387,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v21.7 · 2026-09-06';
+  var BUILD='v21.8 · 2026-09-06';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -8243,14 +8243,32 @@
   // reflect prior prep (the OCR engine is cached in the browser once done)
   (function(){ var r=false; try{ r=localStorage.getItem('ad_ocr_ready')==='1'; }catch(e){}
     setPrepBtn(r); if(r) setPill('Camera OCR: ready · cached offline','ready',false); })();
-  function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=res;s.onerror=function(){rej(new Error('load'))};document.head.appendChild(s)})}
+  /* A <script> tag on a radio with no route fires NEITHER load nor error - it simply never
+     resolves. Awaiting one is how "Loading PDF engine…" could spin forever with the OFP still
+     unread, in exactly the state a phone is in when it is left out of airplane mode at
+     altitude. The tag now loses a race against a clock, and the loser is removed so a late
+     arrival cannot resolve a promise nobody is waiting on any more. */
+  function loadScript(src, ms){
+    return new Promise(function(res,rej){
+      var s=document.createElement('script'), done=false;
+      var t=setTimeout(function(){
+        if(done) return; done=true;
+        try{ s.parentNode && s.parentNode.removeChild(s); }catch(e){}
+        rej(new Error('timeout'));
+      }, ms||12000);
+      s.src=src;
+      s.onload=function(){ if(done) return; done=true; clearTimeout(t); res(); };
+      s.onerror=function(){ if(done) return; done=true; clearTimeout(t); rej(new Error('load')); };
+      document.head.appendChild(s);
+    });
+  }
   async function ensureTess(){
     if(tessReady)return true;
     setPill('Camera OCR: downloading engine…','busy',true);
     try{
       if(typeof Tesseract==='undefined'){
-        try{await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');}
-        catch(e){await loadScript('https://unpkg.com/tesseract.js@5/dist/tesseract.min.js');}
+        try{await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js', 15000);}
+        catch(e){await loadScript('https://unpkg.com/tesseract.js@5/dist/tesseract.min.js', 15000);}
       }
       setPill('Camera OCR: preparing recognizer…','busy',true);
       worker=await Tesseract.createWorker('eng');
@@ -9148,10 +9166,19 @@
     if(pdfReady)return true;
     if(!silent) flStatus('Loading PDF engine…',true);
     try{
-      if(typeof pdfjsLib==='undefined') await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
+      if(typeof pdfjsLib==='undefined') await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', 15000);
       pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-      try{ await fetch(pdfjsLib.GlobalWorkerOptions.workerSrc); }catch(_){}   // prime the worker file into the offline cache
-      pdfReady=true; try{localStorage.setItem('ad_pdf_ready','1');}catch(e){} setFlReady();
+      /* The worker file is what actually parses the document, so priming it is not optional
+         bookkeeping - and a bare fetch here could hang forever on a dead radio while the
+         catch that was meant to absorb the failure never ran. Time-boxed, and the ready flag
+         is only set if the worker really arrived. Claiming "offline ready" without it is how
+         a pilot finds out at FL350 that the OFP reader needs the internet. */
+      var wOk=false;
+      try{ var wr=await netFetch(pdfjsLib.GlobalWorkerOptions.workerSrc, 15000); wOk=!!(wr&&wr.ok); }catch(_){ wOk=false; }
+      pdfReady=true;
+      if(wOk){ try{localStorage.setItem('ad_pdf_ready','1');}catch(e){} }
+      else { try{localStorage.removeItem('ad_pdf_ready');}catch(e){} }
+      setFlReady();
       return true;
     }catch(e){
       if(!silent) flStatus('Could not load the OFP reader — it needs internet once to cache. Open the app on wi-fi before your flight, then it works offline.',false);

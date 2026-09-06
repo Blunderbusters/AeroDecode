@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v21-7';
+var V='cargodecode-v21-8';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
@@ -31,6 +31,15 @@ var NET_MS=8000;
    Nothing is waiting on the document refresh. It runs in waitUntil, in the background,
    after a cached page has already gone back to the user. It can afford to be patient. */
 var PAGE_MS=60000;
+/* And a SHORT one for the first load, when there is no cached copy to fall back to.
+
+   PAGE_MS is generous because nothing is waiting on the background refresh. The very first
+   launch is the opposite case: the screen is blank and a person is looking at it. Raising the
+   refresh deadline to 60 s quietly raised this one too, which would have meant a minute of
+   nothing on a phone with the radio on and no route - exactly the state this file's opening
+   note is about. The question is not "how long might the download take" but "is anyone
+   waiting", and here they are. */
+var COLD_MS=20000;
 
 function timed(req, ms){
   return new Promise(function(resolve, reject){
@@ -152,7 +161,8 @@ self.addEventListener('fetch', function(e){
         return c.match('./index.html').then(function(hit){
           return (hit? Promise.resolve(hit) : c.match('./')).then(function(cached){
             cached = cached || hit;
-            var net = timed(new Request(url.pathname+'?sw='+Date.now(), {cache:'no-store'}), PAGE_MS)
+            var net = timed(new Request(url.pathname+'?sw='+Date.now(), {cache:'no-store'}),
+                            cached? PAGE_MS : COLD_MS)
               .then(function(resp){
                 if(resp && resp.ok){ try{ c.put('./index.html', resp.clone()); }catch(_){} }
                 return resp;
@@ -161,9 +171,16 @@ self.addEventListener('fetch', function(e){
             if(cached){ e.waitUntil(net.catch(function(){})); return cached; }
             return net.catch(function(){
               return new Response('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">'+
-                '<body style="font:16px system-ui;background:#0a1730;color:#dce8fb;padding:26px">'+
-                '<h2>CargoDecode is not cached yet</h2><p>Open this page once with a working connection and it will be '+
-                'available offline from then on.</p></body>',
+                '<body style="font:16px/1.55 system-ui;background:#0a1730;color:#dce8fb;padding:26px">'+
+                '<h2 style="margin:0 0 10px">Not stored on this device yet</h2>'+
+                '<p>CargoDecode could not be downloaded, so there is nothing to fall back to. This is the one '+
+                'state the app cannot work around \u2014 it has never been saved here.</p>'+
+                '<p><b>If you have signal:</b> tap reload.<br><b>If the bars are lying:</b> turn on airplane mode, '+
+                'then off again. A radio with no route makes requests hang rather than fail, which is slower '+
+                'than having no radio at all.</p>'+
+                '<p><button onclick="location.reload()" style="font:600 16px system-ui;padding:12px 18px;'+
+                'border-radius:10px;border:1px solid #4ea3ff;background:#1f74d8;color:#fff">Try again</button></p>'+
+                '</body>',
                 {headers:{'Content-Type':'text/html; charset=utf-8'}});
             });
           });
