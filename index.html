@@ -408,6 +408,12 @@
   .pfrow{display:flex;align-items:center;gap:7px;margin-top:6px;color:var(--dim);font-size:11.5px}
   .pfmark{flex:0 0 14px;text-align:center;font-weight:800}
   .pfnote{font-size:11px;color:var(--faint);line-height:1.5;margin-top:8px}
+  .pfwhy{margin-top:8px}
+  .pfwhy>summary{list-style:none;cursor:pointer;font-size:11px;color:var(--faint);padding:6px 0;min-height:32px;
+    display:flex;align-items:center;gap:6px}
+  .pfwhy>summary::-webkit-details-marker{display:none}
+  .pfwhy>summary::before{content:'▸';font-size:10px}
+  .pfwhy[open]>summary::before{content:'▾'}
   .pfbtn{display:block;width:100%;margin-top:9px;padding:10px;border-radius:10px;font-family:inherit;
     background:rgba(24,64,44,.85);border:1px solid rgba(78,227,154,.5);color:#bff5da;font-size:13px;font-weight:800;cursor:pointer}
   .pfbtn[disabled]{opacity:.5;cursor:default}
@@ -1296,17 +1302,21 @@
   .gcard.cpr .gv{color:#c9f7dd;font-size:20px}
   .gitem.na .gv{color:var(--faint);font-size:15px}
   /* tabs + flight log */
-  /* One scrolling row, not five wrapped ones. Twelve tabs at min-width 86px wrapped to about
-     250px of permanent chrome; scrolling costs a swipe and returns the height to every tab.
-     The row is sticky so switching tabs never leaves you stranded three screens down with
-     the tab bar somewhere above you. */
-  .tabs{display:flex;flex-wrap:nowrap;gap:8px;margin-top:12px;overflow-x:auto;overflow-y:hidden;
-    -webkit-overflow-scrolling:touch;scrollbar-width:none;padding:6px 2px;position:sticky;top:0;z-index:40;
-    background:rgba(7,16,34,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-    margin-left:-2px;margin-right:-2px;scroll-snap-type:x proximity}
-  .tabs::-webkit-scrollbar{display:none}
-  .tab{flex:0 0 auto;min-width:0;scroll-snap-align:start;background:rgba(38,34,20,.55);border:1px solid rgba(255,209,102,.32);color:#f0d79a;border-radius:12px;
-    padding:11px 13px;font-weight:700;font-size:13.5px;min-height:44px;white-space:nowrap;transition:background .2s,color .2s,box-shadow .2s}
+  /* ALL TWELVE VISIBLE, on purpose. A scrolling row was shorter, but this app gets handed to
+     crew who have never seen it and the tab bar is the only place that says what is in it -
+     a row that hides two thirds of the app off the right edge teaches nobody anything.
+
+     So it wraps, and the height comes out of the sizing instead: tighter padding, smaller
+     type, 44px minimum so the targets stay thumb-sized. Not sticky - a three-row bar pinned
+     to the top would cost more than it returns. The stranding problem a sticky bar was
+     solving is fixed properly below, by scrolling to the top of the tabs on every switch. */
+  .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:12px}
+  .tab{min-width:0;background:rgba(38,34,20,.55);border:1px solid rgba(255,209,102,.32);color:#f0d79a;border-radius:11px;
+    padding:7px 6px;font-weight:700;font-size:11.5px;min-height:46px;line-height:1.18;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    white-space:normal;overflow-wrap:anywhere;
+    transition:background .2s,color .2s,box-shadow .2s}
+  @media (min-width:560px){ .tabs{grid-template-columns:repeat(6,minmax(0,1fr))} }
   .tab.on{background:linear-gradient(180deg,#ffd36b,#e5a11f);color:#241a05;border-color:#ffe0a0;
     box-shadow:0 6px 18px rgba(229,161,31,.42),inset 0 1px 0 rgba(255,255,255,.35)}
   .fl-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
@@ -1510,7 +1520,7 @@
        were 450px of permanent chrome above every tab, on a phone. Folded into one row; it
        opens itself when there is actually an update to install, so the one state that needs
        your attention still gets it. -->
-  <details class="apptools" id="appTools">
+  <details class="apptools" id="appTools" open>
     <summary><span>App, updates &amp; sharing</span><span class="apptoolsdot" id="appToolsDot" hidden>1</span></summary>
     <div class="apptoolsb">
       <div class="updbar" id="updBar">
@@ -1536,15 +1546,15 @@
 
   <div class="tabs">
     <button class="tab on" data-view="decode">Decode</button>
-    <button class="tab" data-view="flightlog">Flight&nbsp;Log</button>
-    <button class="tab" data-view="crewrest">Crew&nbsp;Rest</button>
+    <button class="tab" data-view="flightlog">Flight Log</button>
+    <button class="tab" data-view="crewrest">Crew Rest</button>
     <button class="tab" data-view="duty">LABT/LATT</button>
     <button class="tab" data-view="logbook">Logbook</button>
-    <button class="tab" data-view="hf">HF&nbsp;Checks</button>
+    <button class="tab" data-view="hf">HF Checks</button>
     <button class="tab" data-view="catering">Catering</button>
     <button class="tab tab-proto" id="ftTab" data-view="fatigue">Fatigue <span class="protopill">PROTO</span></button>
-    <button class="tab tab-proto" id="slpTab" data-view="sleep">Sleep&nbsp;Plan <span class="protopill">PROTO</span></button>
-    <button class="tab tab-proto" data-view="sched">Schedule&nbsp;Checks <span class="protopill">PROTO</span></button>
+    <button class="tab tab-proto" id="slpTab" data-view="sleep">Sleep Plan <span class="protopill">PROTO</span></button>
+    <button class="tab tab-proto" data-view="sched">Schedule Checks <span class="protopill">PROTO</span></button>
     <button class="tab" data-view="calc">Calculators</button>
     <button class="tab tab-fun" data-view="wheel">🎡 Wheel of Misfortune</button>
   </div>
@@ -7377,7 +7387,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v21.6 · 2026-09-06';
+  var BUILD='v21.7 · 2026-09-06';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -8480,6 +8490,20 @@
       Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(x){x.classList.remove('on');});
       t.classList.add('on');
       var v=t.getAttribute('data-view');
+      /* Land at the top of the tab you just opened, with the tab bar in view.
+
+         Switching used to keep the scroll position. Three thousand pixels into the Fatigue
+         deck, tapping Logbook collapsed the document to a fraction of its height, the browser
+         clamped the scroll to the new maximum, and you arrived somewhere in the footer of a
+         tab you had not seen - with the tab bar far above you and no way back but a long
+         swipe. */
+      try{
+        var bar=document.querySelector('.tabs');
+        if(bar){
+          var y=bar.getBoundingClientRect().top+window.pageYOffset-6;
+          if(window.pageYOffset>y) window.scrollTo({top:Math.max(0,y), behavior:'auto'});
+        }
+      }catch(e){}
       $('#view-decode').hidden=(v!=='decode'); $('#view-flightlog').hidden=(v!=='flightlog');
       $('#view-crewrest').hidden=(v!=='crewrest');
       $('#view-duty').hidden=(v!=='duty');
@@ -14223,8 +14247,10 @@
       h+='<div class="pfrow"><span class="pfmark" style="color:'+(ok?'#4ee39a':'#ff9d4d')+'">'+(ok?'✓':'○')+'</span>'+esc(it.label)+'</div>';
     });
     if(!ready) h+='<button class="pfbtn" id="pfGo"'+(busy?' disabled':'')+'>'+(busy?'Caching…':'Cache everything now')+'</button>';
-    h+='<div class="pfnote"><b>In the air, put the device in airplane mode.</b> With the radio switched on but no signal, requests do not fail — they hang, and any app waiting on one appears frozen. Airplane mode makes them fail instantly, which is what lets this app fall straight through to its offline copy.'+
-       (NET_OK===false? '<br><br><b style="color:var(--warn)">No usable connection right now</b> — running from the cached copy.' : '')+'</div>';
+    if(NET_OK===false)
+      h+='<div class="pfnote"><b style="color:var(--warn)">No usable connection right now</b> — running from the cached copy.</div>';
+    h+='<details class="pfwhy"><summary>Why airplane mode matters in flight</summary>'+
+       '<div class="pfnote" style="margin-top:5px"><b>In the air, put the device in airplane mode.</b> With the radio switched on but no signal, requests do not fail — they hang, and any app waiting on one appears frozen. Airplane mode makes them fail instantly, which is what lets this app fall straight through to its offline copy.</div></details>';
     el.innerHTML=h;
     var go=document.getElementById('pfGo');
     if(go) go.onclick=function(){
