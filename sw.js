@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v21-0';
+var V='cargodecode-v21-6';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
@@ -42,20 +42,40 @@ function timed(req, ms){
 
 self.addEventListener('install', function(e){
   self.skipWaiting();
-  // Pre-cache the shell so the FIRST launch after install is already flight-ready.
+  /* Pre-cache the shell so the FIRST launch after install is already flight-ready.
+
+     index.html is REQUIRED and everything else is optional. Every entry used to be optional,
+     which meant a install on dying hotel wifi could time out on all ten fetches, swallow all
+     ten failures, resolve, and hand straight to activate - which then deleted the cache that
+     held the working page. The next launch, offline, got the "not cached yet" stub. An
+     install that did not manage to store the app is not an install. */
   e.waitUntil(caches.open(V).then(function(c){
-    return Promise.all(SHELL.map(function(u){
-      return timed(new Request(u, {cache:'reload'}), PAGE_MS)
-        .then(function(r){ if(r && (r.ok || r.type==='opaque')) return c.put(u, r); })
-        .catch(function(){});                       // a missing optional asset must not fail the install
-    }));
+    var need=timed(new Request('./index.html', {cache:'reload'}), PAGE_MS)
+      .then(function(r){
+        if(!r || !r.ok) throw new Error('index.html did not cache');
+        return c.put('./index.html', r.clone()).then(function(){ return c.put('./', r); });
+      });
+    var rest=Promise.all(SHELL.filter(function(u){ return u!=='./index.html' && u!=='./'; })
+      .map(function(u){
+        return timed(new Request(u, {cache:'reload'}), PAGE_MS)
+          .then(function(r){ if(r && (r.ok || r.type==='opaque')) return c.put(u, r); })
+          .catch(function(){});                     // a missing optional asset must not fail the install
+      }));
+    return need.then(function(){ return rest; });
   }));
 });
 
 self.addEventListener('activate', function(e){
-  e.waitUntil(caches.keys().then(function(ks){
-    return Promise.all(ks.map(function(k){ return k===V? null : caches.delete(k); }));
-  }).then(function(){ return self.clients.claim(); }));
+  /* Delete the previous caches only once the new one is proved to hold the app. Unconditional
+     deletion here is what turned a failed install into an unopenable app. */
+  e.waitUntil(
+    caches.open(V).then(function(c){ return c.match('./index.html'); }).then(function(hit){
+      if(!hit) return;                              // new cache is not usable: keep the old one
+      return caches.keys().then(function(ks){
+        return Promise.all(ks.map(function(k){ return k===V? null : caches.delete(k); }));
+      });
+    }).then(function(){ return self.clients.claim(); })
+  );
 });
 
 self.addEventListener('message', function(e){
@@ -156,7 +176,10 @@ self.addEventListener('fetch', function(e){
   /* The version probe is network-only. It exists to answer "is there a newer build", and a
      cache-first answer to that question is worse than no answer: it would report the version
      that was current when the app was installed, forever, and look authoritative doing it. */
-  if(/\/version\.txt$/.test(url.pathname)) return;
+  /* Network-only probes. Each is fetched with a cache-busting query, so the catch-all branch
+     below would miss every time, fetch, and then store ANOTHER permanent entry - one per
+     launch, forever, in the same origin bucket that holds the only copy of the roster. */
+  if(/\/(version|kill|announce)\.txt$/.test(url.pathname)) return;
 
   // Everything else: cache-first, network time-boxed, opaque CDN responses cached too.
   e.respondWith(
