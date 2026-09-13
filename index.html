@@ -2366,6 +2366,7 @@
     <span style="display:block;margin:8px auto;max-width:640px;color:var(--faint);font-size:11px;line-height:1.45">Independent tool — not affiliated with, endorsed by, or sponsored by Atlas Air, Inc. or the International Brotherhood of Teamsters. "Atlas Air" and other marks are the property of their respective owners. All results are estimates for personal reference only; always confirm against official sources and the governing CBA before relying on them.</span>
     <span id="buildStamp" style="color:var(--faint);font-variant:tabular-nums"></span><br>
     <button id="reportBtn" class="minibtn" style="margin-top:8px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">✉ Report an issue</button>
+    <button id="suggestBtn" class="minibtn" style="margin-top:8px;margin-left:6px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">💡 Suggest a feature</button>
     <button id="manageBtn" class="minibtn" style="margin-top:8px;margin-left:6px;background:rgba(24,44,76,.8);border:1px solid var(--edge);color:var(--ink)">Sign out</button>
     <details class="advisory" id="advisory" hidden>
       <summary>⚠️ Operational Advisory: Extended Captain Changeover Buffer</summary>
@@ -2395,8 +2396,8 @@
 
 <div class="rptModal" id="rptModal">
   <div class="rptBox">
-    <div class="rptTitle">Report an issue</div>
-    <div class="rptSub">Send it to <b id="rptTo">CargoAeroData@gmail.com</b>. Pick whichever works on your device.</div>
+    <div class="rptTitle" id="rptTitle">Report an issue</div>
+    <div class="rptSub" id="rptSub">Send it to <b id="rptTo">CargoAeroData@gmail.com</b>. Pick whichever works on your device.</div>
     <button class="rptOpt primary" id="rptGmail">Compose in Gmail<span class="rptOptSub">Opens a pre-filled Gmail message in a new browser tab</span></button>
     <button class="rptOpt" id="rptMail">Open your email app<span class="rptOptSub">Uses your device's default mail app (mailto)</span></button>
     <button class="rptOpt" id="rptCopy">Copy address &amp; message<span class="rptOptSub">Paste into any email if the buttons above don't work</span></button>
@@ -7409,7 +7410,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v22.3 · 2026-09-09';
+  var BUILD='v22.4 · 2026-09-13';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -7962,14 +7963,39 @@
   function forceUpdateNow(){ setUpd('Updating…'); applyUpdate(); }   // purge caches + SW, hard-reload fresh
   if(ub) ub.onclick=function(){ if(_pendingUpd){ forceUpdateNow(); } else { checkForUpdate(true, true); } };
   if(updStatus) updStatus.onclick=function(){ if(_pendingUpd) forceUpdateNow(); };
+  /* Two doors, one room. A bug report and a suggestion want different prompts and arrive in
+     different mental states, but they take the same three routes out — Gmail, mail app, or
+     copy — so the modal is told which one it is rather than being built twice.
+
+     The prompts differ in a way that matters. A bug report needs the device string, because
+     "it did nothing when I tapped upload" is unanswerable without knowing the browser. A
+     suggestion does not, so it does not collect one. */
+  var rptMode='issue';
   function rptMsg(){
+    if(rptMode==='idea'){
+      return { subj:'CargoDecode suggestion — '+BUILD,
+        body:'What would you like it to do?\n\n\n'+
+             'What are you trying to get done when this comes up?\n\n\n'+
+             'How often does it come up — every trip, now and then, once?\n\n\n'+
+             '----------------------\nApp version: '+BUILD };
+    }
     return { subj:'CargoDecode issue — '+BUILD,
       body:'Describe the issue (what you were doing, which report or flight plan, and what went wrong):\n\n\n\n----------------------\nApp version: '+BUILD+'\nDevice: '+navigator.userAgent };
   }
   var rptModal=document.getElementById('rptModal');
-  function rptShow(){ var c=document.getElementById('rptCopied'); if(c)c.textContent=''; if(rptModal)rptModal.classList.add('on'); }
+  function rptShow(mode){
+    rptMode=(mode==='idea')?'idea':'issue';
+    var t=document.getElementById('rptTitle'), sub=document.getElementById('rptSub');
+    if(t) t.textContent=(rptMode==='idea')? 'Suggest a feature' : 'Report an issue';
+    if(sub) sub.innerHTML=(rptMode==='idea')
+      ? 'Ideas, gripes, anything missing — send it to <b>'+FEEDBACK_EMAIL+'</b>. Half of what is in this app started as somebody saying "it should just…".'
+      : 'Send it to <b>'+FEEDBACK_EMAIL+'</b>. Pick whichever works on your device.';
+    var c=document.getElementById('rptCopied'); if(c)c.textContent='';
+    if(rptModal)rptModal.classList.add('on');
+  }
   function rptHide(){ if(rptModal)rptModal.classList.remove('on'); }
-  var rbtn=document.getElementById('reportBtn'); if(rbtn) rbtn.onclick=rptShow;
+  var rbtn=document.getElementById('reportBtn'); if(rbtn) rbtn.onclick=function(){ rptShow('issue'); };
+  var sbtn=document.getElementById('suggestBtn'); if(sbtn) sbtn.onclick=function(){ rptShow('idea'); };
   var rG=document.getElementById('rptGmail'); if(rG) rG.onclick=function(){
     var m=rptMsg();
     var url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(FEEDBACK_EMAIL)+
