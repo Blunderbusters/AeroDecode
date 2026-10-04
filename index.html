@@ -5184,12 +5184,42 @@
       /* The rest that follows, but ONLY when the next duty is inside the window being
          drawn. Reading it off a link set against the whole roster ran the time axis out
          past the last duty and left the chart trailing into empty space. */
+      /* The rest that follows, but ONLY when the next duty is inside the window being
+         drawn. Reading it off a link set against the whole roster ran the time axis out
+         past the last duty and left the chart trailing into empty space. */
       var nxt=duties[di+1];
       if(nxt && nxt.wakeMs!=null && nxt.wakeMs>d.release){
         var blocks=nxt.restBlocks||[];
+        /* The rest is now MODELLED, not left blank.
+
+           Every rest used to emit e:null, so the line stopped dead at each release and
+           restarted at the next wake-up. On a roster with real days off that is not a curve,
+           it is a row of unconnected fragments - a month of October came out as ten separate
+           pieces - and it reads as the chart being broken rather than as the pattern it is.
+
+           The reservoir is perfectly well defined across a rest: it drains while you are up
+           and refills across each modelled sleep. So the breakpoints simply continue past
+           release, through the sleep blocks, to the next wake-up call, and the same sampler
+           runs over them. The points are marked phase:'rest' so the renderer can draw them
+           differently - this is what the model thinks you would be, not a duty figure. */
+        var rbp=[{t:d.release, r:cur}], rcur=cur, rlast=d.release;
+        blocks.forEach(function(bk){
+          if(bk.end<=rlast || bk.start>=nxt.wakeMs) return;
+          var st=Math.max(bk.start, rlast), en=Math.min(bk.end, nxt.wakeMs);
+          if(en<=st) return;
+          if(st>rlast){ rcur=F.reservoirAt(rcur,(st-rlast)/3600000); rbp.push({t:st,r:rcur,sleep:true}); }
+          else rbp.push({t:st,r:rcur,sleep:true});
+          rcur=F.reservoirAfterSleep(rcur,(en-st)/3600000, 0.9);
+          rbp.push({t:en,r:rcur});
+          rlast=en;
+        });
+        if(nxt.wakeMs>rlast){ rcur=F.reservoirAt(rcur,(nxt.wakeMs-rlast)/3600000); rbp.push({t:nxt.wakeMs,r:rcur}); }
         for(var u=d.release; u<=nxt.wakeMs; u+=step){
           var asleep=blocks.some(function(b){ return u>=b.start && u<b.end; });
-          pts.push({ t:u, e:null, sleep:asleep, phase:'rest' });
+          var sp=sample(u,rbp,bOff,F,'rest');
+          sp.sleep=asleep;
+          if(asleep) sp.e=null;        // asleep is not an alertness figure; the gap is the point
+          pts.push(sp);
         }
       }
     });
@@ -7410,7 +7440,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v22.4 · 2026-09-13';
+  var BUILD='v22.5 · 2026-10-04';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -10141,12 +10171,26 @@
         /* Only the pattern around the duty in question: the whole roster is not a trip. */
         var here=-1;
         for(var z=0;z<allD.length;z++) if(allD[z].report===nd.report){ here=z; break; }
-        var lo=Math.max(0, here-3), hi=Math.min(allD.length, here+4);
-        var win=allD.slice(lo,hi);
+        /* Three duties either side, AND within a week either side.
+
+           The count alone was not a pattern. Come back from a fortnight off and the three
+           duties "before" this one are three weeks in the past, so a chart headed "this
+           pattern, start to finish" opened on 9 September for a duty on 4 October — two
+           blocks of flying with a hole between them, presented as one pattern. A pattern is
+           the run you are IN, so the window is bounded in time as well as in count, and the
+           caption says which days it actually covers. */
+        var PAT_DAYS=7*86400000, anchorT=nd.report;
+        var lo=here, hi=here;
+        while(lo>0 && (here-lo)<3 && allD[lo-1].release!=null && (anchorT-allD[lo-1].release)<=PAT_DAYS) lo--;
+        while(hi<allD.length-1 && (hi-here)<3 && allD[hi+1].report!=null && (allD[hi+1].report-anchorT)<=PAT_DAYS) hi++;
+        var win=allD.slice(lo,hi+1);
         var g=dpCurveSVG(win, F, false);
         if(g){
           h+='<div class="rptbox"><div class="rpthead">This pattern, start to finish</div>'+
-             '<div class="rptq" style="font-size:13px">Predicted alertness across the days either side of this duty.</div>'+
+             '<div class="rptq" style="font-size:13px">Predicted alertness across the run this duty sits in — '+
+             esc(dpDay(win[0].report))+' to '+esc(dpDay(win[win.length-1].report))+
+             (win.length<2? '. This duty stands alone: nothing else within a week of it.' :
+              ' ('+win.length+' duty periods). Anything more than a week either side is a different pattern and is left out.')+'</div>'+
              '<div class="ovcurve">'+dpCurveAxis()+'<div class="ovscroll">'+g+'</div></div>'+
              '<div class="rptwhy" style="margin-top:8px;font-size:11.5px">'+
              'Blue shading is modelled sleep, lighter shading is duty. Dots mark the low point of each duty period. '+
@@ -12602,14 +12646,29 @@
     });
     flush(t1);
 
-    var seg=[], paths=[];
+    /* Two strokes, one line. Duty is solid and bright; the stretch between duties is thinner
+       and dimmer, because it is the same model running on a day you are not at work - worth
+       seeing, not worth mistaking for a duty figure. The only breaks left are modelled SLEEP,
+       where an alertness number would mean nothing, and those now read as gaps inside the
+       blue shading rather than as the chart giving up. */
+    var seg=[], segPhase=null, paths=[];
+    function flushSeg(){ if(seg.length>1) paths.push({pts:seg, rest:(segPhase==='rest')}); }
     pts.forEach(function(pt){
-      if(pt.e==null){ if(seg.length>1) paths.push(seg); seg=[]; return; }
+      if(pt.e==null){ flushSeg(); seg=[]; segPhase=null; return; }
+      var ph=(pt.phase==='rest')?'rest':'duty';
+      if(segPhase!==null && ph!==segPhase){
+        var last=seg[seg.length-1];
+        flushSeg();                       // carry one point across so the two meet
+        seg=last? [last] : [];
+      }
+      segPhase=ph;
       seg.push(X(pt.t).toFixed(1)+','+Y(pt.e).toFixed(1));
     });
-    if(seg.length>1) paths.push(seg);
+    flushSeg();
     paths.forEach(function(sg){
-      g+='<polyline points="'+sg.join(' ')+'" fill="none" stroke="#8fb4ff" stroke-width="1.8" stroke-linejoin="round"/>';
+      g+='<polyline points="'+sg.pts.join(' ')+'" fill="none" stroke="#8fb4ff" '+
+         (sg.rest? 'stroke-width="1.1" stroke-opacity=".45" stroke-dasharray="4 3"'
+                 : 'stroke-width="1.8"')+' stroke-linejoin="round"/>';
     });
 
     /* ---- the duty ribbon: what each shaded block actually IS.
@@ -12627,9 +12686,21 @@
          '" rx="2.5" fill="'+col+'" fill-opacity=".85"><title>'+esc(dd.from+'→'+dd.to)+
          '  report '+hhmm(dd.report)+'Z  release '+hhmm(dd.release)+'Z'+
          (dd.effWorst!=null? '  — low '+dd.effWorst+'%':'')+'</title></rect>';
-      var label=dd.from+'→'+dd.to;
-      if(wpx > label.length*5.4+6)
-        g+='<text x="'+((x0+x1)/2).toFixed(1)+'" y="'+(8+RIB-8)+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="#08101f">'+esc(label)+'</text>';
+      /* A bar too narrow for its route used to get NO text at all, so a short sector came out
+         as an empty coloured pill - three of twelve on a real October roster. Shorten the
+         label rather than dropping it: route, then destination, then its first letter. A bar
+         narrower than even that gets the route underneath, where there is always room. */
+      var midX=((x0+x1)/2).toFixed(1), ty=(8+RIB-8);
+      var forms=[dd.from+'\u2192'+dd.to, String(dd.to||''), String(dd.to||'').charAt(0)];
+      var drew=false;
+      for(var fi=0; fi<forms.length; fi++){
+        if(forms[fi] && wpx > forms[fi].length*5.4+5){
+          g+='<text x="'+midX+'" y="'+ty+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="#08101f">'+esc(forms[fi])+'</text>';
+          drew=true; break;
+        }
+      }
+      if(!drew && dd.to)
+        g+='<text x="'+midX+'" y="'+(8+RIB+9)+'" text-anchor="middle" font-size="7.5" font-weight="700" fill="'+col+'">'+esc(dd.from+'\u2192'+dd.to)+'</text>';
       /* Report and release times sit just under the ribbon, tied to the edges of the block
          rather than centred, so a narrow duty still says when it began. */
       if(wpx>44){
