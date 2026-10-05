@@ -129,6 +129,9 @@
   .featban .fbody{font-size:13.5px;line-height:1.6;color:#cfe9db;margin-top:7px}
   .featban .fbody b{color:#eafff4}
   .featban .fgo{width:100%;margin-top:12px;background:linear-gradient(180deg,#4ee39a,#1ea96b);color:#042b1b}
+  /* Same green as the new-feature banner's action, because it IS that action - the banner
+     hands you to this button, and two colours for one thing reads as two things. */
+  .recbtn{width:100%;margin-top:10px;background:linear-gradient(180deg,#4ee39a,#1ea96b);color:#042b1b}
   .featban .fnote{font-size:12px;color:#8fd9b4;margin-top:9px;line-height:1.5}
   .advisory{margin-top:14px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left;
     background:rgba(60,32,12,.22);border:1px solid rgba(255,180,90,.18);border-radius:12px;padding:8px 12px}
@@ -7532,7 +7535,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v22.9 · 2026-10-05';
+  var BUILD='v23.0 · 2026-10-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -9625,7 +9628,7 @@
     h+='</div>';
     flQC.innerHTML=h;
     flSum.innerHTML='<div class="fl-summary">Departure <b>'+dep+'Z</b> · '+eta.length+' waypoints · Arrival <b>'+esc(last.wpt)+' '+last.eta+'</b>'+(flTrip?' · trip '+flTrip.str:'')+' <button class="minibtn" id="flCopyBtn" style="margin-left:8px">Copy for kneeboard</button></div>'+
-      '<button id="flRecBtn" style="width:100%;margin-top:10px">\u270e  Record ETAs onto the printed plan</button>'+
+      '<button id="flRecBtn" class="recbtn">\u270e  Record ETAs onto paper OFP</button>'+
       '<div class="hint" style="margin-top:6px">One waypoint at a time, in the order they appear on your flight plan, with a big NEXT bar — so your eye never has to find its place in the table again.</div>'+
       '<div class="hint" style="margin-top:6px">Tap any <b style="color:var(--dim)">Waypoint / NM / Leg-T / Tot-T</b> cell to fix an OCR misread — ETAs and cards recompute automatically.</div>';
     var cb=$('#flCopyBtn'); if(cb) cb.onclick=function(){ var t=flCopyText(); if(navigator.clipboard)navigator.clipboard.writeText(t); cb.textContent='Copied ✓'; setTimeout(function(){cb.textContent='Copy for kneeboard';},1300); };
@@ -9766,7 +9769,7 @@
      Shown on the Flight Log tab until dismissed. The button is live: if a plan
      is already loaded it opens the stepper straight away, so the banner is not
      just telling you about a thing, it is the thing. */
-  var FEAT={ id:'recetas-1', ver:'v22.9',
+  var FEAT={ id:'recetas-1', ver:'v23.0',
     title:'Record ETAs — one waypoint at a time',
     body:'Writing an ETA beside every waypoint on the printed plan means your eye has to find its place in the table again after every single one. This walks the list for you: <b>one point on screen</b>, the one you just did above it, the one coming next below it, and a <b>full-width NEXT bar</b> you can hit without looking. It keeps your place if you put the phone down, and holds the screen awake so it cannot dim out from under you halfway down the list.',
     note:'The order is the order on your plan — same document, same sequence. Read the waypoint name before you write: if it does not match the line you are on, a point was misread on import.' };
