@@ -10,7 +10,7 @@
      1. The page is served CACHE-FIRST. A cached copy goes back immediately, every time, and
         the network is consulted afterwards to refresh it for next launch.
      2. Nothing waits on the network without a deadline. */
-var V='cargodecode-v22-6';
+var V='cargodecode-v22-8';
 var SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png',
            './icon-192.png','./icon-512.png','./hf-pac.jpg','./hf-atl.jpg','./hf-vhf.jpg','./hf-mex.jpg'];
 var NET_MS=8000;
@@ -133,6 +133,27 @@ self.addEventListener('fetch', function(e){
      returned AS the app, which is a cache poisoned by visiting a wrong URL once. */
   var base=new URL('./', self.location).pathname;
   if(isDoc && url.pathname!==base && url.pathname!==base+'index.html') return;
+
+  /* The app's own page fetched by SCRIPT rather than navigated to - which is exactly what
+     the "Install update" button does, and what getLatestBuild falls back to when there is no
+     version.txt. A plain fetch() is not a navigation: its mode is "cors" and its destination
+     is "", so isDoc is false and it used to fall all the way through to the catch-all branch
+     at the bottom. That branch is cache-first on NET_MS - eight seconds.
+
+     Eight seconds is the right deadline for the small requests the UI waits on, and the
+     comment on PAGE_MS above describes precisely why it is the wrong one for index.html.
+     That fix was applied to the branch that SERVES the page and not to the branch the
+     updater's own request lands in, so the update button kept the bug the page load had
+     been cured of: the worker aborted the download at 8 s, answered Response.error(), the
+     page's fetch rejected, and the app reported "Could not download the update" while the
+     page-side deadline sat there with 52 seconds still to run. Measured at 1.32 MB: fails at
+     8,007 ms through the worker, succeeds at 12,024 ms without it.
+
+     There is nothing for a cache to add here. The caller wants the server's copy, by
+     definition, and storing it under a one-off cache-busting key would leave a 1.3 MB entry
+     per attempt in the same bucket that holds the only copy of the roster. So the worker
+     gets out of the way and lets the page's own 60-second deadline govern. */
+  if(!isDoc && (url.pathname===base || url.pathname===base+'index.html')) return;
 
   /* An escape hatch that is a LINK rather than a reinstall.
 
