@@ -111,6 +111,25 @@
   .protobanner-body{margin:0;font-size:13.5px;line-height:1.55;color:#f0d79a}
   .protobanner-body b{color:#fff}
   /* tongue-in-cheek operational advisory in the footer — subtle, collapsed by default */
+  /* ---- "new feature" banner, scoped to one tab ------------------------------
+     The What's-new card on the home screen announces a release; this announces
+     ONE thing, on the tab where that thing lives, so the explanation and the
+     button are in the same eyeful. Dismissal is keyed to the feature id, so a
+     later feature gets a new banner and this one never comes back. */
+  .featban{margin-bottom:14px;border-radius:16px;padding:14px 15px;position:relative;
+    background:linear-gradient(180deg,rgba(32,86,60,.5),rgba(16,52,38,.52));
+    border:1px solid rgba(78,227,154,.42)}
+  .featban .fhead{display:flex;align-items:center;gap:9px}
+  .featban .ftag{font-size:9.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+    background:var(--good);color:#04331f;padding:3px 8px;border-radius:7px}
+  .featban .fver{font-family:var(--mono);font-size:11.5px;color:#8fd9b4;letter-spacing:.3px}
+  .featban .fx{margin-left:auto;background:none;border:0;padding:4px 6px;min-height:0;
+    color:#8fd9b4;font-size:17px;font-weight:700;line-height:1;opacity:.8}
+  .featban .ftitle{font-size:16.5px;font-weight:800;color:#eafff4;margin-top:8px;line-height:1.3}
+  .featban .fbody{font-size:13.5px;line-height:1.6;color:#cfe9db;margin-top:7px}
+  .featban .fbody b{color:#eafff4}
+  .featban .fgo{width:100%;margin-top:12px;background:linear-gradient(180deg,#4ee39a,#1ea96b);color:#042b1b}
+  .featban .fnote{font-size:12px;color:#8fd9b4;margin-top:9px;line-height:1.5}
   .advisory{margin-top:14px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left;
     background:rgba(60,32,12,.22);border:1px solid rgba(255,180,90,.18);border-radius:12px;padding:8px 12px}
   .advisory summary{cursor:pointer;list-style:none;font-size:11px;color:var(--faint);font-weight:700;
@@ -1704,6 +1723,7 @@
   </div><!-- /view-decode -->
 
   <div id="view-flightlog" hidden>
+    <div id="flFeat"></div>
     <div class="card">
       <label class="fld">Departure time — Zulu (HHMM, wheels-up)</label>
       <div class="fl-controls">
@@ -7512,7 +7532,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v22.6 · 2026-10-05';
+  var BUILD='v22.7 · 2026-10-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -9705,6 +9725,40 @@
   $('#recBack').onclick=function(){ if(recI>0){ recI--; recStore(); recRender(); } };
   $('#recX').onclick=recClose;
 
+
+  /* ---- the Record-ETAs announcement ---------------------------------------
+     Shown on the Flight Log tab until dismissed. The button is live: if a plan
+     is already loaded it opens the stepper straight away, so the banner is not
+     just telling you about a thing, it is the thing. */
+  var FEAT={ id:'recetas-1', ver:'v22.7',
+    title:'Record ETAs — one waypoint at a time',
+    body:'Writing an ETA beside every waypoint on the printed plan means your eye has to find its place in the table again after every single one. This walks the list for you: <b>one point on screen</b>, the one you just did above it, the one coming next below it, and a <b>full-width NEXT bar</b> you can hit without looking. It keeps your place if you put the phone down, and holds the screen awake so it cannot dim out from under you halfway down the list.',
+    note:'The order is the order on your plan — same document, same sequence. Read the waypoint name before you write: if it does not match the line you are on, a point was misread on import.' };
+  function featSeen(){ try{ return localStorage.getItem('ad_featseen')||''; }catch(e){ return ''; } }
+  function featRender(){
+    var box=$('#flFeat'); if(!box) return;
+    if(featSeen()===FEAT.id){ box.innerHTML=''; return; }
+    box.innerHTML='<div class="featban">'+
+      '<div class="fhead"><span class="ftag">New feature</span><span class="fver">'+esc(FEAT.ver)+'</span>'+
+        '<button class="fx" id="featX" aria-label="Dismiss">✕</button></div>'+
+      '<div class="ftitle">'+esc(FEAT.title)+'</div>'+
+      '<div class="fbody">'+FEAT.body+'</div>'+
+      '<button class="fgo" id="featGo">✎  Try it</button>'+
+      '<div class="fnote">'+FEAT.note+'</div></div>';
+    $('#featX').onclick=function(){
+      try{ localStorage.setItem('ad_featseen', FEAT.id); }catch(e){}
+      box.innerHTML='';
+    };
+    $('#featGo').onclick=function(){
+      if(flEta && flEta.length){ recOpen(); }
+      else {
+        /* Nothing loaded yet - say what to do rather than opening an empty stepper. */
+        var n=$('#featGo'); n.textContent='Load a flight plan first — OFP UPLOAD, above';
+        setTimeout(function(){ n.innerHTML='✎  Try it'; },2600);
+      }
+    };
+  }
+
   flDep.addEventListener('input',function(){ flRender(); flSave(); });
 
   // One entry point: parse the OFP once and cascade it into Flight Log, LABT/LATT and Crew Rest.
@@ -9774,6 +9828,7 @@
      value, and a restore attempted above this line looked up localStorage[undefined],
      found nothing and reported success at having nothing to do. */
   try{ flRestore(); }catch(e){}
+  try{ featRender(); }catch(e){}
   function goFlightLog(){ var t=document.querySelector('.tab[data-view="flightlog"]'); if(t) t.click(); }
   $('#flPasteGo').onclick=function(){ var t=$('#flPaste').value||''; if(t.trim()){ ofpIngest(t); goFlightLog(); } };
   // Demo OFP — a real ORD→ZHEC flight plan to experiment with on first use

@@ -9647,6 +9647,10 @@
     if(document.visibilityState==='visible' && recOv && recOv.classList.contains('on')) recWakeOn();
   });
 
+  /* The table keeps the "+1d" day-count suffix; the card does not. In the
+     stepper you are copying a four-digit Zulu time into a box on the plan, and
+     the extra characters are noise at that size. */
+  function recZ(e){ return String(e).replace(/\s*\+\d+d$/,''); }
   function recTagOf(w){
     if(!flSt) return null;
     if(flSt.entryFix===w.wpt) return {c:'etops',t:'ETOPS ENTRY'};
@@ -9658,7 +9662,7 @@
     if(!w){ el.innerHTML=''; el.style.visibility='hidden'; return; }
     el.style.visibility='visible';
     el.innerHTML='<span class="lab">'+lab+'</span><span class="wp">'+esc(w.wpt)+'</span>'+
-                 '<span class="tm">'+esc(w.eta)+'</span>';
+                 '<span class="tm">'+esc(recZ(w.eta))+'</span>';
   }
   function recRender(){
     var n=flEta.length, card=$('#recCard'), go=$('#recGo'), bk=$('#recBack');
@@ -9671,21 +9675,19 @@
       recSide($('#recNext'),'', null);
       card.className='recEnd';
       card.innerHTML='<div class="big">✓ All '+n+' recorded</div>'+
-        '<div class="sub">Last point <b style="color:var(--gold)">'+esc(flEta[n-1].wpt)+' '+esc(flEta[n-1].eta)+
+        '<div class="sub">Last point <b style="color:var(--gold)">'+esc(flEta[n-1].wpt)+' '+esc(recZ(flEta[n-1].eta))+
         '</b>.<br>Check it against the bottom line of your printed plan before you close this — if the names do not match, a waypoint was misread on import and the column is off by one.</div>';
       go.textContent='Start over'; go.className='recGo fin';
       return;
     }
     var w=flEta[recI], tag=recTagOf(w), dest=(recI===n-1);
-    var m=String(w.eta).match(/^(\d{4})Z(?:\s*\+(\d+)d)?$/);
-    var big=m? m[1]+'Z' : w.eta, day=m&&m[2]? '+'+m[2]+' day'+(m[2]>'1'?'s':''):'';
+    var big=recZ(w.eta);
     $('#recCount').textContent=(recI+1)+' / '+n;
     recSide($('#recPrev'),'done', recI>0? flEta[recI-1] : null);
     recSide($('#recNext'),'next', recI<n-1? flEta[recI+1] : null);
     card.className='recCard';
     card.innerHTML='<div class="recWpt">'+esc(w.wpt)+'</div>'+
       '<div class="recEta">'+esc(big)+'</div>'+
-      (day? '<div class="recTag etops">'+esc(day)+' — write the date too</div>' : '')+
       (tag? '<div class="recTag '+tag.c+'">'+tag.t+'</div>' : '')+
       (dest&&!tag? '<div class="recTag dest">DESTINATION</div>' : '')+
       '<div class="recSub">Tot '+esc(w.tot||'—')+(w.nm?'  ·  '+esc(w.nm)+' NM':'')+'</div>';
