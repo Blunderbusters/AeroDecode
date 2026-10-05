@@ -7532,7 +7532,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v22.8 · 2026-10-05';
+  var BUILD='v22.9 · 2026-10-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -8015,10 +8015,36 @@
       return t;
     }catch(e){ return null; }
   }
+  /* ---- recovery, so that a failed update never needs a human to explain it ---------
+     The first time this failed for real, the only cure was for someone to be TOLD to open
+     the app's address with ?fresh=1 — and the person who would have to do the telling has
+     no way to reach the people who need it. An update path whose recovery lives in a text
+     message is not a recovery path.
+
+     So the app performs its own. ?fresh=1 is a NAVIGATION, which is the one route that was
+     never affected: the worker answers navigations on the 60-second page deadline and
+     stores whatever the server returns. If the download the normal way does not arrive,
+     the app takes that route itself rather than reporting a dead end.
+
+     Once per launch, because the failure that is NOT recoverable — no signal at all — would
+     otherwise bounce the app off this forever: the worker's fresh branch falls back to the
+     cached page, the app loads, the check runs, and round it goes. One attempt, then the
+     honest message. */
+  var _freshKey='ad_upd_fresh';
+  function _triedFresh(){ try{ return sessionStorage.getItem(_freshKey)==='1'; }catch(e){ return false; } }
+  function _markFresh(){ try{ sessionStorage.setItem(_freshKey,'1'); }catch(e){} }
+  function _keepKey(){ var m=/[?&](k=[^&#]+)/.exec(location.search||''); return m? '&'+m[1] : ''; }
+
   async function applyUpdate(){
     setUpd('Downloading the new version…');
     var fresh=await fetchNewPage();
     if(!fresh){
+      if(!_triedFresh()){
+        _markFresh();
+        setUpd('That route stalled — trying another…');
+        location.replace(location.pathname+'?fresh=1'+_keepKey());
+        return;
+      }
       setUpd('');
       alert('Could not download the update, so nothing was changed.\n\n'+
             'The app you have still works and is still available offline. Try again on a better connection.');
@@ -8081,6 +8107,16 @@
       setUpd(manual?('✓ You’re on the latest ('+BUILD.split(' ')[0]+')'):'');
     }
   }
+  /* fresh=1 has served its purpose by the time this runs: the document in front of you IS
+     the server's copy. Leaving it in the address is how a cache-busting query got baked into
+     an installed app's start URL once before. */
+  (function(){
+    try{
+      if(/(^|[?&])fresh=1(&|$)/.test(location.search) && history.replaceState)
+        history.replaceState(null,'',location.pathname+(/[?&](k=[^&#]+)/.test(location.search)
+          ? '?'+/[?&](k=[^&#]+)/.exec(location.search)[1] : ''));
+    }catch(e){}
+  })();
   var ub=document.getElementById('updBtn');
   function forceUpdateNow(){ setUpd('Updating…'); applyUpdate(); }   // purge caches + SW, hard-reload fresh
   if(ub) ub.onclick=function(){ if(_pendingUpd){ forceUpdateNow(); } else { checkForUpdate(true, true); } };
@@ -9730,7 +9766,7 @@
      Shown on the Flight Log tab until dismissed. The button is live: if a plan
      is already loaded it opens the stepper straight away, so the banner is not
      just telling you about a thing, it is the thing. */
-  var FEAT={ id:'recetas-1', ver:'v22.8',
+  var FEAT={ id:'recetas-1', ver:'v22.9',
     title:'Record ETAs — one waypoint at a time',
     body:'Writing an ETA beside every waypoint on the printed plan means your eye has to find its place in the table again after every single one. This walks the list for you: <b>one point on screen</b>, the one you just did above it, the one coming next below it, and a <b>full-width NEXT bar</b> you can hit without looking. It keeps your place if you put the phone down, and holds the screen awake so it cannot dim out from under you halfway down the list.',
     note:'The order is the order on your plan — same document, same sequence. Read the waypoint name before you write: if it does not match the line you are on, a point was misread on import.' };
