@@ -1,3 +1,7 @@
-off
-Update Required
-Please delete CargoDecode from your home screen and reload it from your browser to install the latest version.
+flightkeys-wip-1
+New flight plan format
+Dispatch switched to the new FlightKeys OFP today.
+
+The Flight Log is being updated to read it. Until that update reaches your phone, check anything it pulls off a FlightKeys plan against the paper — in particular the arrival time and the departure time.
+
+Expect the update in the next 24 to 48 hours. You do not need to do anything; the app updates itself when you open it with a connection.
