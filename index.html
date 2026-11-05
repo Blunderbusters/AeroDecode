@@ -3167,7 +3167,23 @@
     return cand.replace(/[^A-Z0-9./]/g,'');
   }
 
+  /* Which reader to use is not left to the sniffer alone. The fuel plan states the trip
+     time independently of the nav log, so the document can settle the argument itself:
+     whichever reader lands on the printed TRIP time is the one that read the table
+     correctly. The sniffer only decides who goes first. A misdetection then costs a
+     little work instead of producing a plausible, wrong arrival time. */
   function parseNavlog(text){
+    function safe(fn){ try{ return fn(text)||[]; }catch(e){ return []; } }
+    var fk=isFlightKeys(text);
+    var a=safe(fk? parseNavlogFK : parseNavlogLegacy);
+    var trip=parseTripTime(text);
+    if(!trip || !trip.str) return a.length? a : safe(fk? parseNavlogLegacy : parseNavlogFK);
+    if(a.length && a[a.length-1].tot===trip.str) return a;
+    var b=safe(fk? parseNavlogLegacy : parseNavlogFK);
+    if(b.length && b[b.length-1].tot===trip.str) return b;
+    return a.length>=b.length? a : b;
+  }
+  function parseNavlogLegacy(text){
     const lines=String(text).replace(/\r/g,'').split('\n');
     const wpts=[]; let lastTot=-1; let started=false;
     // detect origin (first airport with elevation "FT")
@@ -3246,17 +3262,35 @@
     for(const w of wpts){ const n=w.wpt.toUpperCase().replace(/[()]/g,''); if(names.some(x=>n===x||n.indexOf(x)>-1))return w; }
     return null;
   }
+  /* The old OFP wrote this as a clock-style "ETOPS Entry 07:02"; FlightKeys writes the same
+     figure as "ETOPS   Entry   06.39". Both are hours and minutes into the flight, not a
+     Zulu time. Only a fallback - when the nav log carries an (E.ENT) row its cumulative
+     time is used instead, and on all three ETOPS samples the two agree exactly. */
   function parseEtopsEntryMin(text){
-    const m=String(text).match(/ETOPS\s+Entry\s+(\d{1,2}):(\d{2})/i);
+    const m=String(text).match(/ETOPS\s+Entry\s+(\d{1,2})[:.](\d{2})/i);
     return m? (+m[1])*60+(+m[2]) : null;
   }
   // POR: labeled "DP(POR): SABTU 12.13" or "(POR) AT SABTU", else a fix literally named POR
   function parsePOR(text, wpts){
-    let m=String(text).match(/DP\s*\(POR\)\s*:?\s*([A-Z0-9.]{2,7})\s+(\d{1,2})\.(\d{2})/i);
+    var t=String(text);
+    /* FlightKeys states it twice and agreeing: a header line "POR: BIL+479NM   04.35"
+       and a nav-log row "(POR) AT BIL+479NM" carrying the same cumulative time.
+
+       Read the reference fix instead and you get the wrong hour. The point of regret
+       here is 479 NM PAST Billings, not at it: BIL is 03.40 into the flight and the POR
+       is 04.35. The old rule matched "(POR) AT <fix>", looked <fix> up in the waypoint
+       list and reported the POR 55 minutes early - early in the direction that invites
+       a decision before the aeroplane is anywhere near the point. */
+    var m=t.match(/^\s*.*?\bPOR:\s*([A-Z0-9+.\-]{2,16})\s+(\d{1,2})\.(\d{2})\b/mi);
+    var hdr = m? {fix:m[1].toUpperCase(), min:(+m[2])*60+(+m[3])} : null;
+    var row = findWpt(wpts,['POR']);           // the plotted row, same table as every ETA
+    if(hdr && row) return {fix:hdr.fix, min:row.min};
+    if(row) return {fix:row.wpt, min:row.min};
+    if(hdr) return hdr;
+    m=t.match(/DP\s*\(POR\)\s*:?\s*([A-Z0-9.]{2,7})\s+(\d{1,2})\.(\d{2})/i);
     if(m) return {fix:m[1].toUpperCase(), min:(+m[2])*60+(+m[3])};
-    m=String(text).match(/\(POR\)\s+AT\s+([A-Z0-9.]{2,7})/i);
-    if(m){ const w=findWpt(wpts,[m[1].toUpperCase()]); if(w) return {fix:m[1].toUpperCase(), min:w.min}; }
-    const w=findWpt(wpts,['POR']); if(w) return {fix:w.wpt, min:w.min};
+    m=t.match(/\(POR\)\s+AT\s+([A-Z0-9.]{2,7})/i);
+    if(m){ var w2=findWpt(wpts,[m[1].toUpperCase()]); if(w2) return {fix:m[1].toUpperCase(), min:w2.min}; }
     return null;
   }
   // key times grouped: ETOPS (window/entry/exit), POR (window/point), CPR (every 4h)
@@ -3292,6 +3326,14 @@
   function parseFlightId(text){
     var t=String(text);
     // top-left line: "GTI340 /18          KORD - ZHEC         18 JUL 26   N708GT"
+    /* FlightKeys prints the identity as one slash-separated run in the page header,
+       "GTI732/03NOV/KMIA-PANC/N708GT", rather than as spaced columns. */
+    var fk=t.match(/^\s*([A-Z]{2,3}\d{2,5})\/(\d{2}[A-Z]{3})\/([A-Z]{4})-([A-Z]{4})\/([A-Z0-9]{4,7})/m);
+    if(fk){
+      var o={fp:fk[1], orig:fk[3], dest:fk[4], tail:fk[5], day:fk[2]};
+      var r0=t.match(/Revision:\s*([\d.]+)/i); if(r0) o.rev=r0[1];
+      return o;
+    }
     var m=t.match(/^\s*([A-Z]{2,3}\d{2,5})\s*(\/\d+)?\s+([A-Z]{4})\s*-\s*([A-Z]{4})/m);
     var rev=t.match(/Revision:\s*(\d+)/i);
     var out={};
@@ -3300,15 +3342,258 @@
     return (out.fp||out.orig)? out : null;
   }
   // Scheduled departure Zulu from the ORIG line's trailing time: "ORIG KORD/ORD ... 1030Z"
+
+  /* ======================================================================
+     FlightKeys OFP (introduced November 2026, Operations Bulletin OB-2026-06)
+     ----------------------------------------------------------------------
+     Dispatch moved to a new flight planning system and the nav log is laid
+     out differently enough that the legacy reader mis-parses it rather than
+     failing - which is the worse outcome, because a wrong ETA looks like a
+     right one. Both readers are kept: crews will be handed either format for
+     a while, and an app that can only read the new one is no better than one
+     that can only read the old one.
+
+     A waypoint is three printed lines:
+
+        DCT   JYROD                                      <- airway, then fix
+         N33 10.9  333  187  486  476  00.23 M03 T010 0393   MTK NM GS TAS LEG-T
+        W085 51.9  328  329  255  836  01.10  F400 -59 222/046   TTK MH IAS .M TOT-T
+
+     The cumulative time (TOT-T) is on the longitude line. Three things about
+     this layout break the legacy reader:
+
+       1. The destination's longitude sometimes lands on its OWN line AFTER
+          the time row, so the time row has no longitude prefix at all:
+
+             FROGZ5   KMIA   00009 FT  MIAMI INTL
+             N25 48.0  094  133  203  203  00.24  P11  T000  0145
+             087 094 200 302 07.21  DSC +26 085/008
+             W080 18.1
+
+          The legacy reader keys on the longitude, so it dropped the
+          destination and ended the flight at top of descent - short by the
+          whole descent, and the arrival time is the number this screen
+          exists to produce.
+
+       2. FIR and ARTCC boundary crossings are printed inline and carry a
+          cumulative time of their own:
+
+             (KZJX)   AT SMELZ   00.24   JACKSONVILLE   ARTCC HIGH
+
+          These are not waypoints. Read as one, "AT" became a fix and took
+          SMELZ's place in the list.
+
+       3. The fix is the LAST token on the name line, not the second: the
+          airway can wrap onto its own line, and a SID prints as
+          "DONTI1R   DONTI" where the legacy rule returned DONTI1R.
+
+     Terrain lines (" ^ 102") sit between the latitude and longitude rows and
+     are skipped. ====================================================== */
+
+  var FK_HDR=/AWY\s+WPT\s+MTK\s+NM\s+GS\s+TAS\s+LEG-T/;
+  /* The column NAMES are no use for telling the formats apart - both print
+     "AWY WPT MTK NM GS TAS LEG-T" over "MORA TTK MH IAS .M TOT-T". Keying on that
+     header classified the old Atlas OFP as FlightKeys, which added a taxi to its
+     departure time and moved every ETA on the page by half an hour. Only the three
+     marks that exist solely in the new system are trusted: the FUFI (FlightKeys
+     Unique Flight Identifier) stamped on every page footer, the system's own name in
+     the dispatch remarks, and the "OPERATIONAL FLIGHT PLAN RLS nn" title block. */
+  function isFlightKeys(text){
+    var t=String(text);
+    return /\bFUFI\s*:/i.test(t) || /FlightKeys/i.test(t) ||
+           /OPERATIONAL\s+FLIGHT\s+PLAN\s+RLS\b/i.test(t);
+  }
+  /* Counting columns does not work. An ETOPS entry, an ETOPS exit and an ETP print with
+     several columns BLANK - no leg distance, no magnetic track, no true track:
+
+        R220   (E.ENT)
+         N59 34.4  257   489  482  00.31  P08  0497          three figures, not four
+        W170 44.0 274 823 06.39   F360 -48   153/019         two, not four
+
+     and a destination can print its leg row with no coordinate on it at all, the latitude
+     having been pushed onto a line of its own:
+
+        GUKDO3C   RKSI   00023 FT  SEOUL/INCHEON INTL
+         153  108  200  200  00.22  M00  T000  0073
+        N37 29.0
+        E126 26.4 144 153 201 304 14.05  DSC +15 145/011
+
+     A fixed column count dropped every ETOPS point on two of the three plans and dropped
+     RKSI itself on the third - and because the reader that DID pick them up was the legacy
+     one winning the trip-time arbitration, two identical ETOPS flights were being read by
+     two different parsers. Silent, and inconsistent in a way nobody would ever notice.
+
+     So the rows are told apart by the one thing that is always printed on each: the leg row
+     carries the ISA deviation (P08, M00) and the time row carries the flight level (F360,
+     or DSC/CLB on a descent or climb row). That holds on every row of all six sample plans,
+     with or without coordinates, with or without blank columns. */
+  var FK_H=/(\d{1,2}\.\d{2})/;
+  var FK_LEG_MARK=/\s[PM]\d{2}(\s|$)/;                 // ISA deviation: leg row
+  var FK_TOT_MARK=/\s(?:F\d{3}|DSC|CLB)(\s|$)/;        // flight level: time row
+  var FK_LATPFX=/^\s*[NS]\d{2,3}\s+\d{1,2}\.\d\s+/;
+  var FK_LONPFX=/^\s*[EW]\d{2,3}\s+\d{1,2}\.\d\s+/;
+  function fkCols(ln){                                   // figures printed before the time
+    var r=String(ln).replace(FK_LATPFX,'').replace(FK_LONPFX,'').trim();
+    var t=r.split(/\s+/), out=[];
+    for(var i=0;i<t.length;i++){ if(/^\d{1,2}\.\d{2}$/.test(t[i])) break; if(/^\d+$/.test(t[i])) out.push(t[i]); else break; }
+    return out;
+  }
+  function fkLeg(ln){
+    if(!FK_LEG_MARK.test(ln) || FK_TOT_MARK.test(ln)) return null;
+    var r=String(ln).replace(FK_LATPFX,''); if(/^\s*[NSEW]\d/.test(r)) return null;
+    var h=r.match(FK_H); if(!h) return null;
+    var c=fkCols(ln);
+    return {legt:h[1], nm:(c.length===4? c[1] : null)};   // NM is knowable only when nothing is blank
+  }
+  function fkTot(ln){
+    if(!FK_TOT_MARK.test(ln)) return null;
+    var r=String(ln).replace(FK_LONPFX,''); if(/^\s*[NSEW]\d/.test(r)) return null;
+    var h=r.match(FK_H); return h? h[1] : null;
+  }
+  var FK_LAT=/^\s*[NS]\d{2,3}\s+\d{1,2}\.\d\s+(\d{2,3})\s+(\d{1,4})\s+(\d{1,4})\s+(\d{1,4})\s+(\d{1,2}\.\d{2})\b/;
+  var FK_CARET=/^\s*\^\s*\d+\s*$/;
+  var FK_AIRPORT=/\b([A-Z]{4})\s+\d{3,5}\s*FT\b/;
+
+  function fkBoundary(s){
+    return /\b(ARTCC|FIR|OCEANIC|UIR|CTA)\b/.test(s) || /^\s*\([A-Z]{4}\)\s+[NS]\d/.test(s);
+  }
+  function fkFurniture(s){
+    if(!s || !s.trim()) return true;
+    if(FK_CARET.test(s)) return true;
+    if(/FUFI:/.test(s)) return true;
+    if(/OPERATIONAL\s+FLIGHT\s+PLAN/i.test(s)) return true;
+    if(FK_HDR.test(s)) return true;
+    if(/^\s*MORA\s+TTK\b/.test(s)) return true;
+    if(/^\s*[A-Z]{2,3}\d{2,5}\/\d{2}[A-Z]{3}\//.test(s)) return true;   // page header
+    if(/^\s*MORA\s+\d/.test(s)) return true;
+    return false;
+  }
+  /* The fix on a name line. Airports are named by their ICAO rather than by the
+     plain-language field that follows it, the point of regret prints as
+     "(POR) AT 55N20+179NM", and everything else is the last fix-shaped token. */
+  function fkName(ln){
+    if(!ln) return null;
+    var s=ln.trim(); if(!s) return null;
+    if(fkBoundary(s)) return null;
+    var por=s.match(/\(([A-Z0-9]{2,5})\)\s*AT\b/i); if(por) return por[1].toUpperCase();
+    /* An equal-time point prints as "(GOPASY) ETP1". The bracketed code names the airport
+       it sends you to; the label a crew actually says out loud is ETP1, so that is the one
+       that goes in the table. */
+    var etp=s.match(/\(([A-Z0-9]{2,8})\)\s*(ETP\s*\d*)/i);
+    if(etp) return etp[2].replace(/\s+/g,'').toUpperCase();
+    /* Printed phrases rather than fixes - "TOP OF STEP CLB" is what is on the page, and
+       the second token alone ("TOP") matches nothing a pilot is reading. */
+    var phr=s.match(/\b(TOP OF [A-Z]+(?: [A-Z]+)?)\b/);
+    if(phr) return phr[1].trim();
+    var ap=s.match(FK_AIRPORT); if(ap) return ap[1];
+    /* Columns, not guesswork. The airway occupies column one and the fix column two,
+       so the fix is the SECOND token - unless the airway wrapped onto a line of its
+       own, which leaves the fix alone on this one.
+
+       Taking the LAST token instead looks right on "DONTI1R   DONTI" and is wrong on
+       every navaid, because a navaid prints its plain name and frequency after the
+       identifier: "DCT   JOH JOHNSTONE   POINT 116.7" would yield 116.7. Three fixes
+       on the PANC-KMIA plan came through as radio frequencies that way. */
+    var toks=s.split(/\s+/).filter(Boolean);
+    if(!toks.length) return null;
+    var pick=function(t){
+      if(!t) return null;
+      t=t.replace(/[^A-Za-z0-9/.+-]/g,'').toUpperCase();
+      if(!t) return null;
+      if(/^\d/.test(t) && !/^\d{2}[NSEW]/.test(t)) return null;   // frequency or column value
+      if(!/[A-Z]/.test(t)) return null;
+      return /^[A-Z0-9][A-Z0-9/.+-]{1,8}$/.test(t)? t : null;
+    };
+    var cand = toks.length>1 ? pick(toks[1]) : pick(toks[0]);
+    if(cand) return cand;
+    for(var i=0;i<toks.length;i++){ var c=pick(toks[i]); if(c) return c; }
+    return null;
+  }
+
+  function parseNavlogFK(text){
+    var lines=String(text).replace(/\r/g,'').split('\n');
+    var wpts=[], lastTot=-1, started=false;
+    for(var i=0;i<lines.length;i++){
+      var ln=lines[i];
+      if(!started){
+        /* The origin prints its elevation but no leg figures, so it has no leg row. */
+        var om=ln.match(FK_AIRPORT);
+        if(om && !fkLeg(ln) && !fkBoundary(ln)){
+          wpts.push({wpt:om[1], tot:'00.00', min:0, nm:null, legt:null});
+          started=true; lastTot=0; continue;
+        }
+      }
+      var leg=fkLeg(ln);
+      if(!leg) continue;
+      // the cumulative time is on the next time row, past any terrain or coordinate line
+      var tot=null;
+      for(var j=i+1;j<Math.min(lines.length,i+5);j++){
+        if(FK_CARET.test(lines[j])) continue;
+        if(fkBoundary(lines[j])) continue;
+        if(/^\s*[NSEW]\d{2,3}\s+\d{1,2}\.\d\s*$/.test(lines[j])) continue;   // bare coordinate
+        if(fkFurniture(lines[j])) continue;
+        var tt=fkTot(lines[j]);
+        if(tt){ tot=tt; break; }
+        if(fkLeg(lines[j])) break;                        // next waypoint already: give up
+      }
+      if(tot==null) continue;
+      var pad=tot.indexOf('.')===1? '0'+tot : tot;
+      var min=totToMin(pad);
+      if(min==null) continue;
+      if(started && wpts.length>1 && min < lastTot-1) break;   // a second copy of the OFP
+      var name=null;
+      for(var k=i-1;k>=Math.max(0,i-6);k--){
+        if(fkFurniture(lines[k])) continue;
+        if(fkLeg(lines[k])||fkTot(lines[k])) break;
+        if(/^\s*[NSEW]\d{2,3}\s+\d{1,2}\.\d\s*$/.test(lines[k])) continue;
+        name=fkName(lines[k]);
+        if(name) break;
+      }
+      if(!name) name='(fix)';
+      wpts.push({wpt:name, tot:pad, min:min, nm:leg.nm, legt:leg.legt});
+      lastTot=min; started=true;
+    }
+    return wpts;
+  }
+
+  /* The FlightKeys ORIG time is the estimated OFF-BLOCK time - it is the EOBT of the
+     filed ICAO plan ("-KMIA0420") and the sheet leaves OUT/OFF/ON/IN blank for the crew.
+     The nav log counts from wheels-up, so handing ORIG straight to the departure box
+     would run every ETA on the page early by the taxi time. Verified on all three
+     sample plans: DEST = ORIG + TAXI + TRIP exactly. */
+  function parseDepBasis(text){
+    var t=String(text);
+    var m=t.match(/^\s*ORIG\b.*?\b(\d{4})Z/m); if(!m) return null;
+    var out=m[1];
+    if(!isFlightKeys(t)) return {off:out, outBlock:null, taxiMin:0, fk:false};
+    var tx=parseTaxiOut(t);
+    var taxi=tx? tx.min : 0;
+    var mins=((+out.slice(0,2))*60+(+out.slice(2))+taxi)%1440;
+    var off=String(Math.floor(mins/60)).padStart(2,'0')+String(mins%60).padStart(2,'0');
+    return {off:off, outBlock:out, taxiMin:taxi, fk:true};
+  }
+
   function parseOrigTime(text){
-    var m=String(text).match(/^\s*ORIG\b.*\b(\d{4})Z/m);
-    return m? m[1] : null;
+    var b=parseDepBasis(text);
+    return b? b.off : null;
   }
   // Critical Fuel Scenario alternate airports (ETP alternates) — may be several
   function fuelAirports(text){
-    var seen={}, list=[];
-    var re=/ETP\s*\d*\s+([A-Z]{3,4})-([A-Z]{3,4})/g, m;
-    while((m=re.exec(String(text)))){ [m[1],m[2]].forEach(function(a){ if(!seen[a]){seen[a]=1;list.push(a);} }); }
+    var seen={}, list=[], m;
+    var t=String(text);
+    function add(a){ if(a && !seen[a]){ seen[a]=1; list.push(a); } }
+    /* FlightKeys names the airports in a labelled block at the top rather than inside an
+       ETP table, so the ETP sweep below finds nothing and the Jeppesen card came back
+       empty on every plan in the new format. Scoped to the new format on purpose: the old
+       OFP has the same labelled block AND an ETP table, and sweeping both there would
+       quietly turn a card headed "fuel-scenario alternate" into a list of every airport
+       on the release. */
+    if(isFlightKeys(t)){
+      var re2=/^\s*(ORIG|DEST|DEST2|PALT|RAPT|RALT|EALT|TALT|IALT|ALTN)\s+([A-Z]{4})\//gm;
+      while((m=re2.exec(t))) add(m[2]);
+    }
+    var re=/ETP\s*\d*\s+([A-Z]{3,4})-([A-Z]{3,4})/g;
+    while((m=re.exec(t))){ add(m[1]); add(m[2]); }
     return list;
   }
 
@@ -3321,6 +3606,16 @@
     var LON=/^\s*([EW]\d{2,3})\s+(\d{1,2}\.\d)\b/;
     var out={eent:[],eext:[],etp:[]}, seen={};
     function add(kind,name,s){ var k=kind+'|'+s; if(seen[k])return; seen[k]=1; out[kind].push({name:name,str:s}); }
+    /* The Critical Fuel Scenario block names the airport each point diverts to, which the
+       nav-log rows do not. FlightKeys prints the entry bracketed with its "GO" code and the
+       exit spelled E.EXIT rather than E.EXT:
+         (GOPAKN)   E.ENT   PAKN   N59   34.4   W170   44.0
+          E.EXIT   RJCC   N45   06.2   E151   16.6                                      */
+    var cf;
+    var reEnt=/\(?G?O?([A-Z]{3,4})\)?\s+E\.?ENT\s+([A-Z]{3,4})\s+([NS]\d{2,3})\s+(\d{1,2}\.\d)\s+([EW]\d{2,3})\s+(\d{1,2}\.\d)/g;
+    while((cf=reEnt.exec(String(text)))) add('eent','ETOPS Entry \u00b7 '+cf[2], cf[3]+cf[4]+cf[5]+cf[6]);
+    var reExt=/\bE\.?EXI?T\s+([A-Z]{3,4})\s+([NS]\d{2,3})\s+(\d{1,2}\.\d)\s+([EW]\d{2,3})\s+(\d{1,2}\.\d)/g;
+    while((cf=reExt.exec(String(text)))) add('eext','ETOPS Exit \u00b7 '+cf[1], cf[2]+cf[3]+cf[4]+cf[5]);
     for(var i=0;i<lines.length;i++){
       var isEnt=/\(E\.?ENT\)/i.test(lines[i]), isExt=/\(E\.?EXT\)/i.test(lines[i]);
       if(isEnt||isExt){
@@ -3357,7 +3652,7 @@
     return {restStart:rs, restEnd:re, window:win, changeover:co, periods:periods, landMin:landMin};
   }
 
-  const API={parseNavlog,computeETA,fmtZ,totToMin,parseTripTime,parseTaxiOut,qualityCheck,fmtHM,specialTimes,jeppPoints,parseFlightId,fuelAirports,parseOrigTime,crewRest};
+  const API={parseNavlog,isFlightKeys,parseDepBasis,computeETA,fmtZ,totToMin,parseTripTime,parseTaxiOut,qualityCheck,fmtHM,specialTimes,jeppPoints,parseFlightId,fuelAirports,parseOrigTime,crewRest};
   if(typeof module!=='undefined'&&module.exports)module.exports=API;
   root.NAVLOG=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -7535,7 +7830,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v23.0 · 2026-10-05';
+  var BUILD='v24.1 · 2026-11-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -8665,6 +8960,12 @@
   var flDep=$('#flDep'), flStatusEl=$('#flStatus'), flSpin=$('#flSpin'),
       flCards=$('#flCards'), flQC=$('#flQC'), flSum=$('#flSum'), flTable=$('#flTable');
   var flWpts=[], flTrip=null, flTaxi=null, flTextRaw='', flEta=[], flSt=null, flId=null, flOrig=null;
+  /* flOrig is WHEELS-UP, because that is what the nav log counts from and what every
+     ETA on the page is built on. flOut is BLOCK-OUT, which is what a report time and a
+     catering departure are reckoned against. On the old format the two were the same
+     number; FlightKeys prints the off-block time and leaves OFF for the crew to fill
+     in, so they are now a taxi apart and the difference has to be kept. */
+  var flOut=null;
   var flDepFromOfp=false;      // did the Departure field come from the OFP, or is it a leftover?
   function renderFpInfo(){
     var el=document.getElementById('fpInfo'); if(!el) return;
@@ -8937,7 +9238,11 @@
       duFlt.value=flTrip.str.replace('.',':');
       if(flTaxi && flTaxi.min!=null){ duTaxiOut.value=Math.floor(flTaxi.min/60)+':'+String(flTaxi.min%60).padStart(2,'0'); }
       var rep='';
-      if(flOrig){ var om=(+flOrig.slice(0,2))*60+(+flOrig.slice(2)); var rm=((om-90)%1440+1440)%1440;   // report 1.5h before ORIG dep
+      /* Report is 1.5 h before SCHEDULED DEPARTURE, which is off-blocks - not before
+         wheels-up. On a FlightKeys plan those differ by the taxi, and this number
+         drives the LABT/LATT band and the duty countdown. */
+      var depBase=flOut||flOrig;
+      if(depBase){ var om=(+depBase.slice(0,2))*60+(+depBase.slice(2)); var rm=((om-90)%1440+1440)%1440;
         duReport.value=String(Math.floor(rm/60)).padStart(2,'0')+String(rm%60).padStart(2,'0'); rep=' · report set to '+duReport.value+'Z (1.5 h before departure)'; }
       duCompute();
       duNote.textContent='Pulled trip time '+flTrip.str+' (h:mm)'+(flTaxi?' and OFP taxi-out '+flTaxi.str:'')+' from the OFP'+rep+'.';
@@ -9565,12 +9870,17 @@
     flTextRaw=text; flWpts=NAVLOG.parseNavlog(text); flTrip=NAVLOG.parseTripTime(text); flTaxi=NAVLOG.parseTaxiOut(text);
     /* Parse the OFP times BEFORE drawing the header strip — it shows the planned off/on
        times, and rendering first left them blank until the next minute ticked over. */
-    var ot=NAVLOG.parseOrigTime(text); flOrig=ot||null;
+    var basis=NAVLOG.parseDepBasis(text);
+    var ot=basis? basis.off : null; flOrig=ot||null;
+    flOut=(basis&&basis.outBlock)? basis.outBlock : null;
     if(ot){ flDep.value=ot; flDepFromOfp=true; } else { flDepFromOfp=false; }
     flId=NAVLOG.parseFlightId(text); renderFpInfo();
     if(!flWpts.length){ flStatus('No waypoints found — try PDF upload, or make sure the nav-log pages are included.',false); flQC.innerHTML='';flSum.innerHTML='';flTable.innerHTML=''; return; }
-    flStatus('Found '+flWpts.length+' waypoints'+(flTrip?' · trip time '+flTrip.str+' (h:mm, not decimal)':'')+
-      (flDepFromOfp? ' · departure '+flOrig+'Z read from the OFP'
+    flStatus((basis&&basis.fk? '<b style="color:var(--good)">FlightKeys OFP</b> \u00b7 ' : '')+
+      'Found '+flWpts.length+' waypoints'+(flTrip?' · trip time '+flTrip.str+' (h:mm, not decimal)':'')+
+      (flDepFromOfp? ' · departure '+flOrig+'Z read from the OFP'+
+        ((basis&&basis.fk&&basis.outBlock)? ' <b style="color:var(--dim)">(the OFP shows '+esc(basis.outBlock)+
+          'Z off-blocks; '+basis.taxiMin+' min taxi added, because the table runs from wheels-up)</b>' : '')
                    : ' · <b style="color:var(--warn)">No departure time found in the OFP — check the Departure box</b>')+'.',false);
     flRender();
   }
@@ -9769,10 +10079,10 @@
      Shown on the Flight Log tab until dismissed. The button is live: if a plan
      is already loaded it opens the stepper straight away, so the banner is not
      just telling you about a thing, it is the thing. */
-  var FEAT={ id:'recetas-1', ver:'v23.0',
-    title:'Record ETAs — one waypoint at a time',
-    body:'Writing an ETA beside every waypoint on the printed plan means your eye has to find its place in the table again after every single one. This walks the list for you: <b>one point on screen</b>, the one you just did above it, the one coming next below it, and a <b>full-width NEXT bar</b> you can hit without looking. It keeps your place if you put the phone down, and holds the screen awake so it cannot dim out from under you halfway down the list.',
-    note:'The order is the order on your plan — same document, same sequence. Read the waypoint name before you write: if it does not match the line you are on, a point was misread on import.' };
+  var FEAT={ id:'flightkeys-1', ver:'v24.1',
+    title:'The new FlightKeys OFP reads correctly',
+    body:'Dispatch moved to <b>FlightKeys</b> (Operations Bulletin OB-2026-06) and the nav log is laid out differently. The app reads both formats now, and tells you which one it got. Three things the old reader got wrong on a new plan: the flight <b>ended at top of descent</b> instead of at the destination, FIR crossings turned into waypoints, and navaids came through as their radio frequencies.',
+    note:'One number is worth checking yourself the first time. FlightKeys prints the <b>off-block</b> time and leaves OFF blank for you, while the nav log counts from wheels-up \u2014 so the app adds the planned taxi, and says so on screen. On all three sample plans the arrival it produces matches the OFP\u2019s own printed DEST time to the minute.' };
   function featSeen(){ try{ return localStorage.getItem('ad_featseen')||''; }catch(e){ return ''; } }
   function featRender(){
     var box=$('#flFeat'); if(!box) return;
@@ -9782,7 +10092,7 @@
         '<button class="fx" id="featX" aria-label="Dismiss">✕</button></div>'+
       '<div class="ftitle">'+esc(FEAT.title)+'</div>'+
       '<div class="fbody">'+FEAT.body+'</div>'+
-      '<button class="fgo" id="featGo">✎  Try it</button>'+
+      '<button class="fgo" id="featGo">✎  Open an OFP</button>'+
       '<div class="fnote">'+FEAT.note+'</div></div>';
     $('#featX').onclick=function(){
       try{ localStorage.setItem('ad_featseen', FEAT.id); }catch(e){}
@@ -9825,13 +10135,13 @@
     try{
       if(!flTextRaw){ localStorage.removeItem(FL_KEY); return; }
       var pack=JSON.stringify({v:1, t:flTextRaw, w:flWpts, trip:flTrip, taxi:flTaxi,
-        orig:flOrig, id:flId, dep:(flDep&&flDep.value)||'', fromOfp:!!flDepFromOfp, at:Date.now()});
+        orig:flOrig, outb:flOut, id:flId, dep:(flDep&&flDep.value)||'', fromOfp:!!flDepFromOfp, at:Date.now()});
       /* A very long OFP could blow the quota and take the roster down with it. Drop the raw
          text first - the table survives without it, only the Jeppesen points need it. */
       try{ localStorage.setItem(FL_KEY, pack); }
       catch(e){
         try{ localStorage.setItem(FL_KEY, JSON.stringify({v:1, t:'', w:flWpts, trip:flTrip,
-          taxi:flTaxi, orig:flOrig, id:flId, dep:(flDep&&flDep.value)||'',
+          taxi:flTaxi, orig:flOrig, outb:flOut, id:flId, dep:(flDep&&flDep.value)||'',
           fromOfp:!!flDepFromOfp, at:Date.now(), trimmed:1})); }catch(_){}
       }
     }catch(e){}
@@ -9840,7 +10150,7 @@
     var st=null; try{ st=JSON.parse(localStorage.getItem(FL_KEY)||'null'); }catch(e){}
     if(!st || !st.w || !st.w.length) return false;
     flTextRaw=st.t||''; flWpts=st.w; flTrip=st.trip||null; flTaxi=st.taxi||null;
-    flOrig=st.orig||null; flId=st.id||null; flDepFromOfp=!!st.fromOfp;
+    flOrig=st.orig||null; flOut=st.outb||null; flId=st.id||null; flDepFromOfp=!!st.fromOfp;
     if(flDep && st.dep) flDep.value=st.dep;
     try{ renderFpInfo(); }catch(e){}
     try{ flRender(); }catch(e){}
@@ -9853,7 +10163,7 @@
       ' <b id="flForget" style="color:#8fb4ff;cursor:pointer;text-decoration:underline">Clear it</b>', false);
     var fg=document.getElementById('flForget');
     if(fg) fg.onclick=function(){
-      flTextRaw=''; flWpts=[]; flTrip=null; flTaxi=null; flOrig=null; flId=null;
+      flTextRaw=''; flWpts=[]; flTrip=null; flTaxi=null; flOrig=null; flOut=null; flId=null;
       try{ localStorage.removeItem(FL_KEY); }catch(e){}
       if(flDep) flDep.value='';
       try{ renderFpInfo(); }catch(e){}
@@ -10065,7 +10375,8 @@
     if(typeof flOrig!=='undefined' && flOrig && typeof flId!=='undefined' && flId && flId.orig){
       var off=tzOffsetMin(flId.orig);
       if(off!=null){
-        var z=(+flOrig.slice(0,2))*60+(+flOrig.slice(2));
+        var cb=flOut||flOrig;                       // scheduled departure = off-blocks
+        var z=(+cb.slice(0,2))*60+(+cb.slice(2));
         var loc=((z+off)%1440+1440)%1440;
         var e2=$('#catDep'); if(e2){ e2.value=String(Math.floor(loc/60)).padStart(2,'0')+String(loc%60).padStart(2,'0');
           note.push('departure '+e2.value+' local at '+flId.orig); }

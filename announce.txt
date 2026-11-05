@@ -1,7 +1,7 @@
-flightkeys-wip-1
-New flight plan format
-Dispatch switched to the new FlightKeys OFP today.
+flightkeys-live-1
+Updated for the new FlightKeys format
+CargoDecode now reads the new FlightKeys OFP. Open the app once with a connection and it updates itself — the Flight Log will tell you which format it read.
 
-The Flight Log is being updated to read it. Until that update reaches your phone, check anything it pulls off a FlightKeys plan against the paper — in particular the arrival time and the departure time.
+Found a problem? Use the "Report an issue" button at the bottom of the app, or email CargoAeroData@gmail.com. If a number looks wrong, trust the paper and tell us.
 
-Expect the update in the next 24 to 48 hours. You do not need to do anything; the app updates itself when you open it with a connection.
+Hope you enjoy the app. Please keep sharing it with the people you fly with — and if there is something you want it to do, email us. Most of what is in here started as somebody saying "it should just…".
