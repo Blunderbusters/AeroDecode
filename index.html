@@ -3148,7 +3148,7 @@
   const LAT=/[NS]\d{2}\s+\d{1,3}\.\d/;                 // latitude present
   const AWY=/^(DCT|[A-Z]{1,3}\d{1,3}|[A-Z]\d{2,3}|ANCH\d|SID\d?|[A-Z]{4,5}\d?|\([A-Z]{3,4}\))$/;
 
-  function totToMin(t){ const m=t.match(/^(\d{1,2})\.(\d{2})$/); return m? (+m[1])*60+(+m[2]) : null; }
+  function totToMin(t){ const m=String(t).match(/^(\d{1,2})[:.](\d{2})$/); return m? (+m[1])*60+(+m[2]) : null; }
 
   // pull the waypoint name from a "name line": AWY in col1, WPT in col2 (+ maybe navaid text)
   function nameFromLine(ln){
@@ -3258,8 +3258,17 @@
     return {pass:checks.length&&checks.every(c=>c.pass), checks, last, tripMin, hasTrip:tripMin!=null};
   }
 
+  /* Exact match, after stripping the brackets the nav log prints around special points.
+     This used to accept a SUBSTRING, which meant the search for the point of regret found
+     any fix whose name happened to contain those three letters. On a Hong Kong-Abu Dhabi
+     release with no POR in it at all, the waypoint AGPOR was reported as the POR, complete
+     with a weather window - an operational decision point invented out of a navaid's name.
+     Searching for 'EEP' would have done the same to any fix called SHEEPY. */
   function findWpt(wpts,names){
-    for(const w of wpts){ const n=w.wpt.toUpperCase().replace(/[()]/g,''); if(names.some(x=>n===x||n.indexOf(x)>-1))return w; }
+    for(const w of wpts){
+      const n=String(w.wpt).toUpperCase().replace(/[()]/g,'');
+      if(names.some(function(x){ return n===x; })) return w;
+    }
     return null;
   }
   /* The old OFP wrote this as a clock-style "ETOPS Entry 07:02"; FlightKeys writes the same
@@ -3427,7 +3436,15 @@
      carries the ISA deviation (P08, M00) and the time row carries the flight level (F360,
      or DSC/CLB on a descent or climb row). That holds on every row of all six sample plans,
      with or without coordinates, with or without blank columns. */
-  var FK_H=/(\d{1,2}\.\d{2})/;
+  /* Separators are not consistent between releases. On the Atlas (GTI) plans both LEG-T
+     and TOT-T print as h.mm; on an Etihad (ETD) release the SAME nav log prints LEG-T as
+     h:mm and leaves TOT-T as h.mm - 192 rows of it. Matching only the dot meant no leg row
+     was recognised at all, the FlightKeys reader produced nothing, and the trip-time
+     arbitration quietly handed the whole plan to the legacy parser, which ended the flight
+     19 minutes early and left three waypoints unnamed. Both separators are accepted
+     everywhere now and normalised to the dot the rest of this file expects. */
+  var FK_H=/(\d{1,2})[:.](\d{2})(?!\d)/;
+  function fkTime(ln){ var m=String(ln).match(FK_H); return m? (m[1].length<2?'0':'')+m[1]+'.'+m[2] : null; }
   var FK_LEG_MARK=/\s[PM]\d{2}(\s|$)/;                 // ISA deviation: leg row
   var FK_TOT_MARK=/\s(?:F\d{3}|DSC|CLB)(\s|$)/;        // flight level: time row
   var FK_LATPFX=/^\s*[NS]\d{2,3}\s+\d{1,2}\.\d\s+/;
@@ -3435,20 +3452,20 @@
   function fkCols(ln){                                   // figures printed before the time
     var r=String(ln).replace(FK_LATPFX,'').replace(FK_LONPFX,'').trim();
     var t=r.split(/\s+/), out=[];
-    for(var i=0;i<t.length;i++){ if(/^\d{1,2}\.\d{2}$/.test(t[i])) break; if(/^\d+$/.test(t[i])) out.push(t[i]); else break; }
+    for(var i=0;i<t.length;i++){ if(/^\d{1,2}[:.]\d{2}$/.test(t[i])) break; if(/^\d+$/.test(t[i])) out.push(t[i]); else break; }
     return out;
   }
   function fkLeg(ln){
     if(!FK_LEG_MARK.test(ln) || FK_TOT_MARK.test(ln)) return null;
     var r=String(ln).replace(FK_LATPFX,''); if(/^\s*[NSEW]\d/.test(r)) return null;
-    var h=r.match(FK_H); if(!h) return null;
+    var h=fkTime(r); if(!h) return null;
     var c=fkCols(ln);
-    return {legt:h[1], nm:(c.length===4? c[1] : null)};   // NM is knowable only when nothing is blank
+    return {legt:h, nm:(c.length===4? c[1] : null)};      // NM is knowable only when nothing is blank
   }
   function fkTot(ln){
     if(!FK_TOT_MARK.test(ln)) return null;
     var r=String(ln).replace(FK_LONPFX,''); if(/^\s*[NSEW]\d/.test(r)) return null;
-    var h=r.match(FK_H); return h? h[1] : null;
+    return fkTime(r);
   }
   var FK_LAT=/^\s*[NS]\d{2,3}\s+\d{1,2}\.\d\s+(\d{2,3})\s+(\d{1,4})\s+(\d{1,4})\s+(\d{1,4})\s+(\d{1,2}\.\d{2})\b/;
   var FK_CARET=/^\s*\^\s*\d+\s*$/;
@@ -7855,7 +7872,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v24.2 · 2026-11-05';
+  var BUILD='v24.3 · 2026-11-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -10110,7 +10127,7 @@
      Shown on the Flight Log tab until dismissed. The button is live: if a plan
      is already loaded it opens the stepper straight away, so the banner is not
      just telling you about a thing, it is the thing. */
-  var FEAT={ id:'flightkeys-1', ver:'v24.2',
+  var FEAT={ id:'flightkeys-1', ver:'v24.3',
     title:'The new FlightKeys OFP reads correctly',
     body:'Dispatch moved to <b>FlightKeys</b> (Operations Bulletin OB-2026-06) and the nav log is laid out differently. The app reads both formats now, and tells you which one it got. Three things the old reader got wrong on a new plan: the flight <b>ended at top of descent</b> instead of at the destination, FIR crossings turned into waypoints, and navaids came through as their radio frequencies.',
     note:'One number is worth checking yourself the first time. FlightKeys prints the <b>off-block</b> time and leaves OFF blank for you, while the nav log counts from wheels-up \u2014 so the app adds the planned taxi, and says so on screen. On all three sample plans the arrival it produces matches the OFP\u2019s own printed DEST time to the minute.' };
