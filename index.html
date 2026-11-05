@@ -3578,6 +3578,31 @@
     return b? b.off : null;
   }
   // Critical Fuel Scenario alternate airports (ETP alternates) — may be several
+  /* What each airport on a FlightKeys release actually IS. fuelAirports() returns bare
+     codes and must keep doing so - the old OFP only ever listed ETP alternates there, and
+     the Jeppesen card has always labelled them "Fuel-scenario alternate". That label became
+     wrong the moment the new format made me read the labelled block at the top as well,
+     because it put the ORIGIN and the DESTINATION under it. Spotted on a 747 release, where
+     a card headed "fuel-scenario alternate" listed the field it was taking off from. */
+  var FK_ROLE={ORIG:'Origin', DEST:'Destination', DEST2:'Re-clear airport',
+    PALT:'Primary alternate', RAPT:'Re-clear airport', RALT:'Re-clear alternate',
+    EALT:'ETOPS alternate', TALT:'Terrain alternate', IALT:'Intermediate alternate',
+    ALTN:'Alternate'};
+  function airportRoles(text){
+    var out={}, m, t=String(text);
+    if(!isFlightKeys(t)) return out;
+    var re=/^\s*(ORIG|DEST2|DEST|PALT|RAPT|RALT|EALT|TALT|IALT|ALTN)\s+([A-Z]{4})\//gm;
+    while((m=re.exec(t))) if(!out[m[2]]) out[m[2]]=FK_ROLE[m[1]]||'Alternate';
+    return out;
+  }
+  /* Whether the release has an ETOPS section at all. A four-engine aeroplane does not get
+     one, so on a 747 the card used to read "Entry - not found", which looks like the app
+     failed rather than like there is nothing to find. */
+  function hasEtopsSection(text){
+    var t=String(text);
+    return /ETOPS\s+Entry\s+\d/i.test(t) || /\(E\.?ENT\)/i.test(t) ||
+           /Critical\s+Fuel\s+Scenario/i.test(t) || /\bE\.?EXI?T\s+[A-Z]{3,4}\s+[NS]\d/i.test(t);
+  }
   function fuelAirports(text){
     var seen={}, list=[], m;
     var t=String(text);
@@ -3652,7 +3677,7 @@
     return {restStart:rs, restEnd:re, window:win, changeover:co, periods:periods, landMin:landMin};
   }
 
-  const API={parseNavlog,isFlightKeys,parseDepBasis,computeETA,fmtZ,totToMin,parseTripTime,parseTaxiOut,qualityCheck,fmtHM,specialTimes,jeppPoints,parseFlightId,fuelAirports,parseOrigTime,crewRest};
+  const API={parseNavlog,isFlightKeys,parseDepBasis,airportRoles,hasEtopsSection,computeETA,fmtZ,totToMin,parseTripTime,parseTaxiOut,qualityCheck,fmtHM,specialTimes,jeppPoints,parseFlightId,fuelAirports,parseOrigTime,crewRest};
   if(typeof module!=='undefined'&&module.exports)module.exports=API;
   root.NAVLOG=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -7830,7 +7855,7 @@
   'use strict';
   var $=function(s){return document.querySelector(s)};
   var input=$('#input'), out=$('#output'), spin=$('#spin'), ocrPill=$('#ocrPill');
-  var BUILD='v24.1 · 2026-11-05';
+  var BUILD='v24.2 · 2026-11-05';
   /* Published deliberately. The rescue panel needs to report the running version even when
      the rest of the app has fallen over, and reading it back out of the page text is what
      broke the updater. */
@@ -9892,7 +9917,8 @@
     jp.eent.forEach(function(p){items.push(p);});
     jp.eext.forEach(function(p){items.push(p);});
     jp.etp.forEach(function(p){items.push(p);});
-    airports.forEach(function(a){items.push({name:'Fuel-scenario alternate',str:a});});
+    var roles=flTextRaw? NAVLOG.airportRoles(flTextRaw) : {};
+    airports.forEach(function(a){ items.push({name:(roles[a]||'Fuel-scenario alternate'),str:a}); });
     if(!items.length){ box.innerHTML=''; return; }
     var h='<div class="jepp"><div class="jtitle">✈ Jeppesen Lat/Long Pasteable Values from OFP</div>'+
       '<div class="jsub">Simply copy and paste these values into your Jeppesen “Marked Points” and “Decision Point”.</div>';
@@ -9926,7 +9952,12 @@
       return h+'</div></div>';
     }
     var ch='';
-    ch+=grp('etops','ETOPS', st.etops.length? st.etops : [{k:'Entry',v:'not found',na:true}]);
+    /* Say which it is. "not found" on a 747 reads as a failure; the aeroplane has four
+       engines and the release carries no ETOPS section to find. */
+    var hasE=flTextRaw? NAVLOG.hasEtopsSection(flTextRaw) : false;
+    ch+=grp('etops','ETOPS', st.etops.length? st.etops
+         : [hasE? {k:'Entry',v:'not found',na:true}
+                : {k:'Entry',v:'none in this plan',na:true}]);
     ch+=grp('por','POR', st.por? st.por : [{k:'POR',v:'not in plan',na:true}]);
     if(st.cpr.length) ch+=grp('cpr','CPR — Company Position Report · every 4 hr', st.cpr);
     flCards.innerHTML=ch;
@@ -10079,7 +10110,7 @@
      Shown on the Flight Log tab until dismissed. The button is live: if a plan
      is already loaded it opens the stepper straight away, so the banner is not
      just telling you about a thing, it is the thing. */
-  var FEAT={ id:'flightkeys-1', ver:'v24.1',
+  var FEAT={ id:'flightkeys-1', ver:'v24.2',
     title:'The new FlightKeys OFP reads correctly',
     body:'Dispatch moved to <b>FlightKeys</b> (Operations Bulletin OB-2026-06) and the nav log is laid out differently. The app reads both formats now, and tells you which one it got. Three things the old reader got wrong on a new plan: the flight <b>ended at top of descent</b> instead of at the destination, FIR crossings turned into waypoints, and navaids came through as their radio frequencies.',
     note:'One number is worth checking yourself the first time. FlightKeys prints the <b>off-block</b> time and leaves OFF blank for you, while the nav log counts from wheels-up \u2014 so the app adds the planned taxi, and says so on screen. On all three sample plans the arrival it produces matches the OFP\u2019s own printed DEST time to the minute.' };
